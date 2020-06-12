@@ -3,6 +3,12 @@
 
 注：ここでは、`startetrobo`によってインストールされるファイル群を「**etroboパッケージ**」、`startetrobo`によって起動する開発環境を「**etrobo環境**」と呼びます。
 
+etrobo環境は、以下のソフトウェアおよび成果物の一部を利用し構成され、etroboパッケージはこれらを自動的に取得しインストールします。
+- [ETロボコンシミュレータ](https://etrobo.jp/)
+- [TOPPERS/EV3RT](https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT)
+- [TOPPERS/箱庭](https://toppers.github.io/hakoniwa/)
+- [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
+
 ## 主な特徴
 
 - Visual Studio Code（VSCode）以外のインストールを完全自動化

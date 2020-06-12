@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+#
+# sim, centralized simulator launcher/controller
+#   sim 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+# default filenames for launcher
+athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
+memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
+device_config_txt="$ETROBO_ATHRILL_SDK/common/device_config.txt"
+target="$ETROBO_ATHRILL_WORKSPACE/asp"
+
+# export default envvars
+export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | head -n 1`
+export ETROBO_SIM_DEV="UnityETroboSim"
+export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
+export ETROBO_SIM_NAME="ETロボコンシミュレータ"
+export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
+if [ "$ETROBO_OS" = "win" ]; then
+    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
+elif [ "$ETROBO_OS" = "linux" ]; then
+    export ETROBO_SIM_LOG="~/.config/unity3d/$ETROBO_SIM_LOG"
+elif [ "$ETROBO_OS" = "mac" ]; then
+    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
+else
+    unset ETROBO_SIM_LOG
+fi
+
+export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
+
+if [ "$1" = "ver" ]; then
+    export ETROBO_SIM_VER="$2"
+    shift 2
+fi
+
+if [ "$1" != "env" ]; then
+    if [ "$ETROBO_KERNEL" = "debian" ]; then
+        export ETROBO_LAUNCH_SIM='"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
+    elif [ "$ETROBO_KERNEL" = "darwin" ]; then
+        export ETROBO_LAUNCH_SIM='open -a "/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}${ETROBO_EXE_POSTFIX}"'
+    else
+        unset ETROBO_LAUNCH_SIM
+    fi
+
+    if [ "$1" = "show" ]; then
+        shift
+        echo $(eval echo "$ETROBO_LAUNCH_SIM")
+    fi
+    if [ "$1" = "check" ]; then
+        if [ "$ETROBO_OS" = "win" ]; then
+            checker='tasklist.exe /FI "imagename eq ${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" | grep ${ETROBO_SIM_NAME} | sed -E "s/^${ETROBO_SIM_NAME}(.*$)/\1/"'
+        else
+            checker='ps aux | grep -v grep | grep etrobosim'
+        fi
+        pid=$(eval $checker | awk '{print $2}')
+        echo $pid
+        exit 0
+    fi
+    if [ "$1" = "stop" ]; then
+        pid=`sim check`
+        while [ -n "$pid" ]; do
+            if [ "$ETROBO_OS" = "win" ]; then
+                taskkill.exe /pid $pid > /dev/null
+            else
+                kill $pid
+            fi
+            sleep 1s
+            pid=`sim check`
+        done
+        exit 0
+    fi
+    unset sim_wait
+    if [ "$1" = "wait" ]; then
+        sim_wait="true"
+        shift
+    fi
+
+    if [ "$1" = "only" ]; then
+        shift
+    else
+        if [ -z `sim check` ]; then
+            if [ -f "$ETROBO_SIM_LOG" ]; then
+                mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
+            fi
+            eval "$ETROBO_LAUNCH_SIM"
+        fi
+        loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
+        while [ -z "$loop" ]; do
+            sleep 1s
+            loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
+        done
+    fi
+
+    if [ "$1" = "launch" ]; then
+        if [ -f "$ETROBO_ATHRILL_WORKSPACE/currentasp" ]; then
+            target=`cat "$ETROBO_ATHRILL_WORKSPACE/currentasp"`
+        fi
+        if [ -n "$2" ]; then
+            target="$2"
+        fi
+        echo "$target" > "$ETROBO_ATHRILL_WORKSPACE/currentasp"
+        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$ETROBO_ATHRILL_WORKSPACE/$target"
+    fi
+fi

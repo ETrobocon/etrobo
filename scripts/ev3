@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+. "$ETROBO_SCRIPTS/ev3.sh"

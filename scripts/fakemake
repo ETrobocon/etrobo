@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+if [ "`pwd`" != "$ETROBO_ROOT" ]; then
+    if [ "$1" = "on" ]; then
+        cp "$ETROBO_ROOT/make" ./
+    else
+        rm -f ./make
+    fi
+fi

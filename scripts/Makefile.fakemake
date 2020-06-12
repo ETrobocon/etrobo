@@ -1,0 +1,27 @@
+ifdef app
+$(shell echo app=$(app) > currentapp)
+
+start: $(APPLDIR) app
+	@echo start >> currentapp
+
+up: $(APPLDIR) app
+	@if [ "`tail -n 1 < currentapp`" != "sim" ]; then ev3 cp $(app_prefix)$(app); else echo up >> currentapp; fi
+
+sim: app
+	@echo sim >> currentapp
+
+endif
+
+ifdef img
+$(shell echo img=$(img) > currentapp)
+
+start: $(APPLDIR) img
+	@echo start >> currentapp
+
+up: $(APPLDIR) img
+	@if [ "`tail -n 1 < currentapp`" != "sim" ]; then ev3 install img; else echo up >> currentapp; fi
+
+sim: img
+	@echo sim >> currentapp
+
+endif

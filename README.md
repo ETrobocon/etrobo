@@ -83,14 +83,14 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 `Windows`+`R`キーに続いて`cmd`と入力するなどしてコマンドプロンプトを開き、以下のコマンドをコピー＆ペーストして実行してください。
 
 ```
-cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://etrobocon.github.io/etroboEV3/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
+cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
 ```
 
 上記はWSL上のホームディレクトリにインストーラーが作成されます。ただし、一部のWSL環境では、WSLからWindows実行ファイルを起動できないトラブルが報告されています。
 その症状が出た方、またはWindowsエクスプローラ等からファイルを直接操作したい方は以下のコマンドを採用してください。
 
 ```
-cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://etrobocon.github.io/etroboEV3/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
+cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
 ```
 
 デスクトップに`Start ETrobo.cmd`が作成されるので、それをダブルクリックすると、インストールを開始します。
@@ -107,7 +107,7 @@ cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget htt
 続いて、`Finder`の`アプリケーション`から`ユーティリティ`の中にある`ターミナル`を開き、以下のコマンドをコピー＆ペーストして実行してください。
 
 ```
-cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O https://etrobocon.github.io/etroboEV3/$name; chmod +x ~/$name; fi; ~/$name' > "Start ETrobo.command"; chmod +x "Start ETrobo.command"
+cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/$name; chmod +x ~/$name; fi; ~/$name' > "Start ETrobo.command"; chmod +x "Start ETrobo.command"
 
 ```
 デスクトップに`Start ETrobo.command`が作成されるので、それをダブルクリックすると、インストールを開始します。
@@ -123,7 +123,7 @@ cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O 
 その後、`Ctrl`+`Alt`+`T`キーでターミナルを開き、以下のコマンドをコピペして実行してください。
 
 ```
-wget https://etrobocon.github.io/etroboEV3/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; ~/startetrobo
+wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; ~/startetrobo
 
 ```
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="4.90d.200610"
+export BEERHALL_VER="5.00a.200613"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -343,7 +343,7 @@ if [ -z "$BEERHALL" ]; then
     # for startetrobo
     echo "download startetrobo"
     cd "$BEERHALL"
-    "$BEERHALL/usr/local/bin/wget" "https://ETrobocon.github.io/etroboEV3/startetrobo"
+    "$BEERHALL/usr/local/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
     chmod +x startetrobo
 fi
 

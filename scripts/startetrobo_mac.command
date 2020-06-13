@@ -14,7 +14,7 @@ echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
 if [ -z "$BEERHALL" ]; then
     BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
 fi
-if [ "$1" = "update"]; then
+if [ "$1" = "update" ]; then
     makeBeerHall="rebuild"
     rm -f "$BEERHALL/BeerHall"
     rm -f "$BEERHALL/startetrobo"

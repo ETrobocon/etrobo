@@ -11,10 +11,16 @@ echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
 # https://opensource.org/licenses/mit-license.php
 #
 
+if [ -z "$BEERHALL" ]; then
+    BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
+fi
+if [ "$1" = "update"]; then
+    makeBeerHall="rebuild"
+    rm -f "$BEERHALL/BeerHall"
+    rm -f "$BEERHALL/startetrobo"
+fi
+
 if [ "$1" = "clean" ]; then
-    if [ -z "$BEERHALL" ]; then
-        BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
-    fi
     ls $BEERHALL/usr/local/opt/flex/lib |
     while read line; do
         rm -f "/usr/local/lib/$line"
@@ -290,7 +296,10 @@ if [ -z "$BEERHALL" ]; then
         fi
         cp -f "$BEERHALL/usr/local/opt/flex/lib/$line" "/usr/local/lib/"
     done
+    makeBeerHall="build"
+fi
 
+if [ -n "$makeBeerHall" ]; then
     echo "make BeerHall"
     beer=$(mktemp)
     echo '#!/usr/bin/env bash' > $beer

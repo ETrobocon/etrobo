@@ -73,6 +73,30 @@ if [ "$1" = "clean" ]; then
         rm $bashrc
     fi
 
+    targetFile=~/.zprofile
+    unset removeFlag
+    bashrc=$(mktemp)
+    cat $targetFile | 
+    while read line; do
+        if [ -z "$removeFlag" ]; then
+            if [ -n "`echo $line | grep jtBeerHall`" ]; then
+                removeFlag="remove"
+            else
+                echo $line >> $bashrc
+            fi
+        else
+            if [ -n "`echo $line | grep jtBeerHall`" ]; then
+                unset removeFlag
+            fi
+        fi
+    done
+    sudo rm -f $targetFile
+    if [ -s $bashrc ]; then
+        sudo mv -f $bashrc $targetFile
+    else
+        rm $bashrc
+    fi
+
     sudo rm -rf "$BEERHALL"
     unset BEERHALL
     echo "Please restart terminal to unset env vars."
@@ -112,6 +136,17 @@ if [ -z "$BEERHALL" ]; then
     fi
 
     profile="$HOME/.bash_profile"
+    touch "$profile"
+    echo
+    echo "add \$BEERHALL env var to $profile" 
+    export BEERHALL="$pwd/$hallName"
+    if [ -z "`cat $profile 2>&1 | grep BEERHALL`" ]; then
+        echo "envvar named 'BEERHALL' is added into $profile"
+        echo "# ----- this section was added by jtBeerHall -----" >> $profile
+        echo "export BEERHALL=\"$BEERHALL\"" >> $profile
+        echo "# ------------------------------- jtBeerHall end -" >> $profile
+    fi
+    profile="$HOME/.zprofile"
     touch "$profile"
     echo
     echo "add \$BEERHALL env var to $profile" 

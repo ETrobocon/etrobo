@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.00a.200613"
+export BEERHALL_VER="5.00c.200613"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -32,6 +32,7 @@ if [ "$1" = "clean" ]; then
     sudo rm -f /etc/bashrc_BeerHall
 
     targetFile=/etc/bashrc_vscode
+    touch $targetFile
     unset removeFlag
     bashrc=$(mktemp)
     cat $targetFile | 
@@ -56,6 +57,7 @@ if [ "$1" = "clean" ]; then
     fi
 
     targetFile=~/.bash_profile
+    touch $targetFile
     unset removeFlag
     bashrc=$(mktemp)
     cat $targetFile | 
@@ -80,6 +82,7 @@ if [ "$1" = "clean" ]; then
     fi
 
     targetFile=~/.zprofile
+    touch $targetFile
     unset removeFlag
     bashrc=$(mktemp)
     cat $targetFile | 

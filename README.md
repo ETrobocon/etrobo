@@ -10,7 +10,6 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 - [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
 
 インストールがうまくいかなかった場合は、ターミナルのログを添えて [「やばい」ラベルで問題を報告](https://github.com/ETrobocon/etrobo/issues)してください。
-特にMac版は環境による差が大きく、あまり広範なテストができていません。お気づきの点があればお気軽にIssueを立ててください。
 
 ## 主な特徴
 
@@ -78,7 +77,7 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 ### Windows
 
-[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etrobo/wiki/sim_win)で準備します。
+[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etroboEV3/wiki/sim_win)で準備します。
 
 `Windows`+`R`キーに続いて`cmd`と入力するなどしてコマンドプロンプトを開き、以下のコマンドをコピー＆ペーストして実行してください。
 
@@ -106,7 +105,7 @@ cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubuse
 
 ### Mac
 
-[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etrobo/wiki/sim_mac)で準備します。
+[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etroboEV3/wiki/sim_mac)で準備します。
 
 `Finder`の`アプリケーション`から`ユーティリティ`の中にある`ターミナル`を開き、以下のコマンドをコピー＆ペーストして実行してください。
 
@@ -208,7 +207,7 @@ exit
 ## etrobo環境の詳細説明(整備中)
 
 ### etrobo環境の無効化/有効化
-etrobo環境はログインシェルで起動すると自動的に読み込まれます。しかし、サンドボックスを組んでいるMac版は大丈夫ですが、Windows(WSL)/Linux版では他の用途で利用する時に不都合が生じる可能性も高いので、そのような場合には無効化してください。
+etrobo環境はログインシェルで起動すると自動的に読み込まれます。しかし、他の用途で利用する時には不都合が生じる可能性も高いので、そのような場合には無効化してください。
 
 $ETROBO_ROOT（通常`~/etrobo`）内に`disable`という名前のファイルがあると、ログインシェル起動時にetrobo環境を読み込みません。`touch $ETROBO_ROOT/disable`などで設定してください。ログインシェルを開きなおす必要があります。
 

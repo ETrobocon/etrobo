@@ -3,7 +3,10 @@
 !/LICENSE
 !/README.md
 !/scripts/
-!/dist/
+!/dist/etrobosim2020_0.992_linux.tar.gz
+!/dist/etrobosim2020_0.992_mac.tar.gz
+!/dist/etrobosim2020_0.992_win.tar.gz
+!/dist/sample_c4.tar.gz
 !/make
 !/update
 

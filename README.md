@@ -9,6 +9,8 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 - [TOPPERS/箱庭](https://toppers.github.io/hakoniwa/)
 - [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
 
+インストールがうまくいかなかった場合は、ターミナルのログを添えて [「やばい」ラベルで問題を報告](https://github.com/ETrobocon/etrobo/issues)してください。
+
 ## 主な特徴
 
 - Visual Studio Code（VSCode）以外のインストールを完全自動化
@@ -35,8 +37,6 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
-環境構築手順は[こちら](https://github.com/ETrobocon/etroboEV3/wiki)をご覧ください。
-
 ### Windows
 
 - x86-64アーキテクチャのCPU
@@ -61,7 +61,6 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
     - 環境のインストールに管理者権限が必要です。
     - High Sierra(10.13)には今後対応させたいですが、実現可能性も含め未確定です。
 - Xcode(Command Line Tools)のインストール
-    - Xcode 11.5との相性問題も報告されていますが、対応予定です。
 - Visual Studio Codeのインストール
 
 ### Linux
@@ -74,23 +73,16 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 ## etroboパッケージのインストール
 
-環境構築手順は[こちら](https://github.com/ETrobocon/etroboEV3/wiki)をご覧ください。
-
-インストールにはsudoers権限が必要です。インストール中にパスワードを聞かれましたら、ログインパスワードを入力してください。
+各プラットフォームとも、インストールにはsudoers権限が必要です。インストール中にパスワードを聞かれましたら、ログインパスワードを入力してください。
 
 ### Windows
+
+[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etroboEV3/wiki/sim_win)で準備します。
 
 `Windows`+`R`キーに続いて`cmd`と入力するなどしてコマンドプロンプトを開き、以下のコマンドをコピー＆ペーストして実行してください。
 
 ```
 cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
-```
-
-上記はWSL上のホームディレクトリにインストーラーが作成されます。ただし、一部のWSL環境では、WSLからWindows実行ファイルを起動できないトラブルが報告されています。
-その症状が出た方、またはWindowsエクスプローラ等からファイルを直接操作したい方は以下のコマンドを採用してください。
-
-```
-cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
 ```
 
 デスクトップに`Start ETrobo.cmd`が作成されるので、それをダブルクリックすると、インストールを開始します。
@@ -99,12 +91,23 @@ cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget htt
 
 インストール後は、同じく`Start ETrobo.cmd`をダブルクリックすることによってetrobo環境を起動できます。
 
+>**非推奨：WSLの動作に不具合がある場合**
+>
+>上記はWSL上のホームディレクトリにインストーラーが作成されます。ただし、一部のWSL環境では、WSLからWindows実行ファイルを起動できないトラブルが報告されています。
+その症状が出た方は以下のコマンドを採用してください。
+>
+>```
+>cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
+>```
+>ただし、この環境では以下のような制約があります：
+>- Athrill仮想Bluetoothを利用できません
+>- 今後実装されるシミュレータのコントロールやサーバへの接続など、ネットワークを用いた機能は利用できません
+
 ### Mac
 
-まず、VSCodeがインストールされている必要があります。
-その後、VSCodeから `Shift` + `Command` + `P` キーでコマンドパレットが開くので、そこに `>install code` （>は最初から入ってる）ぐらい入力すると、 `シェル コマンド: PATH 内に 'code' コマンドをインストールします` が出てくるので、それを選択してください。
+[etroboパッケージインストール前の動作環境構築手順](https://github.com/ETrobocon/etroboEV3/wiki/sim_mac)で準備します。
 
-続いて、`Finder`の`アプリケーション`から`ユーティリティ`の中にある`ターミナル`を開き、以下のコマンドをコピー＆ペーストして実行してください。
+`Finder`の`アプリケーション`から`ユーティリティ`の中にある`ターミナル`を開き、以下のコマンドをコピー＆ペーストして実行してください。
 
 ```
 cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/$name; chmod +x ~/$name; fi; ~/$name' > "Start ETrobo.command"; chmod +x "Start ETrobo.command"
@@ -133,7 +136,7 @@ wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetro
 
 インストール後は、ターミナルから`./startetrobo`でetrobo環境を起動できます。
 
-## 使用説明＆動作確認
+## 動作確認＆主なコマンドの説明
 
 etrobo環境が起動しましたら、ターミナルを開いて（Windows:`Ctrl`+`@`・Mac/Linux:`Ctrl`+`Shift`+`@`）、とりあえず `make sample` と叩いてください。未来が見えます。
 
@@ -157,6 +160,49 @@ Athrill/ASP3向けも、あえてEV3RT/HRP3向けのビルドも行っていま�
 - 現在Linux版には不具合があり、ターミナルを分割して上記の手法で起動する必要があります。
 
 このように、`~/etrobo`から使用する`make`コマンドには特殊な仕様が仕込まれていますが、それ以外のディレクトリで叩く`make`は通常通り動作します。
+
+## etroboパッケージのバージョンアップ
+
+etrobo環境のターミナルで、etrobo環境ディレクトリから`update`コマンドを実行します。
+
+大抵これで大丈夫ですが、アップデートされていないと思った場合は再度`update`コマンドを実行してから、etrobo環境（VSCode）を閉じ、再度etrobo環境を起動してください。
+
+## etroboパッケージのアンインストール/再インストール
+
+### Windows/Linux
+
+etrobo環境（VSCode）を閉じ、（Ubuntu）ターミナルを開いて`./startetrobo clean`を実行します。
+
+再インストールは、アンインストールしてから、再び上記のインストールコマンドを実行します。
+
+### Mac
+
+Macでは、etroboパッケージのみ再インストールする場合と、BeerHallツールチェーンサンドボックスも含めた全体をアンインストール/再インストールする場合で操作が異なります。
+
+#### etroboパッケージのみを再インストール
+まず、上記「etroboパッケージのバージョンアップ」の手順に従い`update`します。
+
+etrobo環境を（VSCode）を閉じ、ターミナルを開いて、以下のコマンドを順に実行します。
+```
+cd "$BEERHALL"
+./BeerHall "./startetrobo clean"
+exit
+```
+その後、`Command`+`W`キーで一度ターミナルを閉じ、再度新規ターミナルウィンドウを開いて、以下のコマンドを実行します。
+```
+cd "$BEERHALL"
+./BeerHall "./startetrobo"
+```
+
+#### BeerHallも含めた全体のアンインストール/再インストール
+etrobo環境を（VSCode）を閉じ、ターミナルを開いて、以下のコマンドを順に実行します。
+```
+.startetrobo_mac.command clean
+exit
+```
+その後、`Command`+`W`キーでターミナルを閉じます。
+
+再インストールするには、再び上記のインストールコマンドを実行します。
 
 ## etrobo環境の詳細説明(整備中)
 

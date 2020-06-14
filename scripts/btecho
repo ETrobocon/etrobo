@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+echo "$@" > "$ETROBO_ROOT/ev3rt-athrill-v850e2m/sdk/workspace/__ev3rt_bt_in"

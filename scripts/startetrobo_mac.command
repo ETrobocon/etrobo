@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.00c.200613"
+export BEERHALL_VER="5.00d.200615"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"

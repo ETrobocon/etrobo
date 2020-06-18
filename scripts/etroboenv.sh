@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
+# etrobo environment core
+#   etroboenv.sh 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
 if [ "$1" = "unset" ]; then
     . etrobopath.sh unset
     unset ETROBO_ENV
+    unset ETROBO_ENV_VER
     unset ETROBO_SCRIPTS
     unset ETROBO_ATHRILL_GCC
     unset ETROBO_ATHRILL_TARGET
@@ -12,6 +20,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SDCARD
     unset ETROBO_OS
     unset ETROBO_KERNEL
+    unset ETROBO_KERNEL_POSTFIX
     unset ETROBO_USERPROFILE
     unset ETROBO_SIM_VER
     unset ETROBO_SIM_NAME
@@ -21,6 +30,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_HRP3_GCC_VER
     unset ETROBO_HRP3_GCC_URL_BASE
     unset ETROBO_HRP3_GCC_URL
+    unset ETROBO_HRP3_GCC_DIR
 else
     if [ ! -f "$ETROBO_ROOT/disable" ]; then
         export ETROBO_ENV="available"
@@ -32,7 +42,8 @@ else
         export ETROBO_ATHRILL_WORKSPACE="$ETROBO_ATHRILL_SDK/workspace"
         export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-1.0-release/sdcard"
         export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
-        export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
+       #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
+        export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
 
         if [ `uname` == "Darwin" ]; then
             export ETROBO_OS="mac"

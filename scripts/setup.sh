@@ -1,4 +1,30 @@
 #!/usr/bin/env bash
+# etrobo all-in-one package installer/updater
+#   setup.sh 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+# download a file by wget and destroy installer when download error is occured
+download () {
+    wget "$@"
+    case $? in
+        0 ) return 0;;
+        1 ) echo "Request error: an error occured with wget execution";;
+        2 ) echo "Command parse error: invalid options for wget";;
+        3 ) echo "File I/O error:";;
+        4 ) echo "Network error: download failed";;
+        5 ) echo "SSL verification error:";;
+        6 ) echo "Username/Password authentication error:";;
+        7 ) echo "Protocol error:";;
+        8 ) echo "Server error: something is wrong with this file server";;
+    esac
+    echo
+    echo "Package downloader failed. Please re-install this package later."
+    exit 1
+}
+
 if [ -f "BeerHall" ]; then
     BeerHall="$BEERHALL"
 else
@@ -55,18 +81,18 @@ if [ -z "$update" ]; then
         #
         echo 
         echo "Install mkimage:"
-        wget "https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage"
+        download "https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage"
         mv mkimage "$BEERHALL/usr/local/bin"
     fi
     echo
     echo "Install GNU Arm Embedded Toolchain:"
-    wget "$ETROBO_HRP3_GCC_URL"
+    download "$ETROBO_HRP3_GCC_URL"
     tar -xvvf `basename $ETROBO_HRP3_GCC_URL` > /dev/null 2>&1
     rm -f `basename $ETROBO_HRP3_GCC_URL`
 
     echo
     echo "Install TOPPERS/EV3RT:"
-    wget https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip
+    download https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip
     unzip ev3rt-1.0-release.zip > /dev/null
     cp ev3rt-1.0-release/hrp3.tar.xz ./
     tar xvf hrp3.tar.xz > /dev/null 2>&1
@@ -83,7 +109,7 @@ if [ -z "$update" ]; then
     echo
     echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
     if [ "$ETROBO_KERNEL" = "debian" ]; then
-        wget https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz
+        download https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz
         tar xzvf athrill-gcc-package.tar.gz > /dev/null
         cd athrill-gcc-package
         tar xzvf athrill-gcc.tar.gz > /dev/null
@@ -91,7 +117,7 @@ if [ -z "$update" ]; then
         cd ..
         rm athrill-gcc-package.tar.gz
     else
-        wget http://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz
+        download http://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz
         tar xzvf athrill-gcc-package-mac.tar.gz > /dev/null 2>&1
         rm athrill-gcc-package-mac.tar.gz
     fi

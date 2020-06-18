@@ -107,11 +107,17 @@ fi
 #
 # distrubute etrobo_tr samples
 echo "update distributions"
+echo 
+sampleProj="sample_c4"
+echo "distribute $sampleProj project"
 cd "$ETROBO_HRP3_WORKSPACE"
-rm -rf sample_c4
+rm -rf "$sampleProj"
+mkdir "$sampleProj"
 cd "$ETROBO_ROOT/dist"
-tar xvf sample_c4.tar.gz > /dev/null  2>&1
-mv -f sample_c4 "$ETROBO_HRP3_WORKSPACE/"
+rm -rf "$sampleProj"
+tar xvf ${sampleProj}.tar.gz > /dev/null  2>&1
+cp -f "${sampleProj}/"* "$ETROBO_HRP3_WORKSPACE/${sampleProj}"
+rm -rf "$sampleProj"
 
 #
 # distribute UnityETroboSim

@@ -22,7 +22,7 @@ export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
 if [ "$ETROBO_OS" = "win" ]; then
     export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
 elif [ "$ETROBO_OS" = "linux" ]; then
-    export ETROBO_SIM_LOG="~/.config/unity3d/$ETROBO_SIM_LOG"
+    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/$ETROBO_SIM_LOG"
 elif [ "$ETROBO_OS" = "mac" ]; then
     export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
 else

@@ -4,7 +4,7 @@
 #
 # mount.sh
 #
-# for etrobo environment Ver 2.00a.200608
+# for etrobo environment Ver 2.10a.200621
 # Copyright (c) 2020 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
@@ -54,6 +54,8 @@ if [ "$ETROBO_OS" = "win" ]; then
 else
     if [ "$ETROBO_OS" = "mac" ]; then
         physicalDrive="/Volumes"
+    elif [ "$ETROBO_OS" = "chrome" ]; then
+        physicalDrive="/mnt/chromeos/removable"
     elif [ "$ETROBO_KERNEL" = "debian" ]; then
         physicalDrive="/media/$(basename $ETROBO_USERPROFILE)"
     else

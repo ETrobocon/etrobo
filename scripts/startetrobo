@@ -2,6 +2,10 @@
 echo '*************'
 echo ' startetrobo - etrobo all-in-one package installer/invoker'
 echo '*************'
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
 
 if [ -f "BeerHall" ]; then
     BeerHall="$BEERHALL"
@@ -23,6 +27,8 @@ if [ `uname` == "Darwin" ]; then
     fi
 elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
     host="win"
+elif [ "`ls /mnt/chromeos > /dev/null; echo $?`" = "0" ]; then
+    host="chrome"
 elif [ `uname` == "Linux" ]; then
     host="linux"
 else
@@ -68,6 +74,11 @@ if [ "$1" = "update" ]; then
     rm -f "$ETROBO_ROOT/../startetrobo"
     cp -f "$ETROBO_ROOT/scripts/startetrobo" "$ETROBO_ROOT/.."
     echo "startetrobo is copied into `cd $ETROBO_ROOT/..`"
+    if [ "$ETROBO_OS" = "mac" ]; then
+        rm -f "$ETROBO_ROOT/../../startetrobo_mac.command"
+        cp -f "$ETROBO_ROOT/scripts/startetrobo_mac.command" "$ETROBO_ROOT/../.."
+        echo "startetrobo_mac.command is copied into `cd $ETROBO_ROOT/../..`"
+    fi
     exit 0
 fi
 
@@ -103,7 +114,7 @@ if [ "$1" = "clean" ]; then
     cd "$ETROBO_ROOT/.."
     rm -rf etrobo
     if [ -n "$deepFlag" ]; then
-        if [ "$kernel" = "linux" ]; then
+        if [ "$kernel" = "debian" ]; then
             echo "remove /etc/profile.d/ev3rt.sh"
             sudo rm -f /etc/profile.d/ev3rt.sh
             echo "remove /opt/gcc-arm-none-eabi*/"

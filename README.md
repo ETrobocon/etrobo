@@ -189,7 +189,12 @@ etrobo環境のターミナルで、etrobo環境ディレクトリから`update`
 
 ### Windows/Linux
 
-etrobo環境（VSCode）を閉じ、（Ubuntu）ターミナルを開いて`./startetrobo clean`を実行します。
+etrobo環境（VSCode）を閉じ、（Ubuntu）ターミナルを開いて、以下のコマンドを順に実行します。
+```
+./startetrobo clean
+rm ./startetrobo
+exit
+```
 
 再インストールは、アンインストールしてから、再び上記のインストールコマンドを実行します。
 
@@ -215,7 +220,8 @@ cd "$BEERHALL"
 #### BeerHallも含めた全体のアンインストール/再インストール
 etrobo環境を（VSCode）を閉じ、ターミナルを開いて、以下のコマンドを順に実行します。
 ```
-.startetrobo_mac.command clean
+./startetrobo_mac.command clean
+rm ./startetrobo_mac.command
 exit
 ```
 その後、`Command`+`W`キーでターミナルを閉じます。

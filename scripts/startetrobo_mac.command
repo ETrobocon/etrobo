@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.00d.200615"
+export BEERHALL_VER="5.00e.200626"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -26,9 +26,9 @@ if [ "$1" = "clean" ]; then
     fi
     ls $BEERHALL/usr/local/opt/flex/lib |
     while read line; do
-        rm -f "/usr/local/lib/$line"
+        sudo rm -f "/usr/local/lib/$line"
         if [ -e "/usr/local/lib/$line.BeerHallTmp" ]; then
-            mv "/usr/local/lib/$line.BeerHallTmp" "/usr/local/lib/$line"
+            sudo mv "/usr/local/lib/$line.BeerHallTmp" "/usr/local/lib/$line"
         fi
     done
 
@@ -295,12 +295,12 @@ if [ -z "$BEERHALL" ]; then
     while read line; do
         if [ -e "/usr/local/lib/$line" ]; then
             if [ ! -e "/usr/local/lib/$line.BeerHallTmp" ]; then
-                mv "/usr/local/lib/$line" "/usr/local/lib/$line.BeerHallTmp"
+                sudo mv "/usr/local/lib/$line" "/usr/local/lib/$line.BeerHallTmp"
             else
-                rm "/usr/local/lib/$line"
+                sudo rm "/usr/local/lib/$line"
             fi
         fi
-        cp -f "$BEERHALL/usr/local/opt/flex/lib/$line" "/usr/local/lib/"
+        sudo cp -f "$BEERHALL/usr/local/opt/flex/lib/$line" "/usr/local/lib/"
     done
     makeBeerHall="build"
 fi
@@ -318,7 +318,6 @@ if [ -n "$makeBeerHall" ]; then
     echo 'export HOMEBREW_CACHE="$BEERHALL/usr/local/cache"' >> $beer
     echo 'export HOMEBREW_SVN="$BEERHALL/usr/local/bin/svn"'
     echo 'export HOMEBREW_TEMP="/tmp"' >> $beer
-    echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"' >> $beer
     echo 'export BEERHALL_RUBY="$BEERHALL/usr/local/opt/ruby@2.5/bin"' >> $beer
     echo 'export BEERHALL_DARWIN_VER=`uname -a | sed -E "s/^.*Darwin Kernel Version (.*): .*$/\1/"`' >> $beer
     echo 'export BEERHALL_ARCH="x86_64-apple-darwin$BEERHALL_DARWIN_VER"' >> $beer
@@ -329,6 +328,7 @@ if [ -n "$makeBeerHall" ]; then
     echo 'export SHELL="$BEERHALL/usr/local/bin/bash"' >> $beer
     echo 'export PATH="$BEERHALL:$BEERHALL/usr/local/bin:$BEERHALL_RUBY:/usr/bin:/bin:/usr/sbin:/sbin"' >> $beer
     echo 'export BEERHALL_PATH="$PATH"' >> $beer
+    echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"' >> $beer
     echo 'export TERM_PROGRAM="BeerHall"' >> $beer
     echo "export TERM_PROGRAM_VERSION=\"$BEERHALL_VER\"" >> $beer
     echo '' >> $beer

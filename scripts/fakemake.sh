@@ -87,14 +87,18 @@ if [ -f "$incFile" ]; then
     touch "$incFile"
 fi
 cp -f "$incFile" "${incFile}.org"
-echo "COPTS += $copts" >> "$incFile"
+if [ -n "$copts" ]; then
+    echo "COPTS += $copts" >> "$incFile"
+fi
 cp -f "$incFile" "${incFile}.base"
 
 # invoke make for HRP3/EV3
 echo "COPTS += -DMAKE_EV3" >> "$incFile"
 echo invoker make $arg_app_prefix $args
 make $arg_app_prefix $args
-if [ $? -eq 0 ]; then
+makeResult=$?
+cp -f "${incFile}.org" "$incFile"
+if [ $makeResult -eq 0 ]; then
     echo fakemake on HRP3: build succseed: ${app_prefix}${proj}
     currentapp=`head -n 1 currentapp`
     simopt=`tail -n 1 currentapp`
@@ -130,9 +134,11 @@ if [ $? -eq 0 ]; then
             exit 1
         fi
     fi
+    rm -f "${incFile}.org"
+    rm -f "${incFile}.base"
 else
     echo fakemake on HRP3: make failed ... `cat currentapp`
     cd "$ETROBO_HRP3_WORKSPACE"
+    rm -f "${incFile}.org"
     rm -f "${incFile}.base"
-    mv -f "${incFile}.org" "$incFile"
 fi

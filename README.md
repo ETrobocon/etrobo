@@ -35,6 +35,11 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
+## サポートしているEV3RT APIについて
+
+``EV3RT_API_Support.md``を参照して下さい。
+
+
 Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 
@@ -247,7 +252,7 @@ $ETROBO_ROOT（通常`~/etrobo`）内に`disable`という名前のファイル�
     このスクリプトが置かれているディレクトリに`etrobo`ディレクトリを作成してそこにインストールします。既に`etrobo`ディレクトリがある場合は対処してからインストールしてください。
 
 - **startetrobo shell**
-    
+
     上記と同じですが、VSCodeは起動せず、呼び出したターミナルでそのまま利用します。VSCodeが嫌いな方向け。
 
 - **startetrobo update**

@@ -9,6 +9,7 @@
 !/dist/sample_c4.tar.gz
 !/make
 !/update
+!/EV3RT_API_Support.md
 
 # Prerequisites
 *.d

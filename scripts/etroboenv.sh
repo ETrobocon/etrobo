@@ -7,6 +7,8 @@
 #
 
 if [ "$1" = "unset" ]; then
+    . sim unset
+    . download.sh unset
     . etrobopath.sh unset
     unset ETROBO_ENV
     unset ETROBO_ENV_VER
@@ -27,10 +29,6 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_EXE_POSTFIX
     unset ETROBO_LAUNCH_SIM
     unset ETROBO_LAUNCH_ASP
-    unset ETROBO_HRP3_GCC_VER
-    unset ETROBO_HRP3_GCC_URL_BASE
-    unset ETROBO_HRP3_GCC_URL
-    unset ETROBO_HRP3_GCC_DIR
 else
     if [ ! -f "$ETROBO_ROOT/disable" ]; then
         export ETROBO_ENV="available"
@@ -41,9 +39,6 @@ else
         export ETROBO_ATHRILL_SDK="$ETROBO_ROOT/ev3rt-athrill-v850e2m/sdk"
         export ETROBO_ATHRILL_WORKSPACE="$ETROBO_ATHRILL_SDK/workspace"
         export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-1.0-release/sdcard"
-        export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
-       #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
-        export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
 
         if [ `uname` == "Darwin" ]; then
             export ETROBO_OS="mac"
@@ -73,15 +68,14 @@ else
         fi
 
         export ETROBO_ATHRILL_TARGET="$ETROBO_ROOT/athrill-target-v850e2m/build_${ETROBO_KERNEL_POSTFIX}"
-        export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}${ETROBO_KERNEL_POSTFIX}"
-        export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL`"
-        export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL}.tar.bz2"
 
         . "$ETROBO_SCRIPTS/etrobopath.sh" unset
         export ETROBO_ENV_VER=`cd "$ETROBO_ROOT"; git show -s --date=short --format="%cd.%h"`
         . "$ETROBO_SCRIPTS/etrobopath.sh"
 
+        # import module envs
         . "$ETROBO_SCRIPTS/sim" env
+        . "$ETROBO_SCRIPTS/download.sh" env
 
         if [ "$BEERHALL_INVOKER" != "booting" ]; then
             echo

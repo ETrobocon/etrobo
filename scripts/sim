@@ -13,30 +13,39 @@ memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
 device_config_txt="$ETROBO_ATHRILL_SDK/common/device_config.txt"
 target="$ETROBO_ATHRILL_WORKSPACE/asp"
 
-# export default envvars
-export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
-export ETROBO_SIM_DEV="UnityETroboSim"
-export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
-export ETROBO_SIM_NAME="ETロボコンシミュレータ"
-export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
-if [ "$ETROBO_OS" = "win" ]; then
-    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
-elif [ "$ETROBO_KERNEL" = "debian" ]; then
-    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/$ETROBO_SIM_LOG"
-elif [ "$ETROBO_OS" = "mac" ]; then
-    export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
-else
+# unset default envvars
+if [ "$1" = "unset" ]; then
+    unset ETROBO_SIM_VER
+    unset ETROBO_SIM_DEV
+    unset ETROBO_SIM_COMPANY
+    unset ETROBO_SIM_NAME
     unset ETROBO_SIM_LOG
-fi
+    unset ETROBO_LAUNCH_ASP
+    unset ETROBO_LAUNCH_SIM
+else
+    # export default envvars
+    export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
+    export ETROBO_SIM_DEV="UnityETroboSim"
+    export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
+    export ETROBO_SIM_NAME="ETロボコンシミュレータ"
+    export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
+    if [ "$ETROBO_OS" = "win" ]; then
+        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
+    elif [ "$ETROBO_KERNEL" = "debian" ]; then
+        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/$ETROBO_SIM_LOG"
+    elif [ "$ETROBO_OS" = "mac" ]; then
+        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
+    else
+        unset ETROBO_SIM_LOG
+    fi
 
-export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
+    export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
 
-if [ "$1" = "ver" ]; then
-    export ETROBO_SIM_VER="$2"
-    shift 2
-fi
+    if [ "$1" = "ver" ]; then
+        export ETROBO_SIM_VER="$2"
+        shift 2
+    fi
 
-if [ "$1" != "env" ]; then
     if [ "$ETROBO_KERNEL" = "debian" ]; then
         export ETROBO_LAUNCH_SIM='"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
     elif [ "$ETROBO_KERNEL" = "darwin" ]; then
@@ -44,7 +53,9 @@ if [ "$1" != "env" ]; then
     else
         unset ETROBO_LAUNCH_SIM
     fi
+fi
 
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "show" ]; then
         shift
         echo $(eval echo "$ETROBO_LAUNCH_SIM")

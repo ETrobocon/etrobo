@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# etrobo all-in-one package downloader
+#   etrobopkg
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+if [ -f "BeerHall" ]; then
+    BeerHall="$BEERHALL"
+else
+    BeerHall=""
+fi
+
+if [ -z "$ETROBO_ROOT" ]; then
+    echo "run startetrobo first."
+    exit 1
+elif [ ! "$ETROBO_ENV" = "available" ]; then
+    . "$BEERHALL/etc/profile.d/etrobo.sh"
+fi
+cd "$ETROBO_ROOT"
+
+if [ "$1" == "unset" ]; then
+    unset ETROBO_MANIFEST_VER
+    unset ETROBO_CACHE
+    unset ETROBO_HRP3_GCC_VER
+    unset ETROBO_HRP3_GCC_URL_BASE
+    unset ETROBO_HRP3_GCC_URL
+    unset ETROBO_HRP3_GCC_DIR
+else
+    export ETROBO_CACHE="$ETROBO_USERPROFILE/.etrobo_cache"
+    #
+    # ETrobo package download manifest
+    #
+    export ETROBO_MANIFEST_VER="2020.06.29a"
+
+    #
+    # GNU Arm Embedded Toolchain
+    # https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
+    #
+    export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
+    #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
+    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
+    export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}${ETROBO_KERNEL_POSTFIX}"
+    export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL`"
+    export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL}.tar.bz2"
+fi
+
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    urls=(
+        "$ETROBO_HRP3_GCC_URL"
+        #
+        # TOPPERS/EV3RT
+        # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
+        #
+        "https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip"
+    )
+    vers=(
+        "2020.06.29a"
+        "2020.06.29a"
+    )
+    if [ "$ETROBO_KERNEL" = "darwin" ]; then
+        urls+=(
+            #
+            # EV3RT requirement from:
+            # https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac
+            #
+            "https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage"
+            #
+            # Athrill Toolchain from TOPPERS/Hakoniwa
+            # https://toppers.github.io/hakoniwa/
+            #
+            "http://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz"
+        )
+        vers+=(
+            "2020.06.29a"
+            "2020.06.29a"
+        )
+    else
+        urls+=(
+            #
+            # Athrill Toolchain from TOPPERS/Hakoniwa
+            # https://toppers.github.io/hakoniwa/
+            #
+            "https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz"
+        )
+        vers+=(
+            "2020.06.29a"
+        )
+    fi
+    #
+    # cli-kintone by Cyboze, Inc.
+    # https://github.com/kintone/cli-kintone
+    #
+    if [ "$ETROBO_OS" = "win" ]; then
+        clikintone="windows"
+    elif [ "$ETROBO_OS" = "mac" ]; then
+        clikintone="macos"
+    elif [ "$ETROBO_KERNEL" = "debian" ]; then
+        clikintone="linux"
+    fi
+    if [ -n "$clikintone" ]; then
+        urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.11.1/${clikintone}-x64.zip")
+        vers+=("2020.06.29a")
+    fi
+
+    if [ ! -d "$ETROBO_CACHE" ]; then
+        rm -f "$ETROBO_CACHE"
+        mkdir "$ETROBO_CACHE"
+    fi
+
+    # download files by wget or pick up files from download cache
+    for ((i=0;i<${#urls[*]};i++)); do
+        url="${urls[$i]}"
+        ver="${vers[$i]}"
+        target="$(basename $url)"
+        archive="$ETROBO_CACHE/$target"
+        manifest="${archive}.manifest"
+
+        if [ -f "$manifest" ]; then
+            manifest_ver=`tail -n 1 < "$manifest"`
+
+            echo "found within the cache: $target"
+            cp "$ETROBO_CACHE/$target" ./
+        else
+            try=1
+            echo "download from $url"
+            echo "$url" > "$manifest"
+            wget "$url"
+            case $? in
+                0 ) try=0;;
+                1 ) echo "Request error: an error occured with wget execution";;
+                2 ) echo "Command parse error: invalid options for wget";;
+                3 ) echo "File I/O error:";;
+                4 ) echo "Network error: download failed";;
+                5 ) echo "SSL verification error:";;
+                6 ) echo "Username/Password authentication error:";;
+                7 ) echo "Protocol error:";;
+                8 ) echo "Server error: something is wrong with this file server";;
+            esac
+            cp "./$target" "$ETROBO_CACHE/"
+        fi
+    done
+fi

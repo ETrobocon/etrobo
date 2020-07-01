@@ -7,11 +7,14 @@ echo '*************'
 # See LICENSE
 #
 
+# check BeerHall
 if [ -f "BeerHall" ]; then
     BeerHall="$BEERHALL"
 else
     BeerHall=""
 fi
+
+# platform detection
 if [ `uname` == "Darwin" ]; then
     host="mac"
     kernel="darwin"
@@ -50,12 +53,15 @@ if [ `uname` == "Linux" ]; then
 fi
 echo "detect platform: $host.x86_64($guest)"
 
+# export ETROBO_ROOT if necessary
 if [ -z "$ETROBO_ROOT" ]; then
     export ETROBO_ROOT="$(cd `dirname $0`; pwd)/etrobo"
 fi
 
+# cancel etrobo environment disabler
 rm -f "$ETROBO/disable"
 
+# usage
 if [ "$1" = "--help" ]; then
     echo 'Usage:'
     echo '  startetrobo         ... install and/or open etrobo terminal on VSCode'
@@ -64,12 +70,32 @@ if [ "$1" = "--help" ]; then
     echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
     echo '  . startetrobo shell ... export etrobo environment vars into this instance'
     echo
+    echo '  startetrobo checkout <branch_name>'
+    echo '                      ... (for developer) checkout <branch_name>'
+    echo
     echo '  startetrobo clean   ... remove etrobo environment from here'
     echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
     echo
     exit 0
 fi
 
+# `checkout [<branch name>]` option
+if [ "$1" = "checkout" ]; then
+    shift
+    if [ -n "$2" ]; then
+        branch="$2"
+        shift
+    else
+        branch="master"
+    fi
+    cd "$ETROBO_ROOT"
+    git checkout .
+    git checkout master
+    git pull
+    git checkout $branch
+fi
+
+# `update` option
 if [ "$1" = "update" ]; then
     rm -f "$ETROBO_ROOT/../startetrobo"
     cp -f "$ETROBO_ROOT/scripts/startetrobo" "$ETROBO_ROOT/.."
@@ -82,6 +108,7 @@ if [ "$1" = "update" ]; then
     exit 0
 fi
 
+# `unset` option
 if [ "$1" = "unset" ]; then
     echo "$0"
     . "$ETROBO_ROOT/scripts/etroboenv.sh" unset
@@ -89,17 +116,19 @@ if [ "$1" = "unset" ]; then
     exit 0
 fi
 
+# `deep` option
 if [ "$1" = "deep" ]; then
     deepFlag="deep"
     shift
     echo
     echo 'IMPORTANT WARNING:'
-    echo '  you must sure `deep clean` removes installed files by the TOPPERS official EV3RT installer.'
+    echo '  you must sure `deep clean` removes cache and installed files by the TOPPERS official EV3RT installer.'
     echo '  also removes folders named "etrobosim*" on your $HOME or %USERPROFILE%.'
 else
     unset deepFlag
 fi
 
+# `clean` option
 if [ "$1" = "clean" ]; then
     echo
     echo 'NOTICE:'
@@ -126,10 +155,15 @@ if [ "$1" = "clean" ]; then
             fi
         elif [ "$kernel" = "darwin" ]; then
             if [ -n "$HOME_ORG" ];then
-                userProfile="/Applications"
+                userProfile="$HOME_ORG"
             else
                 userProfile="$HOME"
             fi 
+        fi
+        rm -rf "$userProfile/.etrobo_cache"
+
+        if [ "$kernel" = "darwin" ]; then
+                userProfile="/Applications"
         fi
         echo "remove $userProfile/etrobosim*/"
         sudo rm -rf $userProfile/etrobosim*/
@@ -138,6 +172,7 @@ if [ "$1" = "clean" ]; then
     exit 0
 fi
 
+# create etrobo.sh
 if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
     echo "create etrobo environment vars exporter into $BeerHall/etc/profile.d/etrobo.sh"
     echo 'Please enter your login password as sudoers if [sudo] ask you'
@@ -147,6 +182,7 @@ if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
     sudo mv tmpFile "$BeerHall/etc/profile.d/etrobo.sh"
 fi
 
+# platform update and git clone etrobo
 if [ ! -d "$ETROBO_ROOT" ]; then
     echo
     echo "update and upgrade your platform"
@@ -168,7 +204,6 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         if [ "$1" = "ldlibpath" ]; then
             touch "$ETROBOROOT/ldlibpath"
         fi
-        "$ETROBO_ROOT/scripts/setup.sh"
     else
         echo
         echo 'an error occured during git clone. setup aborted.'
@@ -176,6 +211,17 @@ if [ ! -d "$ETROBO_ROOT" ]; then
     fi
 fi
 
+# download package
+if [ -d "$ETROBO_ROOT" ]; then
+    "$ETROBO_ROOT/scripts/etrobopkg"
+fi
+
+# install package
+if [ -d "$ETROBO_ROOT" ]; then
+    "$ETROBO_ROOT/scripts/setup.sh"
+fi
+
+# invoke etrobo environment
 cd "$ETROBO_ROOT"
 if [ -z "$ETROBO_ENV" ]; then
     . "$BeerHall/etc/profile.d/etrobo.sh"

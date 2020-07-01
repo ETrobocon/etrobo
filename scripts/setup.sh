@@ -6,30 +6,17 @@
 # See LICENSE
 #
 
-# download a file by wget and destroy installer when download error is occured
-download () {
-    wget "$@"
-    case $? in
-        0 ) return 0;;
-        1 ) echo "Request error: an error occured with wget execution";;
-        2 ) echo "Command parse error: invalid options for wget";;
-        3 ) echo "File I/O error:";;
-        4 ) echo "Network error: download failed";;
-        5 ) echo "SSL verification error:";;
-        6 ) echo "Username/Password authentication error:";;
-        7 ) echo "Protocol error:";;
-        8 ) echo "Server error: something is wrong with this file server";;
-    esac
-    echo
-    echo "Package downloader failed. Please re-install this package later."
+if [ -z "$ETROBO_ROOT" ]; then
+    echo "run startetrobo first."
     exit 1
-}
-
-if [ -f "BeerHall" ]; then
-    BeerHall="$BEERHALL"
-else
-    BeerHall=""
+elif [ ! "$ETROBO_ENV" = "available" ]; then
+    if [ -z "$BEERHALL" ]; then
+        echo "run startetrobo_mac.command first."
+        exit 1
+    fi
+    . "$BEERHALL/etc/profile.d/etrobo.sh"
 fi
+cd "$ETROBO_ROOT"
 
 if [ "$1" = "update" ]; then
     update="update"
@@ -47,14 +34,6 @@ if [ "$1" = "update" ]; then
     . "etroboenv.sh" unset
     . "etroboenv.sh"
 fi
-
-if [ -z "$ETROBO_ROOT" ]; then
-    echo "run startetrobo first."
-    exit 1
-elif [ ! "$ETROBO_ENV" = "available" ]; then
-    . "$BEERHALL/etc/profile.d/etrobo.sh"
-fi
-cd "$ETROBO_ROOT"
 
 if [ -z "$update" ]; then
     echo

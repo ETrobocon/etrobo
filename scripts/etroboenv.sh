@@ -53,7 +53,7 @@ else
             export ETROBO_USERPROFILE="$(cmd.exe /c echo %USERPROFILE% | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
             #export ETROBO_LAUNCH_SIM='cmd.exe /c "%USERPROFILE%\\etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}\\${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
             export ETROBO_EXE_POSTFIX=".exe"
-        elif [ "`ls /mnt/chromeos > /dev/null; echo $?`" = "0" ]; then
+        elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
             export ETROBO_OS="chrome"
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
@@ -75,7 +75,7 @@ else
 
         # import module envs
         . "$ETROBO_SCRIPTS/sim" env
-        . "$ETROBO_SCRIPTS/download.sh" env
+        . "$ETROBO_SCRIPTS/etrobopkg" env
 
         if [ "$BEERHALL_INVOKER" != "booting" ]; then
             echo

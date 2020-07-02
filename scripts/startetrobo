@@ -30,7 +30,7 @@ if [ `uname` == "Darwin" ]; then
     fi
 elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
     host="win"
-elif [ "`ls /mnt/chromeos > /dev/null; echo $?`" = "0" ]; then
+elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
     host="chrome"
 elif [ `uname` == "Linux" ]; then
     host="linux"
@@ -193,6 +193,8 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         sudo apt -y install build-essential
         sudo apt -y install git
         sudo apt -y install ruby
+        sudo apt -y install u-boot-tools
+        sudo apt -y install lib32stdc++6
     fi
 
     cd "`dirname $0`"

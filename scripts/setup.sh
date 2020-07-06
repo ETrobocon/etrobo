@@ -57,7 +57,7 @@ fi
 #cd "$ETROBO_HRP3_WORKSPACE"
 #rm -rf "$sampleProj"
 #mkdir "$sampleProj"
-#cd "$ETROBO_ROOT/dist"
+cd "$ETROBO_ROOT/dist"
 #cp -f "${sampleProj}/"* "$ETROBO_HRP3_WORKSPACE/${sampleProj}"
 #rm -rf "$sampleProj"
 

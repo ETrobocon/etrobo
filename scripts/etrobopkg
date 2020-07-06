@@ -224,6 +224,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "********"
                 fi
 
+                echo "debug: $target"
                 rm -rf ${target:0:-4}
                 rm -rf hrp3
                 unzip "$file" > /dev/null

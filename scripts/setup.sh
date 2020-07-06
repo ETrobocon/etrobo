@@ -29,7 +29,7 @@ if [ "$1" = "update" ]; then
     dist="$2"
     cd "$ETROBO_ROOT"
     echo "update etrobo package:"
-    git pull
+    git pull master
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then
@@ -37,8 +37,8 @@ if [ "$1" = "update" ]; then
         cp -f scripts/startetrobo_mac.command "$BEERHALL/../"
     fi
     cd "$ETROBO_SCRIPTS"
-    . "etroboenv.sh" unset
-    . "etroboenv.sh"
+    . "./etroboenv.sh" unset
+    . "./etroboenv.sh"
 fi
 
 if [ "$dist" != "dist" ]; then
@@ -81,7 +81,7 @@ else
 fi
 mv -f "$targetSrc" "$targetDist/"
 
-if [ -z "$update" ]; then
+if [ -n "$update" ]; then
     echo
     echo "Update: finish"
     echo

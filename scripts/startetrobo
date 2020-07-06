@@ -82,8 +82,8 @@ fi
 # `checkout [<branch name>]` option
 if [ "$1" = "checkout" ]; then
     shift
-    if [ -n "$2" ]; then
-        branch="$2"
+    if [ -n "$1" ]; then
+        branch="$1"
         shift
     else
         branch="master"

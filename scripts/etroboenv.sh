@@ -8,7 +8,7 @@
 
 if [ "$1" = "unset" ]; then
     . sim unset
-    . download.sh unset
+    . etrobopkg unset
     . etrobopath.sh unset
     unset ETROBO_ENV
     unset ETROBO_ENV_VER

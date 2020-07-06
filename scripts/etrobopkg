@@ -162,6 +162,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
         if [ $download ]; then
             echo "download from $url"
+            echo "$url" > "$fileManifest"
+            echo "$ver $size" >> "$fileManifest"
             rm -f "$distManifest"
             wget "$url" -O "$file"
             error=$?

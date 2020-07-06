@@ -76,6 +76,7 @@ else
         # import module envs
         . "$ETROBO_SCRIPTS/sim" env
         . "$ETROBO_SCRIPTS/etrobopkg" env
+        . "$ETROBO_SCRIPTS/etrobopath.sh"
 
         if [ "$BEERHALL_INVOKER" != "booting" ]; then
             echo

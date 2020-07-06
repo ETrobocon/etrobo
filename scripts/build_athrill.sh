@@ -8,7 +8,7 @@
 
 # Athrill2 environment for UnityETroboSim
 # Powered by TOPPERS/ASP3 RTOS of Hakoniwa
-# https://qiita.com/kanetugu2018/items/0e521f4779cd680dab18
+# https://toppers.github.io/hakoniwa/
 #
 # See commits histories:
 # https://github.com/toppers/athrill/commits/master

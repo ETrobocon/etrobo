@@ -6,12 +6,6 @@
 # See LICENSE
 #
 
-if [ -f "BeerHall" ]; then
-    BeerHall="$BEERHALL"
-else
-    BeerHall=""
-fi
-
 if [ -z "$ETROBO_ROOT" ]; then
     echo "run startetrobo first."
     exit 1
@@ -40,12 +34,12 @@ else
     #
     export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
     #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
-    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
-    export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}${ETROBO_KERNEL_POSTFIX}"
-    export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL`"
-    export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL}.tar.bz2"
+    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
+    export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL_BASE`"
+    export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
 fi
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    pkgs=("gcc-arm")
     urls=("$ETROBO_HRP3_GCC_URL")
     vers=("2020.06.29a")
     if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
@@ -58,6 +52,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # TOPPERS/EV3RT
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
     #
+    pkgs+=("ev3rt")
     urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip")
     vers+=("2020.06.29a")
     sizes+=("13774129")
@@ -67,6 +62,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
+        pkgs+=("mkimage")
         urls+=("https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage")
         vers+=("2020.06.29a")
         sizes+=("7120")
@@ -77,13 +73,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://toppers.github.io/hakoniwa/
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
+        pkgs+=("gcc-athrill_mac")
         urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz")
         vers+=("2020.06.29a")
         sizes+=("32950726")
     else
+        pkgs+=("gcc-athrill")
         urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")
         vers+=("2020.06.29a")
-        sizes+=("3933761")
+        sizes+=("236202431")
     fi
 
     #
@@ -98,46 +96,77 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         size="5346972"
     fi
     if [ -n "$clikintone" ]; then
+        pkgs+=("cli-kintone")
         urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.11.1/${clikintone}-x64.zip")
         vers+=("2020.06.29a")
-        sizes+=("size")
+        sizes+=("$size")
     fi
 
     #
     # start downloading
     #
-    echo
-    echo "etrobo package downloader - manifest version $ETROBO_MANIFEST_VER"
-    echo
+    echo "-----------"
+    echo " etrobopkg - etrobo package manager"
+    echo "-----------"
+    echo "  manifest version $ETROBO_MANIFEST_VER"
 
     if [ ! -d "$ETROBO_CACHE" ]; then
         rm -f "$ETROBO_CACHE"
         mkdir "$ETROBO_CACHE"
     fi
 
-    # download files by wget or pick up files from download cache
+    #
+    # download files into .etrobo_cache
+    #
+    # fileManifests are in `$ETROBO_USERPROFILE/.etrobo_cache/<file name>.manifest`
+    # distManifests are in `$ETROBO_ROOT/dist/<file name>.manifest`
+    #
+    # manifest file format:
+    #   <URL>
+    #   <manifest version> <file size>
+    #
     for ((i=0;i<${#urls[*]};i++)); do
+        pkg="${pkgs[$i]}"
         url="${urls[$i]}"
         ver="${vers[$i]}"
         size="${sizes[$i]}"
         target="$(basename $url)"
-        archive="$ETROBO_CACHE/$target"
-        manifest="${archive}.manifest"
+        file="$ETROBO_CACHE/$target"
+        fileManifest="${file}.manifest"
+        distManifest="$ETROBO_ROOT/dist/${target}.manifest"
+        download=true
+        request=true
 
-        
+        if [ -f "$file" ]; then
+            echo
+            echo "cached $target ... checking with manifest"
+            fileSize=`wc -c "$file" | awk '{print $1}'`
+            if [ ! -f "$fileManifest" ]; then
+                echo "$target is downloaded manually."
+                manifestVer=$ver
+                manifestSize=$size
+            else
+                manifestVer=`cat "$fileManifest" | tail -n 1 | awk '{print $1}'`
+                manifestSize=`cat "$fileManifest" | tail -n 1 | awk '{print $2}'`
+            fi
+            if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ]; then
+                echo "$target is already up to date."
+                unset download
+                if [ -f "$distManifest" ]; then
+                    if [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
+                        unset request
+                    fi
+                fi
+            fi
+        fi
 
-        if [ -f "$manifest" ]; then
-            manifest_ver=`tail -n 1 < "$manifest"`
-
-            echo "found within the cache: $target"
-            cp "$ETROBO_CACHE/$target" ./
-        else
-            try=1
+        if [ $download ]; then
             echo "download from $url"
-            echo "$url" > "$manifest"
-            wget "$url"
-            case $? in
-                0 ) try=0;;
+            rm -f "$distManifest"
+            wget "$url" -O "$file"
+            error=$?
+            case $error in
+                0 ) unset error;;
                 1 ) echo "Request error: an error occured with wget execution";;
                 2 ) echo "Command parse error: invalid options for wget";;
                 3 ) echo "File I/O error:";;
@@ -147,7 +176,100 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 7 ) echo "Protocol error:";;
                 8 ) echo "Server error: something is wrong with this file server";;
             esac
-            cp "./$target" "$ETROBO_CACHE/"
+
+            if [ $error ]; then
+                echo 
+                echo "please try to re-run later."
+                echo "if this download error is occuring persistantly, you may download it manually."
+                echo "further information:"
+                echo "https://github.com/ETrobocon/etrobo/wiki/install_error"
+                echo
+                exit 1
+            fi
         fi
+
+        # install files
+        if [ $request ]; then
+            cd "$ETROBO_ROOT"
+            case $pkg in
+            "gcc-arm" ) 
+                echo
+                echo "Install GNU Arm Embedded Toolchain:"
+                if [ -d "$ETROBO_HRP3_GCC_DIR" ]; then
+                    rm -rf "$ETROBO_HRP3_GCC_DIR"
+                fi
+                tar -xvvf "$file" > /dev/null 2>&1
+                ;;
+            "ev3rt" )
+                echo
+                echo "Install TOPPERS/EV3RT:"
+                if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
+                    rm -rf "$ETROBO_ROOT/workspace_autobackup"
+                    cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    rm workspace
+                    echo "********"
+                    echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
+                    echo "          this autobackup folder will be deleted in the next time autobackup."
+                    echo "********"
+                fi
+
+                rm -rf ${target:0:-4}
+                rm -rf hrp3
+                unzip "$file" > /dev/null
+                cp ${target:0:-4}/hrp3.tar.xz ./
+                tar xvf hrp3.tar.xz > /dev/null 2>&1
+                rm hrp3.tar.xz
+
+                if [ ! -d workspace ]; then
+                    ln -s hrp3/sdk/workspace workspace
+                fi
+                if [ -z "`cat workspace/Makefile | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> workspace/Makefile
+                fi
+
+                echo "Install workspace/sample_c4:"
+                cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
+                ;;
+            "mkimage" )
+                echo 
+                echo "Install mkimage:"
+                mv -f "$file" "$BEERHALL/usr/local/bin"
+                ;;
+            "gcc-athrill_mac" ) 
+                echo 
+                echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
+                rm -rf ${target:0:-7}
+                tar xzvf "$file" > /dev/null 2>&1
+                ;;
+            "gcc-athrill" ) 
+                echo 
+                echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
+                rm -rf ${target:0:-7}
+                tar xzvf "$file" > /dev/null
+                cd ${target:0:-7}
+                tar xzvf athrill-gcc.tar.gz > /dev/null
+                ;;
+            "cli-kintone" ) 
+                echo
+                echo "Install kintone command line tool:"
+                unzip "$file" > /dev/null
+                rm -f cli-kintone
+                mv -f build/${target:0:-4}/cli-kintone ./
+                ;;
+            * ) 
+                echo
+                echo "Install ${target}:"
+                extension="${target##*.}"
+                if [ "${extension,,}" = "zip" ]; then
+                    unzip "$file" > /dev/null
+                else
+                    tar xvf "$file" > /dev/null 2>&1
+                fi
+                ;;
+            esac
+
+            echo "$url" > "$distManifest"
+            echo "$ver $size" >> "$distManifest"
+        fi                
     done
 fi

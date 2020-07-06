@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-echo '*************'
+echo '-------------'
 echo ' startetrobo - etrobo all-in-one package installer/invoker'
-echo '*************'
+echo '-------------'
 # Author: jtFuruhata
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
@@ -185,6 +185,8 @@ fi
 # platform update and git clone etrobo
 if [ ! -d "$ETROBO_ROOT" ]; then
     echo
+    echo "Install etrobo Environment: start"
+    echo
     echo "update and upgrade your platform"
     echo 'Please enter your login password as sudoers if [sudo] ask you'
     if [ -z "$BeerHall" ];then
@@ -193,14 +195,21 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         sudo apt -y install build-essential
         sudo apt -y install git
         sudo apt -y install ruby
-        sudo apt -y install u-boot-tools
-        sudo apt -y install lib32stdc++6
+        #
+        # EV3RT requirement from:
+        # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh
+        #
+        echo
+        echo "Remove binutils-arm-none-eabi and gcc-arm-none-eabi:"
+        sudo apt remove binutils-arm-none-eabi gcc-arm-none-eabi -y
+        echo
+        echo "Install u-boot-tools and lib32stdc++6:"
+        sudo apt install u-boot-tools lib32stdc++6 -y
     fi
 
     cd "`dirname $0`"
     echo
-    echo ''
-    echo 'Please enter your GitHub account name and password if GitHub ask you'
+    echo 'Clone etrobo core package'
     git clone https://github.com/ETrobocon/etrobo.git
     if [ $? -eq 0 ]; then
         if [ "$1" = "ldlibpath" ]; then
@@ -209,8 +218,9 @@ if [ ! -d "$ETROBO_ROOT" ]; then
     else
         echo
         echo 'an error occured during git clone. setup aborted.'
-        exit 0
+        exit 1
     fi
+    setupRequest="invoke"
 fi
 
 # download package
@@ -219,7 +229,7 @@ if [ -d "$ETROBO_ROOT" ]; then
 fi
 
 # install package
-if [ -d "$ETROBO_ROOT" ]; then
+if [ "$setupRequest" = "invoke" ]; then
     "$ETROBO_ROOT/scripts/setup.sh"
 fi
 

@@ -22,7 +22,15 @@ if [ "$1" == "unset" ]; then
     unset ETROBO_HRP3_GCC_URL
     unset ETROBO_HRP3_GCC_DIR
 else
-    export ETROBO_CACHE="$ETROBO_USERPROFILE/.etrobo_cache"
+    userProfile="$ETROBO_USERPROFILE"
+    if [ -z "$userProfile" ]; then
+        if [ -n "$HOME_ORG" ]; then
+            userProfile="$HOME_ORG"
+        else
+            userProfile="$HOME"
+        fi
+    fi
+    export ETROBO_CACHE="$userProfile/.etrobo_cache"
     #
     # ETrobo package download manifest
     #

@@ -224,11 +224,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "********"
                 fi
 
-                echo "debug: $target"
-                rm -rf ${target:0:-4}
+                #rm -rf ${target:0:-4}
+                rm -rf ev3rt-1.0-release
                 rm -rf hrp3
                 unzip "$file" > /dev/null
-                cp ${target:0:-4}/hrp3.tar.xz ./
+                #cp ${target:0:-4}/hrp3.tar.xz ./
+                cp ev3rt-1.0-release/hrp3.tar.xz ./
                 tar xvf hrp3.tar.xz > /dev/null 2>&1
                 rm hrp3.tar.xz
 
@@ -250,7 +251,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "gcc-athrill_mac" ) 
                 echo 
                 echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
-                rm -rf ${target:0:-7}
+                rm -rf athrill-gcc-package
                 tar xzvf "$file" > /dev/null 2>&1
                 ;;
             "gcc-athrill" ) 
@@ -266,7 +267,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "Install kintone command line tool:"
                 unzip "$file" > /dev/null
                 rm -f cli-kintone
-                mv -f build/${target:0:-4}/cli-kintone ./
+                if [ "$ETROBO_OS" = mac ]; then
+                    mv -f build/macos-x64/cli-kintone ./
+                else
+                    mv -f build/${target:0:-4}/cli-kintone ./
+                fi
                 ;;
             * ) 
                 echo

@@ -10,7 +10,7 @@ if [ -z "$ETROBO_ROOT" ]; then
     echo "run startetrobo first."
     exit 1
 elif [ ! "$ETROBO_ENV" = "available" ]; then
-    . "$BEERHALL/etc/profile.d/etrobo.sh"
+    . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 cd "$ETROBO_ROOT"
 

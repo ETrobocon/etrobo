@@ -30,6 +30,9 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_LAUNCH_SIM
     unset ETROBO_LAUNCH_ASP
 else
+    if [ "$1" = "silent" ]; then
+        quit="no message mode"
+    fi
     if [ ! -f "$ETROBO_ROOT/disable" ]; then
         export ETROBO_ENV="available"
         export ETROBO_SCRIPTS="$ETROBO_ROOT/scripts"
@@ -78,7 +81,7 @@ else
         . "$ETROBO_SCRIPTS/etrobopkg" env
         . "$ETROBO_SCRIPTS/etrobopath.sh"
 
-        if [ "$BEERHALL_INVOKER" != "booting" ]; then
+        if [ "$BEERHALL_INVOKER" != "booting" ] && [ -z "$quit" ]; then
             echo
             echo "etrobo environment: Ready. (Ver.$ETROBO_ENV_VER)"
             echo

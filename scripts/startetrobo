@@ -236,7 +236,7 @@ fi
 # invoke etrobo environment
 cd "$ETROBO_ROOT"
 if [ -z "$ETROBO_ENV" ]; then
-    . "$BeerHall/etc/profile.d/etrobo.sh"
+    . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 if [ "$ETROBO_ENV" = "available" ]; then
     if [ "$1" = "shell" ]; then

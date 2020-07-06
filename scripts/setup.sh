@@ -20,7 +20,7 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
         echo "run startetrobo_mac.command first."
         exit 1
     fi
-    . "$BEERHALL/etc/profile.d/etrobo.sh"
+    . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 cd "$ETROBO_ROOT"
 

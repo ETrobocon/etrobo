@@ -223,12 +223,6 @@ if [ ! -d "$ETROBO_ROOT" ]; then
     setupRequest="invoke"
 fi
 
-# load etrobo-core
-cd "$ETROBO_ROOT"
-if [ -z "$ETROBO_ENV" ]; then
-    . "$BeerHall/etc/profile.d/etrobo.sh"
-fi
-
 # download package
 if [ -d "$ETROBO_ROOT" ]; then
     "$ETROBO_ROOT/scripts/etrobopkg"
@@ -240,6 +234,10 @@ if [ "$setupRequest" = "invoke" ]; then
 fi
 
 # invoke etrobo environment
+cd "$ETROBO_ROOT"
+if [ -z "$ETROBO_ENV" ]; then
+    . "$BeerHall/etc/profile.d/etrobo.sh"
+fi
 if [ "$ETROBO_ENV" = "available" ]; then
     if [ "$1" = "shell" ]; then
         bash -l

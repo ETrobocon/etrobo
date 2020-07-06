@@ -16,7 +16,7 @@ if [ -z "$ETROBO_ROOT" ]; then
     echo "run startetrobo first."
     exit 1
 elif [ ! "$ETROBO_ENV" = "available" ]; then
-    if [ -z "$BEERHALL" ]; then
+    if [ "$ETROBO_KERNEL" = "darwin" ] && [ -z "$BEERHALL" ]; then
         echo "run startetrobo_mac.command first."
         exit 1
     fi

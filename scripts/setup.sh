@@ -29,16 +29,16 @@ if [ "$1" = "update" ]; then
     dist="$2"
     cd "$ETROBO_ROOT"
     echo "update etrobo package:"
-    git pull master
+    git pull --ff-only
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then
         rm -f "$BEERHALL/../startetrobo_mac.command"
         cp -f scripts/startetrobo_mac.command "$BEERHALL/../"
     fi
-    cd "$ETROBO_SCRIPTS"
-    . "./etroboenv.sh" unset
-    . "./etroboenv.sh"
+    scripts="$ETROBO_SCRIPTS"
+    . "$scripts/etroboenv.sh" unset
+    . "$scripts/etroboenv.sh"
 fi
 
 if [ "$dist" != "dist" ]; then
@@ -49,20 +49,8 @@ if [ "$dist" != "dist" ]; then
 fi
 
 #
-# distrubute etrobo_tr samples
-#echo "update distributions"
-#echo 
-#sampleProj="sample_c4"
-#echo "distribute $sampleProj project"
-#cd "$ETROBO_HRP3_WORKSPACE"
-#rm -rf "$sampleProj"
-#mkdir "$sampleProj"
-cd "$ETROBO_ROOT/dist"
-#cp -f "${sampleProj}/"* "$ETROBO_HRP3_WORKSPACE/${sampleProj}"
-#rm -rf "$sampleProj"
-
-#
 # distribute UnityETroboSim
+cd "$ETROBO_ROOT/dist"
 echo "Bundled Simulator: $ETROBO_SIM_VER"
 targetSrc="etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}"
 tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1

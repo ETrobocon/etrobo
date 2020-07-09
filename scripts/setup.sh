@@ -41,7 +41,7 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 fi
 
-if [ "$dist" != "dist" ]; then
+if [ "$dist" != "dist" ] && [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official
@@ -58,21 +58,24 @@ else
     os="$ETROBO_OS"
 fi
 targetSrc="etrobosim${ETROBO_SIM_VER}_${os}"
-tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
 
-if [ "$ETROBO_KERNEL" = "darwin" ]; then
-    targetSrc="${targetSrc}${ETROBO_EXE_POSTFIX}"
-    targetDist="/Applications/etrobosim"
-else
-    targetDist="$ETROBO_USERPROFILE/etrobosim"
-fi
+if [ ! -d "$targetDist/$targetSrc" ]; then
+    tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
 
-if [ -d "$targetDist" ]; then
-    rm -rf "$targetDist/$targetSrc"
-else
-    mkdir "$targetDist"
+    if [ "$ETROBO_KERNEL" = "darwin" ]; then
+        targetSrc="${targetSrc}${ETROBO_EXE_POSTFIX}"
+        targetDist="/Applications/etrobosim"
+    else
+        targetDist="$ETROBO_USERPROFILE/etrobosim"
+    fi
+
+    if [ -d "$targetDist" ]; then
+        rm -rf "$targetDist/$targetSrc"
+    else
+        mkdir "$targetDist"
+    fi
+    mv -f "$targetSrc" "$targetDist/"
 fi
-mv -f "$targetSrc" "$targetDist/"
 
 if [ -n "$update" ]; then
     echo

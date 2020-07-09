@@ -220,7 +220,6 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         echo 'an error occured during git clone. setup aborted.'
         exit 1
     fi
-    setupRequest="invoke"
 fi
 
 # download package
@@ -228,10 +227,8 @@ if [ -d "$ETROBO_ROOT" ]; then
     "$ETROBO_ROOT/scripts/etrobopkg"
 fi
 
-# install package
-if [ "$setupRequest" = "invoke" ]; then
-    "$ETROBO_ROOT/scripts/setup.sh"
-fi
+# install Athrill2 & UnityETroboSim
+"$ETROBO_ROOT/scripts/setup.sh"
 
 # invoke etrobo environment
 cd "$ETROBO_ROOT"

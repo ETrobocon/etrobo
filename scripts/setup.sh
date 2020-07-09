@@ -38,7 +38,7 @@ if [ "$1" = "update" ]; then
     fi
     scripts="$ETROBO_SCRIPTS"
     . "$scripts/etroboenv.sh" unset
-    . "$scripts/etroboenv.sh"
+    . "$scripts/etroboenv.sh" silent
 fi
 
 if [ "$dist" != "dist" ]; then
@@ -52,7 +52,12 @@ fi
 # distribute UnityETroboSim
 cd "$ETROBO_ROOT/dist"
 echo "Bundled Simulator: $ETROBO_SIM_VER"
-targetSrc="etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}"
+if [ "$ETROBO_OS" = "chrome" ]; then
+    os="linux"
+else
+    os="$ETROBO_OS"
+fi
+targetSrc="etrobosim${ETROBO_SIM_VER}_${os}"
 tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
 
 if [ "$ETROBO_KERNEL" = "darwin" ]; then

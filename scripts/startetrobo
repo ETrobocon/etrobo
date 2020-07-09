@@ -140,10 +140,10 @@ if [ "$1" = "clean" ]; then
     echo
     read -p 'are you sure you want to `clean`? (y/N): ' yn
     case "$yn" in
-        [yY]*) break;;
+        [yY]*) ;;
         *)     exit 1;;
     esac
-    
+
     sudo rm -f "$BeerHall/etc/profile.d/etrobo.sh"
     cd "$ETROBO_ROOT/.."
     rm -rf etrobo

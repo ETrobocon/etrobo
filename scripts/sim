@@ -46,10 +46,15 @@ else
         shift 2
     fi
 
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        os="linux"
+    else
+        os="$ETROBO_OS"
+    fi
     if [ "$ETROBO_KERNEL" = "debian" ]; then
-        export ETROBO_LAUNCH_SIM='"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
+        export ETROBO_LAUNCH_SIM='"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
     elif [ "$ETROBO_KERNEL" = "darwin" ]; then
-        export ETROBO_LAUNCH_SIM='open -a "/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}${ETROBO_EXE_POSTFIX}"'
+        export ETROBO_LAUNCH_SIM='open -a "/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}"'
     else
         unset ETROBO_LAUNCH_SIM
     fi

@@ -99,7 +99,7 @@ fi
 if [ "$1" = "update" ]; then
     rm -f "$ETROBO_ROOT/../startetrobo"
     cp -f "$ETROBO_ROOT/scripts/startetrobo" "$ETROBO_ROOT/.."
-    echo "startetrobo is copied into `cd $ETROBO_ROOT/..`"
+    echo "startetrobo is copied into `cd $ETROBO_ROOT/..; pwd`"
     if [ "$ETROBO_OS" = "mac" ]; then
         rm -f "$ETROBO_ROOT/../../startetrobo_mac.command"
         cp -f "$ETROBO_ROOT/scripts/startetrobo_mac.command" "$ETROBO_ROOT/../.."
@@ -138,7 +138,12 @@ if [ "$1" = "clean" ]; then
     echo 'WARNING:'
     echo '  all your code on workspaces will remove forever.'
     echo
-    read -p 'are you sure you want to `clean`? (y/N): '
+    read -p 'are you sure you want to `clean`? (y/N): ' yn
+    case "$yn" in
+        [yY]*) break;;
+        *)     exit 1;;
+    esac
+    
     sudo rm -f "$BeerHall/etc/profile.d/etrobo.sh"
     cd "$ETROBO_ROOT/.."
     rm -rf etrobo

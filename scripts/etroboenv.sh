@@ -6,6 +6,8 @@
 # See LICENSE
 #
 
+currentDir="`pwd`"
+
 if [ "$1" = "unset" ]; then
     . sim unset
     . etrobopkg unset
@@ -96,3 +98,5 @@ else
         echo
     fi
 fi
+
+cd "$currentDir"

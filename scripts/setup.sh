@@ -77,6 +77,11 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
     mv -f "$targetSrc" "$targetDist/"
 fi
 
+if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
+    echo "Install workspace/sample_c4:"
+    cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
+fi
+
 if [ -n "$update" ]; then
     echo
     echo "Update: finish"

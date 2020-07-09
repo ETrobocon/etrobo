@@ -239,9 +239,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 if [ -z "`cat workspace/Makefile | grep fakemake`" ]; then
                     echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> workspace/Makefile
                 fi
-
-                echo "Install workspace/sample_c4:"
-                cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
                 ;;
             "mkimage" )
                 echo 

@@ -60,25 +60,22 @@ else
     os="$ETROBO_OS"
 fi
 targetSrc="etrobosim${ETROBO_SIM_VER}_${os}"
+if [ "$ETROBO_KERNEL" = "darwin" ]; then
+    targetSrc="${targetSrc}${ETROBO_EXE_POSTFIX}"
+    targetDist="/Applications/etrobosim"
+else
+    targetDist="$ETROBO_USERPROFILE/etrobosim"
+fi
 
 if [ ! -d "$targetDist/$targetSrc" ]; then
     installProcess="${installProcess}sim "
     echo
     echo "Install ETrobocon Simulator"
-    tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
-
-    if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        targetSrc="${targetSrc}${ETROBO_EXE_POSTFIX}"
-        targetDist="/Applications/etrobosim"
-    else
-        targetDist="$ETROBO_USERPROFILE/etrobosim"
-    fi
-
     if [ -d "$targetDist" ]; then
-        rm -rf "$targetDist/$targetSrc"
-    else
         mkdir "$targetDist"
     fi
+
+    tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
     mv -f "$targetSrc" "$targetDist/"
 fi
 

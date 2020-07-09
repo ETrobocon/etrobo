@@ -28,8 +28,8 @@ if [ "$1" = "update" ]; then
     update="update"
     dist="$2"
     cd "$ETROBO_ROOT"
-    echo "update etrobo package:"
-    git pull --ff-only
+    #echo "update etrobo package:"
+    #git pull --ff-only
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then

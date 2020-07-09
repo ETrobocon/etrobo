@@ -42,10 +42,12 @@ if [ "$1" = "update" ]; then
 fi
 
 if [ "$dist" != "dist" ] && [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
+    installProcess="athrill"
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official
     rm -f "$ETROBO_ATHRILL_SDK/common/library/libcpp-ev3/libcpp-ev3-standalone.a"
+    installProcess="${installProcess}athrill "
 fi
 
 #
@@ -60,6 +62,9 @@ fi
 targetSrc="etrobosim${ETROBO_SIM_VER}_${os}"
 
 if [ ! -d "$targetDist/$targetSrc" ]; then
+    installProcess="${installProcess}sim "
+    echo
+    echo "Install ETrobocon Simulator"
     tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
 
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
@@ -78,6 +83,8 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
 fi
 
 if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
+    installProcess="${installProcess}sample "
+    echo
     echo "Install workspace/sample_c4:"
     cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
 fi
@@ -86,7 +93,7 @@ if [ -n "$update" ]; then
     echo
     echo "Update: finish"
     echo
-else
+elif [ -n "$installProcess" ]; then
     echo
     echo "Install etrobo Environment: finish"
     echo

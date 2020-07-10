@@ -71,7 +71,7 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
     installProcess="${installProcess}sim "
     echo
     echo "Install ETrobocon Simulator"
-    if [ -d "$targetDist" ]; then
+    if [ ! -d "$targetDist" ]; then
         mkdir "$targetDist"
     fi
 

@@ -83,6 +83,7 @@ if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
     installProcess="${installProcess}sample "
     echo
     echo "Install workspace/sample_c4:"
+    git checkout .
     cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
 fi
 

@@ -7,6 +7,21 @@ echo '-------------'
 # See LICENSE
 #
 
+# check dev branch
+if [ "$ETROBO_ENV" = "available" ]; then
+    if [ -z "`git branch | grep "* master"`" ]; then
+        echo
+        echo "****************************************"
+        echo " WARNING"
+        echo "   You are in Developer insider branch! "
+        echo
+        echo "   to back to the master branch,"
+        echo "     run `./startetrobo checkout`"
+        echo "****************************************"
+        echo
+    fi
+fi
+
 # check BeerHall
 if [ -f "BeerHall" ]; then
     BeerHall="$BEERHALL"
@@ -70,8 +85,9 @@ if [ "$1" = "--help" ]; then
     echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
     echo '  . startetrobo shell ... export etrobo environment vars into this instance'
     echo
-    echo '  startetrobo checkout <branch_name>'
+    echo '  startetrobo checkout [<branch_name>]'
     echo '                      ... (for developer) checkout <branch_name>'
+    echo '                          default: master branch'
     echo
     echo '  startetrobo clean   ... remove etrobo environment from here'
     echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
@@ -80,7 +96,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 # `checkout [<branch name>]` option
-if [ "$1" = "checkout" ]; then
+if [ "$1" = "checkout" ] && [ "$ETROBO_ENV" = "available" ]; then
     shift
     if [ -n "$1" ]; then
         branch="$1"
@@ -93,10 +109,7 @@ if [ "$1" = "checkout" ]; then
     git checkout master
     git pull
     git checkout $branch
-fi
 
-# `update` option
-if [ "$1" = "update" ]; then
     rm -f "$ETROBO_ROOT/../startetrobo"
     cp -f "$ETROBO_ROOT/scripts/startetrobo" "$ETROBO_ROOT/.."
     echo "startetrobo is copied into `cd $ETROBO_ROOT/..; pwd`"
@@ -105,6 +118,7 @@ if [ "$1" = "update" ]; then
         cp -f "$ETROBO_ROOT/scripts/startetrobo_mac.command" "$ETROBO_ROOT/../.."
         echo "startetrobo_mac.command is copied into `cd $ETROBO_ROOT/../..`"
     fi
+    echo "this environment is switched into $branch branch."
     exit 0
 fi
 

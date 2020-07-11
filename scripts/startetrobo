@@ -16,7 +16,7 @@ if [ "$ETROBO_ENV" = "available" ]; then
         echo "   You are in Developer insider branch! "
         echo
         echo "   to back to the master branch,"
-        echo "     run `./startetrobo checkout`"
+        echo '     run `./startetrobo checkout`'
         echo "****************************************"
         echo
     fi

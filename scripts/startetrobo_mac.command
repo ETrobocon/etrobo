@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.00e.200626"
+export BEERHALL_VER="5.00f.200715"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -300,6 +300,7 @@ if [ -z "$BEERHALL" ]; then
                 sudo rm "/usr/local/lib/$line"
             fi
         fi
+        sudo mkdir -p /usr/local/lib
         sudo cp -f "$BEERHALL/usr/local/opt/flex/lib/$line" "/usr/local/lib/"
     done
     makeBeerHall="build"

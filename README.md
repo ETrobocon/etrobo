@@ -101,7 +101,7 @@ EV3実機向けの開発環境としては充分です。
 `Windows`+`R`キーに続いて`cmd`と入力するなどしてコマンドプロンプトを開き、以下のコマンドをコピー＆ペーストして実行してください。
 
 ```
-cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
+cd /d "%USERPROFILE%\Desktop" & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
 ```
 
 デスクトップに`Start ETrobo.cmd`が作成されるので、それをダブルクリックすると、インストールを開始します。
@@ -116,7 +116,7 @@ cd Desktop & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubuse
 その症状が出た方は以下のコマンドを採用してください。
 >
 >```
->cd Desktop & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
+>cd /d "%USERPROFILE%\Desktop" & echo cd %userprofile%^&wsl if [ ! -f ./startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ./startetrobo; fi; ./startetrobo > "Start ETrobo.cmd"
 >```
 >ただし、この環境では以下のような制約があります：
 >- Athrill仮想Bluetoothを利用できません

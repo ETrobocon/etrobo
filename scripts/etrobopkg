@@ -243,7 +243,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "mkimage" )
                 echo 
                 echo "Install mkimage:"
-                mv -f "$file" "$BEERHALL/usr/local/bin"
+                cp -f "$file" "$BEERHALL/usr/local/bin"
                 ;;
             "gcc-athrill_mac" ) 
                 echo 

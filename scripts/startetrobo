@@ -9,6 +9,8 @@ echo '-------------'
 
 # check dev branch
 if [ "$ETROBO_ENV" = "available" ]; then
+    current="`pwd`"
+    cd "$ETROBO_ROOT"
     if [ -z "`git branch | grep "* master"`" ]; then
         echo
         echo "****************************************"
@@ -20,6 +22,7 @@ if [ "$ETROBO_ENV" = "available" ]; then
         echo "****************************************"
         echo
     fi
+    cd "$current"
 fi
 
 # check BeerHall

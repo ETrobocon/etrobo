@@ -59,11 +59,12 @@ if [ "$ETROBO_OS" = "chrome" ]; then
 else
     os="$ETROBO_OS"
 fi
-targetSrc="etrobosim${ETROBO_SIM_VER}_${os}"
+targetName="etrobosim${ETROBO_SIM_VER}_${os}"
 if [ "$ETROBO_KERNEL" = "darwin" ]; then
-    targetSrc="${targetSrc}${ETROBO_EXE_POSTFIX}"
+    targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
     targetDist="/Applications/etrobosim"
 else
+    targetSrc="${targetName}"
     targetDist="$ETROBO_USERPROFILE/etrobosim"
 fi
 
@@ -75,7 +76,7 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
         mkdir "$targetDist"
     fi
 
-    tar xvf "${targetSrc}.tar.gz" > /dev/null 2>&1
+    tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
     mv -f "$targetSrc" "$targetDist/"
 fi
 

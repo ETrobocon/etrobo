@@ -41,8 +41,12 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 fi
 
-if [ "$athrill" != "athrill" ] && [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
+ if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
     installProcess="athrill"
+    athrill="athrill"
+ fi
+
+if [ "$athrill" = "athrill" ]; then
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official

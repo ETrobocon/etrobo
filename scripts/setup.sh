@@ -26,7 +26,7 @@ cd "$ETROBO_ROOT"
 
 if [ "$1" = "update" ]; then
     update="update"
-    dist="$2"
+    athrill="$2"
     cd "$ETROBO_ROOT"
     #echo "update etrobo package:"
     #git pull --ff-only
@@ -41,7 +41,7 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 fi
 
-if [ "$dist" != "dist" ] && [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
+if [ "$athrill" != "athrill" ] && [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
     installProcess="athrill"
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"

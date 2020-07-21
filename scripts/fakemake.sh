@@ -56,9 +56,9 @@ fi
 
 if [ "$1" = "start" ]; then
     if [ "$2" = "up" ]; then
-        sim wait launch
+        sim $courseSelect wait launch
     else
-        sim only launch asp
+        sim $courseSelect only launch asp
     fi
     exit 0
 fi
@@ -125,9 +125,9 @@ if [ $makeResult -eq 0 ]; then
             echo "${app_prefix}${proj}.asp" > currentasp
             if [ "$simopt" = "up" ]; then
                 echo launch sim
-            	sim wait launch "${app_prefix}${proj}.asp"
+            	sim $courseSelect wait launch "${app_prefix}${proj}.asp"
             elif [ "$simopt" = "start" ]; then
-            	sim only launch "${app_prefix}${proj}.asp"
+            	sim $courseSelect only launch "${app_prefix}${proj}.asp"
             fi
         else
             echo fakemake on ASP3: one or more error occured while build for $proj

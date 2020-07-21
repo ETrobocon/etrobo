@@ -11,6 +11,7 @@
 athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
 memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
 device_config_txt="$ETROBO_ATHRILL_SDK/common/device_config.txt"
+device_config_r_txt="$ETROBO_ATHRILL_SDK/common/device_config_r.txt"
 target="$ETROBO_ATHRILL_WORKSPACE/asp"
 
 # unset default envvars
@@ -39,6 +40,13 @@ else
         unset ETROBO_SIM_LOG
     fi
 
+    if [ "$1" = "left" ]; then
+        shift
+    fi
+    if [ "$1" = "right" ]; then
+        device_config_txt=$device_config_r_txt
+        shift
+    fi
     export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
 
     if [ "$1" = "ver" ]; then

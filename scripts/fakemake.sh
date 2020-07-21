@@ -2,7 +2,7 @@
 #
 # fakemake, integrated build and launch system among HRP3/EV3 and ASP3/Athrill
 #   fakemake.sh 
-# Author: jtFuruhata
+# Author: jtFuruhata, mhikichi1769
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #

@@ -2,7 +2,7 @@
 #
 # sim, centralized simulator launcher/controller
 #   sim 
-# Author: jtFuruhata
+# Author: jtFuruhata, mhikichi1969
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
@@ -40,10 +40,9 @@ else
         unset ETROBO_SIM_LOG
     fi
 
-    if [ "$1" = "left" ]; then
+    if [ "$1" = "l" ] || [ "$1" = "left" ]; then
         shift
-    fi
-    if [ "$1" = "right" ]; then
+    elif [ "$1" = "r" ] || [ "$1" = "right" ]; then
         device_config_txt=$device_config_r_txt
         shift
     fi

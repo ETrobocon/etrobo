@@ -54,6 +54,16 @@ if [ "$athrill" = "athrill" ]; then
     installProcess="${installProcess}athrill "
 fi
 
+device_config="$ETROBO_ATHRILL_SDK/common/device_config"
+if [ ! -f "${device_config}_r.txt" ]; then
+    echo
+    echo "Prepare ${device_config}_r.txt"
+    cat "${device_config}.txt" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
+    > "${device_config}_r.txt"
+fi
+
 #
 # distribute UnityETroboSim
 cd "$ETROBO_ROOT/dist"

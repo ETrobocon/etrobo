@@ -54,7 +54,22 @@ if [ "$athrill" = "athrill" ]; then
     installProcess="${installProcess}athrill "
 fi
 
-device_config="$ETROBO_ATHRILL_SDK/common/device_config"
+#
+# distribute etroboc_common
+src="$ETROBO_ROOT/dist/etroboc_common"
+dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+if [ ! -d "$src" ]; then
+    echo
+    echo "Install etroboc_common to workspace"
+    cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"
+elif [ "$src/etrobo_ext.h" -nt "$dst/etrobo_ext.h" ]; then
+    echo
+    echo "Update etrobo_ext.h"
+    rm -f "$dst/etrobo_ext.h"
+    cp -f "$src/etrobo_ext.h" "$dst/"
+fi
+
+device_config="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
 if [ ! -f "${device_config}_r.txt" ]; then
     echo
     echo "Prepare ${device_config}_r.txt"

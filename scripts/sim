@@ -10,8 +10,7 @@
 # default filenames for launcher
 athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
 memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
-device_config_txt="$ETROBO_ATHRILL_SDK/common/device_config.txt"
-device_config_r_txt="$ETROBO_ATHRILL_SDK/common/device_config_r.txt"
+device_config_path="$ETROBO_ATHRILL_SDK/common"
 target="$ETROBO_ATHRILL_WORKSPACE/asp"
 
 # unset default envvars
@@ -40,10 +39,22 @@ else
         unset ETROBO_SIM_LOG
     fi
 
+    # search & select a path to device_config.txt
+    # select priority: 
+    # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
+    # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
+    # 3. $ETROBO_ATHRILL_SDK/common
+    if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
+        device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+    elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
+        device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+    fi
+    device_config_txt="$device_config_path/device_config.txt"
+
     if [ "$1" = "l" ] || [ "$1" = "left" ]; then
         shift
     elif [ "$1" = "r" ] || [ "$1" = "right" ]; then
-        device_config_txt=$device_config_r_txt
+        device_config_txt="$device_config_path/device_config_r.txt"
         shift
     fi
     export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"

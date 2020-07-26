@@ -58,7 +58,7 @@ fi
 # distribute etroboc_common
 src="$ETROBO_ROOT/dist/etroboc_common"
 dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
-if [ ! -d "$src" ]; then
+if [ ! -d "$dst" ]; then
     echo
     echo "Install etroboc_common to workspace"
     cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"

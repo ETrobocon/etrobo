@@ -15,10 +15,10 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2020.07.17a
-ATHRILL_OFFICIAL_COMMIT="fdf7c29b8d9d12587dd69e0cb165d9036f844dfc"
-TARGET_OFFICIAL_COMMIT="a4811c57ec5556b5991eac82802a92c0b6b879e8"
-SAMPLE_OFFICIAL_COMMIT="443144c3fed27406f8ddd468fe11830188515f34"
+# the ETrobo official certified commit: Ver.2020.07.26a
+ATHRILL_OFFICIAL_COMMIT="0012cefa6b3f00e1cee2772c662efafad3b71b2a"
+TARGET_OFFICIAL_COMMIT="5b4342cd8755635e686fde94be607e6d70a81cf0"
+SAMPLE_OFFICIAL_COMMIT="7dadf8030729ad4d418feece83c2302b0fede229"
 #ATHRILL_HOTFIX_COMMIT=""
 #ATHRILL_HOTFIX_PATH=""
 #TARGET_HOTFIX_COMMIT=""

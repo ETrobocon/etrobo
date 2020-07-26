@@ -62,11 +62,11 @@ if [ ! -d "$dst" ]; then
     echo
     echo "Install etroboc_common to workspace"
     cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"
-elif [ "$src/etrobo_ext.h" -nt "$dst/etrobo_ext.h" ]; then
+elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
     echo
-    echo "Update etrobo_ext.h"
-    rm -f "$dst/etrobo_ext.h"
-    cp -f "$src/etrobo_ext.h" "$dst/"
+    echo "Update etroboc_ext.h"
+    rm -f "$dst/etroboc_ext.h"
+    cp -f "$src/etroboc_ext.h" "$dst/"
 fi
 
 device_config="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"

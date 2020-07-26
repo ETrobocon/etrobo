@@ -1,2 +1,3 @@
 APPL_COBJS += 
 # COPTS += -DMAKE_BT_DISABLE
+COPTS += -I$(ETROBO_HRP3_WORKSPACE)/etroboc_common

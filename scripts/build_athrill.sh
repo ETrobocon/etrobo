@@ -63,13 +63,42 @@ if [ -d "$ETROBO_ROOT/ev3rt-athrill-v850e2m" ]; then
         CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
         CURRENT_BRANCH="master"
     fi
+    cd "$ETROBO_ROOT/athrill-target-v850e2m"
+    TARGET_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
+    TARGET_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+    if [ "$TARGET_BRANCH" = "master" ]; then
+        TARGET_COMMIT="HEAD"
+    else
+        TARGET_COMMIT=`echo "$TARGET_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+        TARGET_BRANCH="master"
+    fi
+    cd "$ETROBO_ROOT/athrill"
+    ATH2_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
+    ATH2_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+    if [ "$ATH2_BRANCH" = "master" ]; then
+        ATH2_COMMIT="HEAD"
+    else
+        ATH2_COMMIT=`echo "$ATH2_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+        ATH2_BRANCH="master"
+    fi
 else
     unset CURRENT_AUTHOR
 fi
 
 if [ "$1" = "show" ]; then
-    echo "current author/commit/branch of this athrill-sample repository: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
-    exit 0
+    echo "Current status of this Athrill-related repositories:"
+    echo "       athrill: $ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH"
+    echo "athrill-target: $TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH"
+    echo " ev3rt-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
+    if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
+    && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
+    && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ]; then
+        echo "the ETrobo official certified commit"
+        exit 0
+    else
+        echo "unofficial commit detected."
+        exit 1
+    fi
 fi
 
 if [ "$1" = "check" ]; then

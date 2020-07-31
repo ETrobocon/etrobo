@@ -41,10 +41,15 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 fi
 
- if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
+if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
     installProcess="athrill"
     athrill="athrill"
- fi
+else
+    "$ETROBO_SCRIPTS/build_athrill.sh" show
+    if [ "$?" = "1" ] && [ "$update" = "update" ] && [ "$athrill" != "skip" ]; then
+        athrill="athrill"
+    fi
+fi
 
 if [ "$athrill" = "athrill" ]; then
     echo

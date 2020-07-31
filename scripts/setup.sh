@@ -106,7 +106,12 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
     fi
 
     tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
-    mv -f "$targetSrc" "$targetDist/"
+    if [ "$?" = "0" ]; then
+        mv -f "$targetSrc" "$targetDist/"
+    else
+        echo "unpacking error: ${targetName}.tar.gz"
+        exit 1
+    fi
 fi
 
 if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then

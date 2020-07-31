@@ -210,6 +210,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     rm -rf "$ETROBO_HRP3_GCC_DIR"
                 fi
                 tar -xvvf "$file" > /dev/null 2>&1
+                if [ "$?" != "0" ]; then
+                    echo "unpacking error: $file"
+                    exit 1
+                fi
                 ;;
             "ev3rt" )
                 echo
@@ -231,6 +235,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 #cp ${target:0:-4}/hrp3.tar.xz ./
                 cp ev3rt-1.0-release/hrp3.tar.xz ./
                 tar xvf hrp3.tar.xz > /dev/null 2>&1
+                if [ "$?" != "0" ]; then
+                    echo "unpacking error: hrp3.tar.xz"
+                    exit 1
+                fi
                 rm hrp3.tar.xz
 
                 if [ ! -d workspace ]; then
@@ -250,6 +258,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
                 rm -rf athrill-gcc-package
                 tar xzvf "$file" > /dev/null 2>&1
+                if [ "$?" != "0" ]; then
+                    echo "unpacking error: $file"
+                    exit 1
+                fi
                 ;;
             "gcc-athrill" ) 
                 echo 
@@ -278,6 +290,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     unzip "$file" > /dev/null
                 else
                     tar xvf "$file" > /dev/null 2>&1
+                    if [ "$?" != "0" ]; then
+                        echo "unpacking error: $file"
+                        exit 1
+                    fi
                 fi
                 ;;
             esac

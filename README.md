@@ -74,19 +74,21 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
     - Ubuntu 20.04へは近日中に対応します。
 - Visual Studio Codeのインストール
 
-### Chromium OS
+### Chrome OS/Chromium OS
 - x86-64アーキテクチャのCPU
-    - 動作確認は以下の環境で行っています：
+    - Chrome OSでの動作確認は以下の環境で行っています：
+        - ASUS Chromebook C223NA
+        - Chrome OS 84.0.4147.110 (Official Build)
+    - Chromium OSでの動作確認は以下の環境で行っています：
         - ASUS TAICHI21
         - CloudReady:Home Edition 80.4.1 Stableチャンネル
-    - Chrome OSでも動作する可能性は高いですが、未検証です。
-- Chromium OS 80以降
+- Chrome/Chromium OS 80以降
     - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。
     - 78以前では、localhostのポート制限により動作しない可能性が高いものと認識していますが、未確認です。
 - Linux(ベータ版)のインストール
     - etroboパッケージのインストール手順等はLinux版をご覧ください。
 - Visual Studio Codeのインストール
-    - Linux(ベータ版)上で行います。
+    - ダウンロードファイルを2本指タップし、「Linux(ベータ版)でのインストール」を選択します。
 - 制限事項：`Crostini GPU Support`有効の状態ではETロボコンシミュレータが起動しないため、実用的なパフォーマンスはでません。
 EV3実機向けの開発環境としては充分です。
 

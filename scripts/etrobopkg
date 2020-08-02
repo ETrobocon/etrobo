@@ -34,7 +34,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2020.06.29a"
+    export ETROBO_MANIFEST_VER="2020.07.31a"
 
     #
     # GNU Arm Embedded Toolchain
@@ -111,6 +111,26 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     #
+    # UnityETroboSim via Kintone
+    #
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        target="linux"
+    else
+        target="$ETROBO_OS"
+    fi
+    if [ "$target" = "win" ]; then
+        size=29384156
+    elif [ "$target" = "mac" ]; then
+        size=29535964
+    elif [ "$target" = "linux" ]; then
+        size=32790956
+    fi    
+    pkgs+=("etrobosim")
+    urls+=("kintone://etrobocon/13/File/etrobosim2020_1.0_${target}.tar.gz")
+    vers+=("2020.07.31a")
+    sizes+=("$size")
+
+    #
     # start downloading
     #
     echo "-----------"
@@ -174,19 +194,55 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         if [ $download ]; then
             echo "download from $url"
             rm -f "$distManifest"
-            wget "$url" -O "$file"
-            error=$?
-            case $error in
-                0 ) unset error;;
-                1 ) echo "Request error: an error occured with wget execution";;
-                2 ) echo "Command parse error: invalid options for wget";;
-                3 ) echo "File I/O error:";;
-                4 ) echo "Network error: download failed";;
-                5 ) echo "SSL verification error:";;
-                6 ) echo "Username/Password authentication error:";;
-                7 ) echo "Protocol error:";;
-                8 ) echo "Server error: something is wrong with this file server";;
-            esac
+            if [ -z "echo $url | grep ^kintone://" ]; then
+                wget "$url" -O "$file"
+                error=$?
+                case $error in
+                    0 ) unset error;;
+                    1 ) echo "Request error: an error occured with wget execution";;
+                    2 ) echo "Command parse error: invalid options for wget";;
+                    3 ) echo "File I/O error:";;
+                    4 ) echo "Network error: download failed";;
+                    5 ) echo "SSL verification error:";;
+                    6 ) echo "Username/Password authentication error:";;
+                    7 ) echo "Protocol error:";;
+                    8 ) echo "Server error: something is wrong with this file server";;
+                esac
+            else
+                query_d=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\1/'`
+                query_a=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\2/'`
+                query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`
+                query_q=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\4/'`
+                clitemp="$ETROBO_ROOT/dist/clitemp"
+
+                echo
+                echo "Download $query_q from cybozu kintone app"
+                echo "Log in to $query_d.cybozu.com ... or hit ENTER key simply if you don't have such account"
+                read -p "UserName: " username
+                read -p "Password: " -s password
+                echo
+                if [ -n "$username" ] && [ -n "$password" ]; then
+                    echo
+                    rm -rf "$clitemp"
+                    cd "$ETROBO_ROOT"
+                    query="--export -a $query_a -d $query_d -u $username -p $password"
+                    fileID=`cli-kintone $query -c "\\\$id" -q "$query_c like \"$query_q\"" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
+                    if [ -z "$fileID" ]; then
+                        echo "failed to log in. Please check your account and re-run startetrobo."
+                        exit 1
+                    fi
+                    filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
+                    rm -f "$file"
+                    cp -f "$clitemp"/$filePath "$file"
+                    rm -rf "$clitemp"
+                else
+                    echo "public release simulator is selected."
+                    echo "if you want to use simulator for competition, run \`update sim\`."
+                    rm -f "$file"
+                    touch "$file"
+                    size=0
+                fi
+            fi
 
             if [ $error ]; then
                 echo 
@@ -210,10 +266,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     rm -rf "$ETROBO_HRP3_GCC_DIR"
                 fi
                 tar -xvvf "$file" > /dev/null 2>&1
-                if [ "$?" != "0" ]; then
-                    echo "unpacking error: $file"
-                    exit 1
-                fi
                 ;;
             "ev3rt" )
                 echo
@@ -235,10 +287,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 #cp ${target:0:-4}/hrp3.tar.xz ./
                 cp ev3rt-1.0-release/hrp3.tar.xz ./
                 tar xvf hrp3.tar.xz > /dev/null 2>&1
-                if [ "$?" != "0" ]; then
-                    echo "unpacking error: hrp3.tar.xz"
-                    exit 1
-                fi
                 rm hrp3.tar.xz
 
                 if [ ! -d workspace ]; then
@@ -258,10 +306,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
                 rm -rf athrill-gcc-package
                 tar xzvf "$file" > /dev/null 2>&1
-                if [ "$?" != "0" ]; then
-                    echo "unpacking error: $file"
-                    exit 1
-                fi
                 ;;
             "gcc-athrill" ) 
                 echo 
@@ -282,6 +326,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     mv -f build/${target:0:-4}/cli-kintone ./
                 fi
                 ;;
+            "etrobosim" ) 
+                rm -f "$ETROBO_ROOT/dist/$target"
+                if [ "$size" != "0" ]; then
+                    echo
+                    echo "Distribute UnityETroboSim:"
+                    rm -f "$ETROBO_ROOT/dist/$target"
+                    cp "$file" "$ETROBO_ROOT/dist/"
+                fi
+                ;;
             * ) 
                 echo
                 echo "Install ${target}:"
@@ -290,10 +343,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     unzip "$file" > /dev/null
                 else
                     tar xvf "$file" > /dev/null 2>&1
-                    if [ "$?" != "0" ]; then
-                        echo "unpacking error: $file"
-                        exit 1
-                    fi
                 fi
                 ;;
             esac

@@ -26,7 +26,7 @@ cd "$ETROBO_ROOT"
 
 if [ "$1" = "update" ]; then
     update="update"
-    athrill="$2"
+    option="$2"
     cd "$ETROBO_ROOT"
     #echo "update etrobo package:"
     #git pull --ff-only
@@ -39,19 +39,24 @@ if [ "$1" = "update" ]; then
     scripts="$ETROBO_SCRIPTS"
     . "$scripts/etroboenv.sh" unset
     . "$scripts/etroboenv.sh" silent
+
+    if [ "$option" = "sim" ]; then
+        rm -f "$ETROBO_CACHE/"etrobosim*
+    fi
+    etrobopkg
 fi
 
 if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
     installProcess="athrill"
-    athrill="athrill"
+    option="athrill"
 else
     "$ETROBO_SCRIPTS/build_athrill.sh" show
     if [ "$?" = "1" ] && [ "$update" = "update" ] && [ "$athrill" != "skip" ]; then
-        athrill="athrill"
+        option="athrill"
     fi
 fi
 
-if [ "$athrill" = "athrill" ]; then
+if [ "$option" = "athrill" ]; then
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official

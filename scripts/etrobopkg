@@ -328,10 +328,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 ;;
             "etrobosim" ) 
                 rm -f "$ETROBO_ROOT/dist/$target"
+                rm -f "$ETROBO_ROOT/dist/$target.manifest"
                 if [ "$size" != "0" ]; then
                     echo
                     echo "Distribute UnityETroboSim:"
-                    rm -f "$ETROBO_ROOT/dist/$target"
                     cp "$file" "$ETROBO_ROOT/dist/"
                 fi
                 ;;
@@ -347,8 +347,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 ;;
             esac
 
-            echo "$url" > "$distManifest"
-            echo "$ver $size" >> "$distManifest"
+            if [ "$size" != "0" ]; then
+                echo "$url" > "$distManifest"
+                echo "$ver $size" >> "$distManifest"
+            fi
         fi                
     done
 fi

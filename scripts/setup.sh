@@ -44,6 +44,7 @@ if [ "$1" = "update" ]; then
         rm -f "$ETROBO_CACHE/"etrobosim*
     fi
     etrobopkg
+    . "$scripts/sim" env
 fi
 
 if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then

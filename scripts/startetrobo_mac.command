@@ -270,7 +270,7 @@ if [ -z "$BEERHALL" ]; then
 
     # install BeerHall (for etrobo) formulae
 
-    brew install bash-completion findutils wget git ruby@2.5 flex make
+    brew install bash-completion findutils wget git ruby@2.5 flex make jq
     brew link ruby@2.5 --force
     brew link flex --force
 

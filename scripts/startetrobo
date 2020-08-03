@@ -256,7 +256,7 @@ else
             brew link curl --force
         fi
     fi
-    fi [ `which jq > /dev/null; echo $?` = 1 ]; then
+    if [ `which jq > /dev/null; echo $?` = 1 ]; then
         echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
         if [ -z "$BeerHall" ];then
             sudo apt -y install jq

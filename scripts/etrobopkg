@@ -34,7 +34,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2020.08.03a"
+    export ETROBO_MANIFEST_VER="2020.08.04a"
 
     #
     # GNU Arm Embedded Toolchain

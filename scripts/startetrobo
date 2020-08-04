@@ -252,17 +252,16 @@ else
         if [ -z "$BeerHall" ];then
             sudo apt -y install curl
         else
-            brew install curl
-            brew link curl --force
+            "$BeerHall/usr/local/bin/brew" install curl
+            "$BeerHall/usr/local/bin/brew" link curl --force
         fi
     fi
-    if [ `which jq > /dev/null; echo $?` = 1 ]; then
+    if [ -z "$BeerHall" ] && [ `which jq > /dev/null; echo $?` = 1 ]; then
         echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
-        if [ -z "$BeerHall" ];then
-            sudo apt -y install jq
-        else
-            brew install jq
-        fi
+        sudo apt -y install jq
+    elif [ -n "$BeerHall" ] && [ ! -f "$BeerHall/usr/local/bin/jq" ]; then
+        echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
+        "$BeerHall/usr/local/bin/brew" install jq
     fi
 fi
 

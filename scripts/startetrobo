@@ -217,6 +217,8 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         sudo apt -y install build-essential
         sudo apt -y install git
         sudo apt -y install ruby
+        sudo apt -y install curl
+        sudo apt -y install jq
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh
@@ -241,6 +243,26 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         echo
         echo 'an error occured during git clone. setup aborted.'
         exit 1
+    fi
+else
+    # 2020_v2 Hotfix for base-platform of etrobo core package
+    if [ `which curl > /dev/null; echo $?` = 1 ]; then
+        echo "2020_v2 Hotfix for base-platform of etrobo core package: curl"
+
+        if [ -z "$BeerHall" ];then
+            sudo apt -y install curl
+        else
+            brew install curl
+            brew link curl --force
+        fi
+    fi
+    if [ `which jq > /dev/null; echo $?` = 1 ]; then
+        echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
+        if [ -z "$BeerHall" ];then
+            sudo apt -y install jq
+        else
+            brew install jq
+        fi
     fi
 fi
 

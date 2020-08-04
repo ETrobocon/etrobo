@@ -108,6 +108,10 @@ cd /d "%USERPROFILE%\Desktop" & echo wsl if [ ! -f ~/startetrobo ]; then wget ht
 
 デスクトップに`Start ETrobo.cmd`が作成されるので、それをダブルクリックすると、インストールを開始します。
 所要時間は10分程度です。
+
+インストール中、`[sudo] password ～ :`と入力を求めれますが、そこにはUbuntuのログインパスワードを入力してください。
+cybozuの`UserName`と`Password`を求められた際には、ETロボコン参加者の方は参加者専用ページのユーザ名とパスワードを、参加者以外の方は両方空エンターで入力してください。
+
 インストールが完了すると、自動的にetrobo環境を備えたVSCodeが起動します。
 
 インストール後は、同じく`Start ETrobo.cmd`をダブルクリックすることによってetrobo環境を起動できます。
@@ -136,6 +140,10 @@ cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O 
 ```
 デスクトップに`Start ETrobo.command`が作成されるので、それをダブルクリックすると、インストールを開始します。
 所要時間は1時間程度です。
+
+インストール中、`Password:`と入力を求めれた際には、Macのログインパスワードを入力してください。
+ただし、cybozuの`UserName`と`Password`の組を求められた際には、ETロボコン参加者の方は参加者専用ページのユーザ名とパスワードを、参加者以外の方は両方空エンターで入力してください。
+
 インストールが完了すると、自動的にetrobo環境を備えたVSCodeが起動します。
 
 インストール後は、同じく`Start ETrobo.command`をダブルクリックすることによってetrobo環境を起動できます。
@@ -153,6 +161,10 @@ wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetro
 
 ターミナル上でインストールが開始されます。
 所要時間は10分程度です。
+
+インストール中、`[sudo] password ～ :`と入力を求めれますが、そこにはLinuxのログインパスワードを入力してください。
+cybozuの`UserName`と`Password`を求められた際には、ETロボコン参加者の方は参加者専用ページのユーザ名とパスワードを、参加者以外の方は両方空エンターで入力してください。
+
 インストールが完了すると、自動的にetrobo環境を備えたVSCodeが起動します。
 
 インストール後は、ターミナルから`./startetrobo`でetrobo環境を起動できます。

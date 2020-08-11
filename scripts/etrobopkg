@@ -34,7 +34,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2020.08.04a"
+    export ETROBO_MANIFEST_VER="2020.08.11a"
 
     #
     # GNU Arm Embedded Toolchain
@@ -119,15 +119,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=31980474
+        size=31984414
     elif [ "$target" = "mac" ]; then
-        size=29122463
+        size=28295955
     elif [ "$target" = "linux" ]; then
-        size=32473098
+        size=31441226
     fi    
     pkgs+=("etrobosim")
-    urls+=("kintone://etrobocon/13/File/etrobosim2020_2.0_${target}.tar.gz")
-    vers+=("2020.08.04a")
+    urls+=("kintone://etrobocon/13/File/etrobosim2020_2.5_${target}.tar.gz")
+    vers+=("2020.08.11a")
     sizes+=("$size")
 
     #
@@ -188,8 +188,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
         fi
 
-        echo "$url" > "$fileManifest"
-        echo "$ver $size" >> "$fileManifest"
+        if [ "$manifestSize" != "0" ]; then
+            echo "$url" > "$fileManifest"
+            echo "$ver $size" >> "$fileManifest"
+        fi
 
         if [ $download ]; then
             echo "download from $url"
@@ -241,6 +243,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     rm -f "$file"
                     touch "$file"
                     size=0
+                    echo "$url" > "$fileManifest"
+                    echo "$ver $size" >> "$fileManifest"
                 fi
             fi
 

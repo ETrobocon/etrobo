@@ -88,11 +88,13 @@ if [ -f "$incFile" ]; then
 fi
 cp -f "$incFile" "${incFile}.org"
 if [ -n "$copts" ]; then
+    echo >> "$incFile"
     echo "COPTS += $copts" >> "$incFile"
 fi
 cp -f "$incFile" "${incFile}.base"
 
 # invoke make for HRP3/EV3
+echo >> "$incFile"
 echo "COPTS += -DMAKE_EV3" >> "$incFile"
 echo invoker make $arg_app_prefix $args
 make $arg_app_prefix $args
@@ -116,6 +118,7 @@ if [ $makeResult -eq 0 ]; then
         cp -r "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"
         mv -f "${incFile}.org" "$incFile"
         cd "$ETROBO_ATHRILL_WORKSPACE"
+        echo >> "$incFile"
         echo "COPTS += -DMAKE_SIM" >> "$incFile"
         make img="$proj"
         if [ $? -eq 0 ]; then

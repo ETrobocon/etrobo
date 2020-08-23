@@ -178,7 +178,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 manifestSize=`cat "$fileManifest" | tail -n 1 | awk '{print $2}'`
             fi
             if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ]; then
-                echo "$target is already up to date."
+                echo "$target is already up to date: size=$fileSize"
                 unset download
                 if [ -f "$distManifest" ]; then
                     if [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then

@@ -185,6 +185,8 @@ HackEVの実機をお持ちの方は、USBポートにさして電源を入れ�
     - Mac - デスクトップのドライブアイコン下のボリューム名部分をクリックして変更
     - Linux - `mlabel`コマンドで変更できますが、Windows/Mac上で行った方が速いと思われます
 
+- EV3に挿入されているSDカードに、[EV3RTのアプリケーションローダがインストールされている](https://dev.toppers.jp/trac_user/ev3pf/wiki/SampleProgram#PC%E3%81%8B%E3%82%89EV3%E3%81%B8%E3%81%AE%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%83%AD%E3%83%BC%E3%83%89%E6%96%B9%E6%B3%95%E3%81%AE%E9%81%B8%E6%8A%9E)必要があります。
+
 Athrill/ASP3（シミュレータ環境）向けビルドは、同じく`~/etrobo`から動かず`make app=sample_c4 sim up`とすると、起動までしてくれます。これも2回目以降は`make sim up`だけで構いません。
 
 Athrill/ASP3向けも、あえてEV3RT/HRP3向けのビルドも行っています。そもそも自分のソースに問題があるのか、シミュレーション環境が対応していないのか切り分けるためです。EV3RT/HRP3向けのビルドが失敗した場合、Athrill/ASP3向けビルドと実行は行いません。

@@ -51,9 +51,12 @@ else
     fi
     device_config_txt="$device_config_path/device_config.txt"
 
+    app_prefix=""
     if [ "$1" = "l" ] || [ "$1" = "left" ]; then
+        app_prefix="l_"
         shift
     elif [ "$1" = "r" ] || [ "$1" = "right" ]; then
+        app_prefix="r_"
         device_config_txt="$device_config_path/device_config_r.txt"
         shift
     fi
@@ -126,8 +129,26 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             sleep 1s
             loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
         done
+        curl -s -X GET http://localhost:54000/ > /dev/null
     fi
 
+    #
+    # the directory structure for new launchDist procedure:
+    # `sim` launches athrill apps from under the `workspace/[projName]/simdist` folder.
+    #
+    # $ETROBO_ATHRILL_WORKSPACE
+    #   |- athrill2
+    # $ETROBO_HRP3_WORKSPACE
+    #   |- [projName]
+    #       |- [simdist]
+    #           |- log.txt
+    #           |- l_projName.asp
+    #           |- r_projName.asp
+    #           |- settings.json
+    #           |- __ev3rt_bt_in
+    #           |- __ev3rt_bt_out
+    #           |- [__ev3rtfs]
+    #
     if [ "$1" = "launch" ]; then
         if [ -f "$ETROBO_ATHRILL_WORKSPACE/currentasp" ]; then
             target=`cat "$ETROBO_ATHRILL_WORKSPACE/currentasp"`
@@ -137,5 +158,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         echo "$target" > "$ETROBO_ATHRILL_WORKSPACE/currentasp"
         ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$ETROBO_ATHRILL_WORKSPACE/$target"
+    elif [ "$1" = "launchDist" ]; then
+        cd "$ETROBO_HRP3_WORKSPACE"
+        projName="$2"
+        if [ -z "$projName" ] && [ -f currentapp ]; then
+            currentapp=`head -n 1 currentapp`
+            projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+        fi
+        cd "$projName/simdist"
+        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "${app_prefix}${projName}.asp" &
     fi
 fi

@@ -126,11 +126,39 @@ if [ $makeResult -eq 0 ]; then
             echo fakemake on ASP3: build succseed: ${app_prefix}${proj}.asp
             cp -f asp "${app_prefix}${proj}.asp"
             echo "${app_prefix}${proj}.asp" > currentasp
+
+            #
+            # prepare simdist folder
+            #
+            # the directory structure for new launchDist procedure:
+            # `sim` launches athrill apps from under the `workspace/[projName]/simdist` folder.
+            #
+            # $ETROBO_ATHRILL_WORKSPACE
+            #   |- athrill2
+            # $ETROBO_HRP3_WORKSPACE
+            #   |- [projName]
+            #       |- [simdist]
+            #           |- log.txt
+            #           |- l_projName.asp
+            #           |- r_projName.asp
+            #           |- settings.json
+            #           |- __ev3rt_bt_in
+            #           |- __ev3rt_bt_out
+            #           |- [__ev3rtfs]
+            #
+            simdist="$ETROBO_HRP3_WORKSPACE/$proj/simdist"
+            if [ ! -d "$simdist" ]; then
+                mkdir -p "$simdist"
+            fi
+            cp -f "${app_prefix}${proj}.asp" "$simdist/"
+
             if [ "$simopt" = "up" ]; then
                 echo launch sim
-            	sim $courseSelect wait launch "${app_prefix}${proj}.asp"
+#            	sim $courseSelect wait launch "${app_prefix}${proj}.asp"
+            	sim $courseSelect wait launchDist $proj
             elif [ "$simopt" = "start" ]; then
-            	sim $courseSelect only launch "${app_prefix}${proj}.asp"
+#            	sim $courseSelect only launch "${app_prefix}${proj}.asp"
+            	sim $courseSelect only launchDist $proj
             fi
         else
             echo fakemake on ASP3: one or more error occured while build for $proj

@@ -118,55 +118,6 @@ Athrill/ASP3向けも、あえてEV3RT/HRP3向けのビルドも行っていま�
 
 このように、`~/etrobo`から使用する`make`コマンドには特殊な仕様が仕込まれていますが、それ以外のディレクトリで叩く`make`は通常通り動作します。
 
-## etroboパッケージのバージョンアップ
-
-etrobo環境のターミナルで、etrobo環境ディレクトリから`update`コマンドを実行します。
-
-大抵これで大丈夫ですが、アップデートされていないと思った場合は再度`update`コマンドを実行してから、etrobo環境（VSCode）を閉じ、再度etrobo環境を起動してください。
-
-## etroboパッケージのアンインストール/再インストール
-
-### Windows/Linux
-
-etrobo環境（VSCode）を閉じ、（Ubuntu）ターミナルを開いて、以下のコマンドを順に実行します。
-```
-./startetrobo clean
-rm ./startetrobo
-exit
-```
-
-再インストールは、アンインストールしてから、再び上記のインストールコマンドを実行します。
-
-### Mac
-
-Macでは、etroboパッケージのみ再インストールする場合と、BeerHallツールチェーンサンドボックスも含めた全体をアンインストール/再インストールする場合で操作が異なります。
-
-#### etroboパッケージのみを再インストール
-まず、上記「etroboパッケージのバージョンアップ」の手順に従い`update`します。
-
-etrobo環境を（VSCode）を閉じ、ターミナルを開いて、以下のコマンドを順に実行します。
-```
-cd "$BEERHALL"
-./BeerHall "./startetrobo clean"
-exit
-```
-その後、`Command`+`W`キーで一度ターミナルを閉じ、再度新規ターミナルウィンドウを開いて、以下のコマンドを実行します。
-```
-cd "$BEERHALL"
-./BeerHall "./startetrobo"
-```
-
-#### BeerHallも含めた全体のアンインストール/再インストール
-etrobo環境を（VSCode）を閉じ、ターミナルを開いて、以下のコマンドを順に実行します。
-```
-./startetrobo_mac.command clean
-rm ./startetrobo_mac.command
-exit
-```
-その後、`Command`+`W`キーでターミナルを閉じます。
-
-再インストールするには、再び上記のインストールコマンドを実行します。
-
 ## etrobo環境の詳細説明(整備中)
 
 ### etrobo環境の無効化/有効化

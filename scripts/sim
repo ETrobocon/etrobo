@@ -20,6 +20,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SIM_COMPANY
     unset ETROBO_SIM_NAME
     unset ETROBO_SIM_LOG
+    unset ETROBO_SIM_COMM
     unset ETROBO_LAUNCH_ASP
     unset ETROBO_LAUNCH_SIM
 else
@@ -52,15 +53,25 @@ else
     device_config_txt="$device_config_path/device_config.txt"
 
     app_prefix=""
+    app_select="l_app"
+    app_req='{"LHackEV":1}'
     if [ "$1" = "l" ] || [ "$1" = "left" ]; then
         app_prefix="l_"
         shift
     elif [ "$1" = "r" ] || [ "$1" = "right" ]; then
         app_prefix="r_"
+        app_select="r_app"
+        app_req='{"RHackEV":1}'
         device_config_txt="$device_config_path/device_config_r.txt"
         shift
     fi
+    ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
+    if [ -z "$ip" ]; then
+        ip="localhost"
+    fi
+    export ETROBO_SIM_COMM="http://$ip:54000/"
     export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
+
 
     if [ "$1" = "ver" ]; then
         export ETROBO_SIM_VER="$2"
@@ -87,26 +98,60 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         echo $(eval echo "$ETROBO_LAUNCH_SIM")
     fi
     if [ "$1" = "check" ]; then
+        # check UnityETroboSim
         if [ "$ETROBO_OS" = "win" ]; then
             checker='tasklist.exe /FI "imagename eq ${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" | grep ${ETROBO_SIM_NAME} | sed -E "s/^${ETROBO_SIM_NAME}(.*$)/\1/"'
         else
             checker='ps aux | grep -v grep | grep etrobosim'
         fi
         pid=$(eval $checker | awk '{print $2}')
-        echo $pid
+        # check athrill app
+        l_pid=`ps aux | grep -v grep | grep device_config.txt | awk '{print $2}'`
+        r_pid=`ps aux | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
+
+        if [ "$2" != "apps" ] && [ "$2" != "l_app" ] && [ "$2" != "r_app" ]; then
+            echo $pid
+        fi
+        if [ "$2" != "sim" ]; then
+            if [ "$2" == "l_app" ]; then
+                echo $l_pid
+            elif [ "$2" == "r_app" ]; then
+                echo $r_pid
+            else
+                echo "$l_pid:$r_pid"
+            fi
+        fi
         exit 0
     fi
     if [ "$1" = "stop" ]; then
-        pid=`sim check`
-        while [ -n "$pid" ]; do
-            if [ "$ETROBO_OS" = "win" ]; then
-                taskkill.exe /pid $pid > /dev/null
-            else
-                kill $pid
-            fi
-            sleep 1s
-            pid=`sim check`
-        done
+        # stop UnityETroboSim
+        if [ "$2" != "apps" ] && [ "$2" != "l_app" ] && [ "$2" != "r_app" ]; then
+            pid=`sim check sim`
+            while [ -n "$pid" ]; do
+                if [ "$ETROBO_OS" = "win" ]; then
+                    taskkill.exe /pid $pid > /dev/null
+                else
+                    kill $pid
+                fi
+                sleep 0.1
+                pid=`sim check sim`
+            done
+        fi
+        # stop athrill apps
+        if [ "$2" != "sim" ]; then
+            l_pid=`sim check l_app`
+            while [ -n "$l_pid" ]; do
+                kill $l_pid
+                sleep 0.1
+                l_pid=`sim check l_app`
+            done
+            r_pid=`sim check r_app`
+            while [ -n "$r_pid" ]; do
+                kill $r_pid
+                sleep 0.1
+                r_pid=`sim check r_app`
+            done
+        fi
         exit 0
     fi
     unset sim_wait
@@ -118,18 +163,20 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "only" ]; then
         shift
     else
-        if [ -z `sim check` ]; then
+        if [ -z `sim check sim` ]; then
             if [ -f "$ETROBO_SIM_LOG" ]; then
                 mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
             fi
             eval "$ETROBO_LAUNCH_SIM"
         fi
-        loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
-        while [ -z "$loop" ]; do
-            sleep 1s
-            loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
+        while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`" ]; do
+            sleep 0.1
         done
-        curl -s -X GET http://localhost:54000/ > /dev/null
+        unset comm_ready
+        if [ -n "`curl -s -X GET $ETROBO_SIM_COMM | jq -r .[].mode | grep CONTROLLABLE`" ]; then
+            comm_ready="Ready"
+            curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+        fi
     fi
 
     #
@@ -149,6 +196,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #           |- __ev3rt_bt_out
     #           |- [__ev3rtfs]
     #
+    unset target
     if [ "$1" = "launch" ]; then
         if [ -f "$ETROBO_ATHRILL_WORKSPACE/currentasp" ]; then
             target=`cat "$ETROBO_ATHRILL_WORKSPACE/currentasp"`
@@ -157,7 +205,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             target="$2"
         fi
         echo "$target" > "$ETROBO_ATHRILL_WORKSPACE/currentasp"
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$ETROBO_ATHRILL_WORKSPACE/$target"
+        target="$ETROBO_ATHRILL_WORKSPACE/$target"
     elif [ "$1" = "launchDist" ]; then
         cd "$ETROBO_HRP3_WORKSPACE"
         projName="$2"
@@ -166,6 +214,18 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
         fi
         cd "$projName/simdist"
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "${app_prefix}${projName}.asp" &
+        target="${app_prefix}${projName}.asp"
+    fi
+
+    # launch a athrill app at background
+    if [ -n "$target" ]; then
+        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+
+        loop="loop"
+        trap "unset loop; sim stop $app_select" SIGINT EXIT
+
+        while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
+            sleep 0.1
+        done
     fi
 fi

@@ -56,9 +56,9 @@ fi
 
 if [ "$1" = "start" ]; then
     if [ "$2" = "up" ]; then
-        sim $courseSelect wait launch
+        sim $courseSelect wait launchDist
     else
-        sim $courseSelect only launch asp
+        sim $courseSelect only launchDist
     fi
     exit 0
 fi

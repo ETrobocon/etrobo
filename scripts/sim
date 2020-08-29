@@ -222,10 +222,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
 
         loop="loop"
-        trap "unset loop; sim stop $app_select" SIGINT EXIT
+        trap "echo now terminating...; unset loop" SIGINT
 
         while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
             sleep 0.1
         done
+
+        sim stop $app_select
     fi
 fi

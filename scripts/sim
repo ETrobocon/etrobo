@@ -154,29 +154,20 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         exit 0
     fi
-    unset sim_wait
-    if [ "$1" = "wait" ]; then
-        sim_wait="true"
-        shift
-    fi
 
-    if [ "$1" = "only" ]; then
+    # `wait` option is no longer using, sim always wait for launch UnityETroboSim
+    unset sim_opt
+    if [ "$1" = "wait" ]; then
+        sim_opt="wait"
+        shift
+    elif [ "$1" = "only" ]; then
+        sim_opt="only"
+        shift
+    elif [ "$1" = "auto" ]; then
+        sim_opt="auto"
         shift
     else
-        if [ -z `sim check sim` ]; then
-            if [ -f "$ETROBO_SIM_LOG" ]; then
-                mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
-            fi
-            eval "$ETROBO_LAUNCH_SIM"
-        fi
-        while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`" ]; do
-            sleep 0.1
-        done
-        unset comm_ready
-        if [ -n "`curl -s -X GET $ETROBO_SIM_COMM | jq -r .[].mode | grep CONTROLLABLE`" ]; then
-            comm_ready="Ready"
-            curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
-        fi
+        unset sim_opt
     fi
 
     #
@@ -224,9 +215,36 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         loop="loop"
         trap "echo now terminating...; unset loop" SIGINT
 
-        while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
-            sleep 0.1
-        done
+        # launch UnityETroboSim at background
+        if [ "$sim_opt" != "only" ]; then
+            if [ -z `sim check sim` ]; then
+                if [ -f "$ETROBO_SIM_LOG" ]; then
+                    mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
+                fi
+                eval "$ETROBO_LAUNCH_SIM"
+            fi
+            if [ "$ETROBO_SIM_VER" == "2020_0.992" ]; then
+                hook="CONTROLLABLE"
+                unset comm_ready
+            else
+                hook="UIHttpServer start"
+                comm_ready="Ready"
+            fi
+            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ]; do
+                sleep 0.1
+            done
+            sleep 1
+            if [ -n "$comm_ready" ]; then
+                if [ -n "`curl -s -X GET $ETROBO_SIM_COMM | jq -r .[].mode | grep CONTROLLABLE`" ]; then
+                    curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+                fi
+            fi
+
+            # loop while UnityETroboSim is running
+            while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
+                sleep 0.1
+            done
+        fi
 
         sim stop $app_select
     fi

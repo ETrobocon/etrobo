@@ -114,9 +114,13 @@ if [ $makeResult -eq 0 ]; then
 
         # invoke make for ASP3/Athrill
         rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
+        rm -rf "$ETROBO_HRP3_WORKSPACE/__tmp_simdist"
+        mv -f "$ETROBO_HRP3_WORKSPACE/$proj/simdist" "$ETROBO_HRP3_WORKSPACE/__tmp_simdist"
         mv -f "${incFile}.base" "${incFile}"
         cp -r "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"
         mv -f "${incFile}.org" "$incFile"
+        mv -f "$ETROBO_HRP3_WORKSPACE/__tmp_simdist" "$ETROBO_HRP3_WORKSPACE/$proj/simdist"
+
         cd "$ETROBO_ATHRILL_WORKSPACE"
         echo >> "$incFile"
         echo "COPTS += -DMAKE_SIM" >> "$incFile"

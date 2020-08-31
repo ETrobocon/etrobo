@@ -169,7 +169,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             echo
             echo "cached $target ... checking with manifest"
             fileSize=`wc -c "$file" | awk '{print $1}'`
-            if [ ! -f "$fileManifest" ]; then
+            if [ "$fileSize" == "0" ]; then
+                manifestVer=$ver
+                manifestSize=$size
+            elif [ ! -f "$fileManifest" ]; then
                 echo "$target is downloaded manually."
                 manifestVer=$ver
                 manifestSize=$size
@@ -177,7 +180,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 manifestVer=`cat "$fileManifest" | tail -n 1 | awk '{print $1}'`
                 manifestSize=`cat "$fileManifest" | tail -n 1 | awk '{print $2}'`
             fi
-            if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ] && [ "$fileSize" != "0" ]; then
+            if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ]; then
                 echo "$target is already up to date: size=$fileSize"
                 unset download
                 if [ -f "$distManifest" ]; then

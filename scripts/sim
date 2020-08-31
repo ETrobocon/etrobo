@@ -218,7 +218,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
 
         loop="loop"
-        trap "echo now terminating...; unset loop" SIGINT
+        trap "echo ' now terminating...'; unset loop" SIGINT
 
         # launch UnityETroboSim at background
         if [ "$sim_opt" != "only" ]; then

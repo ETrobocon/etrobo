@@ -34,7 +34,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2020.08.11a"
+    export ETROBO_MANIFEST_VER="2020.08.31a"
 
     #
     # GNU Arm Embedded Toolchain
@@ -119,15 +119,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=31984414
+        size=32068631
     elif [ "$target" = "mac" ]; then
-        size=28295955
+        size=28371217
     elif [ "$target" = "linux" ]; then
-        size=31441226
+        size=31514730
     fi    
     pkgs+=("etrobosim")
-    urls+=("kintone://etrobocon/13/File/etrobosim2020_2.5_${target}.tar.gz")
-    vers+=("2020.08.11a")
+    urls+=("kintone://etrobocon/13/File/etrobosim2020_3.0_${target}.tar.gz")
+    vers+=("2020.08.31a")
     sizes+=("$size")
 
     #

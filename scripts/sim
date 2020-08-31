@@ -206,11 +206,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         cd "$projName/simdist"
         target="${app_prefix}${projName}.asp"
+    elif [ -z "$sim_opt" ]; then
+        sim_opt="skipASP"
+        target="dummy"
     fi
 
     # launch a athrill app at background
     if [ -n "$target" ]; then
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+        if [ "$sim_opt" != "skipASP" ]; then
+            ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+        fi
 
         loop="loop"
         trap "echo now terminating...; unset loop" SIGINT
@@ -233,6 +238,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ]; do
                 sleep 0.1
             done
+            if [ "$sim_opt" == "skipASP" ]; then
+                exit 0
+            fi
             sleep 1
             if [ -n "$comm_ready" ]; then
                 if [ -n "`curl -s -X GET $ETROBO_SIM_COMM | jq -r .[].mode | grep CONTROLLABLE`" ]; then

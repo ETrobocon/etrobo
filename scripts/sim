@@ -247,12 +247,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
                 fi
             fi
-
-            # loop while UnityETroboSim is running
-            while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
-                sleep 0.1
-            done
         fi
+
+        # loop while UnityETroboSim is running
+        while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
+            sleep 0.1
+        done
 
         sim stop $app_select
     fi

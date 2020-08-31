@@ -238,7 +238,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 unset comm_ready
             else
                 hook="UIHttpServer start"
-                comm_ready="Ready"
+                comm_ready="init"
             fi
             while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ]; do
                 sleep 0.1
@@ -246,9 +246,19 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ "$sim_opt" == "skipASP" ]; then
                 exit 0
             fi
-            sleep 1
-            if [ -n "$comm_ready" ]; then
-                if [ -n "`curl -s -X GET $ETROBO_SIM_COMM | jq -r .[].mode | grep CONTROLLABLE`" ]; then
+            if [ "$comm_ready" == "init" ]; then
+                response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                json=`echo "$response" | sed '1,2d' | sed '$d'`
+                code=`echo "$response" | tail -n 1`
+                while [ "$code" == "500" ]; do
+                    sleep 0.1
+                    response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                    json=`echo "$response" | sed '1,2d' | sed '$d'`
+                    code=`echo "$response" | tail -n 1`
+                done
+                comm_ready="Ready"
+                
+                if [ -n "`echo "$json" | jq -r .[].mode | grep CONTROLLABLE`" ]; then
                     curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
                 fi
             fi

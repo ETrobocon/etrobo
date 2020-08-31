@@ -214,7 +214,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # launch a athrill app at background
     if [ -n "$target" ]; then
         if [ "$sim_opt" != "skipASP" ]; then
-            ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+            if [ "$sim_opt" == "only" ] && [ -z `sim check sim` ]; then
+                ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target"
+                # execution will deadlock here. to terminate, user have to hit Ctrl+C key.
+            else
+                ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+            fi
         fi
 
         loop="loop"

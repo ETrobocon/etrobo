@@ -222,8 +222,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
         fi
 
+        # thread terminator
         loop="loop"
-        trap "echo ' now terminating...'; unset loop" SIGINT
+        trap "unset loop; echo ' now terminating...'" SIGINT
+        trap "unset loop; sim stop $app_select" EXIT
 
         # launch UnityETroboSim at background
         if [ "$sim_opt" != "only" ]; then
@@ -240,7 +242,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 hook="UIHttpServer start"
                 comm_ready="init"
             fi
-            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ]; do
+            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ]; do
                 sleep 0.1
             done
             if [ "$sim_opt" == "skipASP" ]; then
@@ -250,7 +252,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                 json=`echo "$response" | sed '1,2d' | sed '$d'`
                 code=`echo "$response" | tail -n 1`
-                while [ "$code" == "500" ]; do
+                while [ "$code" == "500" ] && [ -n "$loop" ]; do
                     sleep 0.1
                     response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                     json=`echo "$response" | sed '1,2d' | sed '$d'`
@@ -268,7 +270,5 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         while [ -n "`sim check sim`" ] && [ -n "$loop" ]; do
             sleep 0.1
         done
-
-        sim stop $app_select
     fi
 fi

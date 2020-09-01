@@ -113,13 +113,11 @@ if [ $makeResult -eq 0 ]; then
         fi
 
         # invoke make for ASP3/Athrill
+        rm -rf "$ETROBO_HRP3_WORKSPACE/$proj/simdist"   # ToDo: this line will be removed in next year
         rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
-        rm -rf "$ETROBO_HRP3_WORKSPACE/__tmp_simdist"
-        mv -f "$ETROBO_HRP3_WORKSPACE/$proj/simdist" "$ETROBO_HRP3_WORKSPACE/__tmp_simdist"
         mv -f "${incFile}.base" "${incFile}"
         cp -r "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"
         mv -f "${incFile}.org" "$incFile"
-        mv -f "$ETROBO_HRP3_WORKSPACE/__tmp_simdist" "$ETROBO_HRP3_WORKSPACE/$proj/simdist"
 
         cd "$ETROBO_ATHRILL_WORKSPACE"
         echo >> "$incFile"
@@ -135,13 +133,13 @@ if [ $makeResult -eq 0 ]; then
             # prepare simdist folder
             #
             # the directory structure for new launchDist procedure:
-            # `sim` launches athrill apps from under the `workspace/[projName]/simdist` folder.
+            # `sim` launches athrill apps from under the `workspace/simdist/[projName]` folder.
             #
             # $ETROBO_ATHRILL_WORKSPACE
             #   |- athrill2
             # $ETROBO_HRP3_WORKSPACE
-            #   |- [projName]
-            #       |- [simdist]
+            #   |- [simdist]
+            #       |- [projName]
             #           |- log.txt
             #           |- l_projName.asp
             #           |- r_projName.asp
@@ -150,7 +148,7 @@ if [ $makeResult -eq 0 ]; then
             #           |- __ev3rt_bt_out
             #           |- [__ev3rtfs]
             #
-            simdist="$ETROBO_HRP3_WORKSPACE/$proj/simdist"
+            simdist="$ETROBO_HRP3_WORKSPACE/simdist/$proj"
             if [ ! -d "$simdist" ]; then
                 mkdir -p "$simdist"
             fi

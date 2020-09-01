@@ -172,13 +172,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
     #
     # the directory structure for new launchDist procedure:
-    # `sim` launches athrill apps from under the `workspace/[projName]/simdist` folder.
+    # `sim` launches athrill apps from under the `workspace/simdist/[projName]` folder.
     #
     # $ETROBO_ATHRILL_WORKSPACE
     #   |- athrill2
     # $ETROBO_HRP3_WORKSPACE
-    #   |- [projName]
-    #       |- [simdist]
+    #   |- [simdist]
+    #       |- [projName]
     #           |- log.txt
     #           |- l_projName.asp
     #           |- r_projName.asp
@@ -204,7 +204,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             currentapp=`head -n 1 currentapp`
             projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
         fi
-        cd "$projName/simdist"
+        cd "simdist/$projName"
         target="${app_prefix}${projName}.asp"
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"

@@ -169,10 +169,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             echo
             echo "cached $target ... checking with manifest"
             fileSize=`wc -c "$file" | awk '{print $1}'`
-            if [ "$fileSize" == "0" ]; then
-                manifestVer=$ver
-                manifestSize=$size
-            elif [ ! -f "$fileManifest" ]; then
+            if [ ! -f "$fileManifest" ]; then
                 echo "$target is downloaded manually."
                 manifestVer=$ver
                 manifestSize=$size

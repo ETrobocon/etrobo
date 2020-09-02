@@ -334,7 +334,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 ;;
             "etrobosim" ) 
-                rm -f "$ETROBO_ROOT/dist/$target"
+                #rm -f "$ETROBO_ROOT/dist/$target"
                 rm -f "$ETROBO_ROOT/dist/$target.manifest"
                 if [ "$size" != "0" ]; then
                     echo

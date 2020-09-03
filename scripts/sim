@@ -43,7 +43,7 @@ else
     #
     # memory.txt hotfix
     #
-    # @todo: this process has to move into fakemake.sh
+    # @todo: this process has to move into build_athrill.sh
     if [ ! -f "${memory_txt}.org" ]; then
         cp "$memory_txt" "${memory_txt}.org"
         cat $ETROBO_ATHRILL_SDK/common/memory.txt | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"

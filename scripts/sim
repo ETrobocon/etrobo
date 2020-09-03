@@ -40,6 +40,18 @@ else
         unset ETROBO_SIM_LOG
     fi
 
+    #
+    # memory.txt hotfix
+    #
+    # @todo: this process has to move into fakemake.sh
+    if [ ! -f "${memory_txt}.org" ]; then
+        cp "$memory_txt" "${memory_txt}.org"
+        cat $ETROBO_ATHRILL_SDK/common/memory.txt | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"
+        rm "$memory_txt"
+        cp "${memory_txt}.tmp" "$memory_txt"
+        rm "${memory_txt}.tmp"
+    fi
+
     # search & select a path to device_config.txt
     # select priority: 
     # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common

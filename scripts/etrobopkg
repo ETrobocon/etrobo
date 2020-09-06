@@ -16,6 +16,8 @@ cd "$ETROBO_ROOT"
 
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
+    unset ETROBO_PUBLIC_VER
+    unset ETROBO_COMPETITION_VER
     unset ETROBO_CACHE
     unset ETROBO_HRP3_GCC_VER
     unset ETROBO_HRP3_GCC_URL_BASE
@@ -35,6 +37,8 @@ else
     # ETrobo package download manifest
     #
     export ETROBO_MANIFEST_VER="2020.08.31a"
+    export ETROBO_PUBLIC_VER="2020_0.992"
+    export ETROBO_COMPETITION_VER="2020_3.0"
 
     #
     # GNU Arm Embedded Toolchain
@@ -126,7 +130,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         size=31514730
     fi    
     pkgs+=("etrobosim")
-    urls+=("kintone://etrobocon/13/File/etrobosim2020_3.0_${target}.tar.gz")
+    urls+=("kintone://etrobocon/13/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
     vers+=("2020.08.31a")
     sizes+=("$size")
 
@@ -233,6 +237,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         echo "failed to log in. Please check your account and re-run startetrobo."
                         exit 1
                     fi
+                    echo "authentication succeeded."
+                    echo "downloading now... please wait a minute."
                     filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
                     rm -f "$file"
                     cp -f "$clitemp"/$filePath "$file"

@@ -9,6 +9,15 @@
 
 cd "$ETROBO_HRP3_WORKSPACE"
 
+# `make import` imports from UnityETroboSim preferences to settings.json
+import=""
+export=""
+if [ "$1" = "import" ]; then
+    import="import"
+    export="export"
+    shift
+fi
+
 # select course
 courseSelect=""
 copts=""
@@ -30,18 +39,31 @@ if [ -n "$app_prefix" ]; then
     arg_app_prefix="app_prefix=$app_prefix"
 fi
 
+# manual launch control
+manual_launch=""
+if [ "$1" = "manual" ]; then
+    manual_launch="manual"
+    shift
+fi
+# `make unprefs` doesn't set preference to UnityETroboSim preferences
+unprefs=""
+if [ "$1" = "unprefs" ]; then
+    unprefs="unprefs"
+    shift
+fi
+
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
     if [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
-        make $courseSelect app="etrobo_tr" sim up
+        make $zip $import $courseSelect $manual_launch $unprefs app="etrobo_tr" sim up
     else
         cd "$ETROBO_ROOT"
-        make $courseSelect app="sample_c4" sim up
+        make $zip $import $courseSelect $manual_launch $unprefs app="sample_c4" sim up
 #        cd "$ETROBO_ATHRILL_WORKSPACE"
 #        make $courseSelect img=athrillsample
 #        if [ $? -eq 0 ]; then
-#            sim wait launch
+#            sim launchws
 #        fi
     fi
     exit 0
@@ -56,10 +78,15 @@ fi
 
 if [ "$1" = "start" ]; then
     if [ "$2" = "up" ]; then
-        sim $courseSelect wait launchDist
+        sim $export $courseSelect $manual_launch $unprefs launch
     else
-        sim $courseSelect only launchDist
+        sim $export $courseSelect $manual_launch $unprefs only launch
     fi
+    exit 0
+fi
+
+if [ "$1" = "stop" ]; then
+    sim stop $2
     exit 0
 fi
 
@@ -132,7 +159,7 @@ if [ $makeResult -eq 0 ]; then
             #
             # prepare simdist folder
             #
-            # the directory structure for new launchDist procedure:
+            # the directory structure for new launch simdist procedure:
             # `sim` launches athrill apps from under the `workspace/simdist/[projName]` folder.
             #
             # $ETROBO_ATHRILL_WORKSPACE
@@ -155,12 +182,10 @@ if [ $makeResult -eq 0 ]; then
             cp -f "${app_prefix}${proj}.asp" "$simdist/"
 
             if [ "$simopt" = "up" ]; then
-                echo launch sim
-#            	sim $courseSelect wait launch "${app_prefix}${proj}.asp"
-            	sim $courseSelect wait launchDist $proj
+                echo "launch sim"
+            	sim $export $courseSelect $manual_launch $unprefs launch $proj
             elif [ "$simopt" = "start" ]; then
-#            	sim $courseSelect only launch "${app_prefix}${proj}.asp"
-            	sim $courseSelect only launchDist $proj
+            	sim $export $courseSelect $manual_launch $unprefs only launch $proj
             fi
         else
             echo fakemake on ASP3: one or more error occured while build for $proj

@@ -27,6 +27,7 @@ cd "$ETROBO_ROOT"
 if [ "$1" = "update" ]; then
     update="update"
     option="$2"
+    option2="$3"
     cd "$ETROBO_ROOT"
     #echo "update etrobo package:"
     #git pull --ff-only
@@ -41,10 +42,12 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 
     if [ "$option" = "sim" ]; then
+        echo "update $option $option2 invoked"
         rm -f "$ETROBO_CACHE/"etrobosim*
-        rm -f "$ETROBO_ROOT"/dist/etrobosim*.manifest
-        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$2" | while read line; do
+        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$option2"
+        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$option2" | while read line; do
             rm -f "$line"
+            rm -f "$line.manifest"
         done
     fi
     etrobopkg

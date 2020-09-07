@@ -43,7 +43,7 @@ if [ "$1" = "update" ]; then
     if [ "$option" = "sim" ]; then
         rm -f "$ETROBO_CACHE/"etrobosim*
         rm -f "$ETROBO_ROOT"/dist/etrobosim*.manifest
-        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | while read line; do
+        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$2" | while read line; do
             rm -f "$line"
         done
     fi

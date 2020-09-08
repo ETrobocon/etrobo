@@ -298,7 +298,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 eval "$ETROBO_LAUNCH_SIM"
             fi
             # wait for starting up UnityETrobosim
-            if [ "$ETROBO_SIM_VER" != "$ETROBO_COMPETITION_VER" ]; then
+            if [ "$ETROBO_SIM_VER" == "$ETROBO_PUBLIC_VER" ]; then
                 hook="CONTROLLABLE"
                 unset comm_ready
             else
@@ -366,7 +366,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "[ launcher: ready to start on $sim_select course ]"
 
                 # auto start sequence
-                if [ "$ETROBO_SIM_VER" == "$ETROBO_COMPETITION_VER" ]; then
+                if [ "$ETROBO_SIM_VER" != "$ETROBO_PUBLIC_VER" ]; then
                     # request PREPARE and wait READY
                     echo "[ launcher: Go to the start, Ready? ]"
                     json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`

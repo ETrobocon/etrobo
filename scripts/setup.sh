@@ -42,13 +42,14 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 
     if [ "$option" = "sim" ]; then
-        echo "update $option $option2 invoked"
         rm -f "$ETROBO_CACHE/"etrobosim*
-        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$option2"
-        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "2020_0.992" | grep -v "$option2" | while read line; do
-            rm -f "$line"
-            rm -f "$line.manifest"
-        done
+        if [ "$option2" = "public" ]; then
+            sim_public="sim_public"
+            ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do
+                rm -f "$line"
+                rm -f "$line.manifest"
+            done
+        fi
     fi
     etrobopkg
     . "$scripts/sim" env
@@ -100,6 +101,7 @@ fi
 #
 # distribute UnityETroboSim
 cd "$ETROBO_ROOT/dist"
+. sim env
 echo "Bundled Simulator: $ETROBO_SIM_VER"
 if [ "$ETROBO_OS" = "chrome" ]; then
     os="linux"

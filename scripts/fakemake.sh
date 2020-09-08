@@ -128,7 +128,7 @@ make $arg_app_prefix $args
 makeResult=$?
 cp -f "${incFile}.org" "$incFile"
 if [ $makeResult -eq 0 ]; then
-    echo fakemake on HRP3: build succseed: ${app_prefix}${proj}
+    echo fakemake on HRP3: build succeed: ${app_prefix}${proj}
     currentapp=`head -n 1 currentapp`
     simopt=`tail -n 1 currentapp`
 
@@ -152,7 +152,7 @@ if [ $makeResult -eq 0 ]; then
         make img="$proj"
         if [ $? -eq 0 ]; then
             mv -f "${incFile}.org" "$incFile"
-            echo fakemake on ASP3: build succseed: ${app_prefix}${proj}.asp
+            echo fakemake on ASP3: build succeed: ${app_prefix}${proj}.asp
             cp -f asp "${app_prefix}${proj}.asp"
             echo "${app_prefix}${proj}.asp" > currentasp
 

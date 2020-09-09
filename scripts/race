@@ -1,0 +1,412 @@
+#!/usr/bin/env bash
+#
+# race, ET robocon race sequencer, file archiver (and uploader)
+#   race 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "Usage: race [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
+    echo
+    echo "The ET robocon race sequencer, file archiver (and uploader)"
+    echo
+    echo "The race folder contains 'Requests' and 'Results' folder."
+    echo "This race sequencer gets a .zip file that timestamp is the newest one"
+    echo "from 'Requests' folder and makes competition automatically."
+    echo "After that, race result files are zipped into 'Results' folder as"
+    echo "same .zip filename."
+    echo "If COURSE option is specified, this sequencer launches one of"
+    echo "'l_/r_<projName>.asp' files depending on specified course."
+    echo
+    echo "On 'zip' or 'upload' mode, this archiver creates a upload.zip file from"
+    echo "'\$ETROBO_HRP3_WORKSPACE/simdist/<projName>' into the race folder."
+    echo "If COURSE option is specified, this archiver rewrites L/RHackEV value"
+    echo "on 'settings.json' to specified course."
+    echo
+    echo "  MODE Options:  (default: 'get')"
+    echo "    get    ... get a .zip file from the race folder"
+    echo "    pop    ... get a .zip file from the race folder and *DELETE* it"
+    echo "    zip    ... create a .zip file for 'Requests' into the race folder"
+    echo "    upload ... (Reserved Feature) create a .zip file and upload"
+    echo "    fp1    ... (Reserved Feature) run as Free Practice 1 daemon"
+    echo "    fp2    ... (Reserved Feature) run as Free Practice 2 daemon"
+    echo "    final  ... (Reserved Feature) run as Championship Final daemon"
+    echo
+    echo "  CLASS Options:  (default: 'auto')"
+    echo "    auto   ... choose in dependign on filename prefix"
+    echo "               if no classes are prefixed, choose specified class"
+    echo "               in settings.json"
+    echo "               if there aren't exists, choose 'advanced' class"
+    echo "    advanced . choose 'advanced' class (or 'A_' prefixed .zip file)"
+    echo "    primary .. choose 'primary' class  (or 'P_' prefixed .zip file)"
+    echo "    entry  ... choose 'entry' class    (or 'E_' prefixed .zip file)"
+    echo "    sample ... choose 'sample' course  (or 'S_' prefixed .zip file)"
+    echo
+    echo "  COURSE Options:  (default: 'auto')"
+    echo "    auto   ... specified course in settings.json"
+    echo "               if there aren't exists, choose 'left' course"
+    echo "    left   ... choose 'left' course"
+    echo "    right  ... choose 'right' course"
+    echo
+    echo "  If CLASS or COURSE option is specified, etclass/L_HackEV/R_HackEV"
+    echo "  in settings.json will be rewritten in depending on options."
+    echo
+    echo "  </path/to/raceFolder> can specifies a *ABSOLUTE* path"
+    echo "                        to the race folder."
+    echo "  (default on Windows: '%USERPROFILE%\etrobosim\_race\')"
+    echo "  (default on others:  '\$ETROBO_HRP3_WORKSPACE/simdist/_race/')"
+    echo
+    echo "  On 'zip' or 'update' mode, <projName> can specifies a project name."
+    echo "  (default: current app)"
+    echo "  Both ('l_' prefixed) left and ('r_' prefixed) right apps are"
+    echo "  archived into .zip file regardless of COURSE specification."
+    echo "  This archiver will use a non-prefixed .asp file if there are"
+    echo "  not 'l_'/'r_' prefixed files."
+    echo
+    exit 0
+fi
+
+#
+# get options
+#
+mode="get"
+if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
+|| [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "final" ]; then
+    mode="$1"
+    shift
+fi
+
+class="auto"
+if [ "$1" = "auto" ] || [ "$1" = "advanced" ] || [ "$1" = "primary" ] \
+|| [ "$1" = "entry" ] || [ "$1" = "sample" ]; then
+    class="$1"
+    shift
+fi
+
+course="auto"
+if [ "$1" = "auto" ] || [ "$1" = "left" ] || [ "$1" = "right" ]; then
+    course="$1"
+    shift
+fi
+
+#
+# prepare envver for simdist, temporary and race folder
+#
+simdist="$ETROBO_HRP3_WORKSPACE/simdist"
+raceFolder="$simdist"
+if [ "$ETROBO_OS" == "win" ]; then
+    raceFolder="$ETROBO_USERPROFILE/etrobosim"
+fi
+raceTemp="$simdist/__race"
+raceFolder="$raceFolder/_race"
+if [ -n "`echo $1 | grep ^\/`" ]; then
+    raceFolder="$1"
+    shift
+fi
+if [ ! -d "$raceFolder" ]; then
+    # race folder must be there
+    # if it's on zip mode, make new folders
+    if [ "$mode" == "zip" ]; then
+        mkdir -p "$raceFolder/Requests"
+        mkdir -p "$raceFolder/Results"
+    else
+        echo "race sequencer: the race folder '$raceFolder' is not found."
+        exit 1
+    fi
+fi
+
+#
+# determine a project name
+#
+projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+if [ -n "$1" ]; then
+    projName="$1"
+    shift
+fi
+proj="$simdist/$projName"
+if [ ! -d "$proj" ] && [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    echo "file archiver: project '$projName' is not found at '$simdist'."
+    exit 1
+fi
+
+#
+# prepare __race temp folder in simdist
+#
+rm -rf "$raceTemp"
+mkdir -p "$raceTemp"
+cd "$simdist"
+rm -f *.zip
+
+if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    #
+    # file archiver
+    #
+    echo "file archiver: start"
+
+    # prepare settings.json
+    echo -n "file archiver: settings.json "
+    if [ -f "$proj/settings.json" ]; then
+        cp "$proj/settings.json" "$raceTemp/"
+        if [ "$?" == "0" ]; then
+            echo "is copied."
+        else
+            echo "ERROR while coping."
+            exit 1
+        fi
+    else
+        echo "not found."
+        touch "$raceTemp/settings.json"
+    fi
+
+    # prepare ev3rtfs
+    echo -n "file archiver: __ev3rtfs "
+    if [ -d "$proj/__ev3rtfs" ]; then
+        cp -r "$proj/__ev3rtfs" "$raceTemp/"
+        if [ "$?" == "0" ]; then
+            echo "is copied."
+        else
+            echo "ERROR while coping."
+            exit 1
+        fi
+    else
+        echo "not found."
+        mkdir -p "$raceTemp/__ev3rtfs"
+    fi
+
+    # prepare l_app
+    echo -n "file archiver: Athrill app for Left course: "
+    l_app="${projName}.asp"
+    if [ -f "$proj/l_$l_app" ]; then
+        l_app="l_$l_app"
+    elif [ -n `ls "$proj" | grep ^l_.*\.asp$` ]; then
+        l_app=`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`
+    elif [ -f "$proj/$l_app" ]; then
+        l_app="$l_app"
+    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
+        l_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    else
+        unset l_app
+    fi
+    if [ -n "$l_app" ];then
+        cp -f "$proj/$l_app" "$raceTemp/l___race.asp"
+        if [ "$?" == "0" ]; then
+            echo "'$l_app' is copied."
+        else
+            echo "ERROR while coping."
+            exit 1
+        fi
+    else
+        echo "not found."
+        exit 1
+    fi
+
+    # prepare r_app
+    echo -n "file archiver: Athrill app for Right course: "
+    r_app="${projName}.asp"
+    if [ -f "$proj/r_$r_app" ]; then
+        r_app="r_$r_app"
+    elif [ -n `ls "$proj" | grep ^r_.*\.asp$` ]; then
+        r_app=`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`
+    elif [ -f "$proj/$r_app" ]; then
+        r_app="$r_app"
+    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
+        r_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    else
+        unset r_app
+    fi
+    if [ -n "$r_app" ];then
+        cp -f "$proj/$r_app" "$raceTemp/r___race.asp"
+        if [ "$?" == "0" ]; then
+            echo "'$r_app' is copied."
+        else
+            echo "ERROR while coping."
+            exit 1
+        fi
+    else
+        echo "not found."
+        exit 1
+    fi
+    target="upload.zip"
+else
+    #
+    # race sequencer 
+    #
+    target=`ls -tr "$raceFolder/Requests" | grep \.zip$ | head -n 1`
+    if [ -n "$target" ]; then
+        echo "race sequencer: get $target"
+        cp "$raceFolder/Requests/$target" "$simdist"
+        unzip -o $target > /dev/null
+        if [ "$?" != "0" ]; then
+            echo "race sequencer: UNZIP ERROR"
+            exit 1
+        fi
+        if [ ! -d __race ]; then
+            echo "race sequencer: $target isn't contain '__race' folder."
+            exit 1
+        fi
+        if [ "$mode" != "get" ]; then
+            rm -f "$raceFolder/Requests/$target"
+        fi
+    else
+        echo "race sequencer: Requests empty."
+        exit 2
+    fi
+fi
+
+#
+# get settings.json
+#
+settings=`cat __race/settings.json | jq -c .`
+etclass=`echo "$settings" | jq -r .etclass`
+LHackEV=`echo "$settings" | jq -r .LHackEV`
+RHackEV=`echo "$settings" | jq -r .RHackEV`
+captureDir=`echo "$settings" | jq -r .captureDir`
+# detect Windows path
+if [ -n "`echo $captureDir | grep ':\\\\'`" ]; then
+    captureDir_winPath="$captureDir"
+    captureDir="`echo \"$captureDir\" | sed -E 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -E 's/://' | sed -E 's/\\\\/\//g'`"
+else
+    captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+fi
+
+#
+# determine a class
+#
+if [ "$class" == "auto" ]; then
+    classPrefix=`echo $target | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
+    case "$classPrefix" in
+        "A" ) class="advanced" ;;
+        "P" ) class="primary" ;;
+        "E" ) class="entry" ;;
+        "S" ) class="sample" ;;
+    esac
+fi
+if [ "$class" == "auto" ]; then
+    case "$etclass" in
+        "0" ) class="advanced" ;;
+        "1" ) class="primary" ;;
+        "2" ) class="entry" ;;
+        "3" ) class="sample" ;;
+         *  ) class="advanced ;;"
+    esac
+fi
+echo
+echo "race: $class class is selected."
+# update JSON
+case "$class" in
+    "advanced" ) etclass="0"; classPrefix="A" ;;
+    "primary"  ) etclass="1"; classPrefix="P" ;;
+    "entry"    ) etclass="2"; classPrefix="E" ;;
+    "sample"   ) etclass="3"; classPrefix="S" ;;
+esac
+settings=`echo $settings | jq ".etclass|=\"$etclass\"" | jq -c .`
+
+#
+# determine a course
+#
+if [ "$course" == "auto" ]; then
+    if [ "$RHackEV" == "1" ]; then
+        course="right"
+    else
+        course="left"
+    fi
+fi
+echo "race: $course course is selected."
+# update JSON
+if [ "$course" == "right" ]; then
+    LHackEV="0"
+    RHackEV="1"
+else
+    LHackEV="1"
+    RHackEV="0"
+fi
+settings=`echo $settings | jq ".LHackEV|=\"$LHackEV\"" | jq -c .`
+settings=`echo $settings | jq ".RHackEV|=\"$RHackEV\"" | jq -c .`
+
+#
+# determine preferences for daemons
+#
+if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
+    if [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
+        settings=`echo $settings | jq "del(.EnvLightIntensityLevel)" | jq -c .`
+        settings=`echo $settings | jq "del(.EnvLightRotation)" | jq -c .`
+        settings=`echo $settings | jq "del(.LSpotLight)" | jq -c .`
+        settings=`echo $settings | jq "del(.RSpotLight)" | jq -c .`
+        settings=`echo $settings | jq "del(.SponsorLogo_GroupA)" | jq -c .`
+        settings=`echo $settings | jq "del(.SponsorLogo_GroupB)" | jq -c .`
+        settings=`echo $settings | jq "del(.SponsorLogo_GroupC)" | jq -c .`
+        settings=`echo $settings | jq "del(.SponsorLogo_PhysicMaterial)" | jq -c .`
+    fi
+    if [ "$mode" == "final" ]; then
+        settings=`echo $settings | jq "del(.initLBlockLayout)" | jq -c .`
+        settings=`echo $settings | jq "del(.initLNumberCase)" | jq -c .`
+        settings=`echo $settings | jq "del(.initLNumberBlock)" | jq -c .`
+        settings=`echo $settings | jq "del(.initRBlockLayout)" | jq -c .`
+        settings=`echo $settings | jq "del(.initRNumberCase)" | jq -c .`
+        settings=`echo $settings | jq "del(.initRNumberBlock)" | jq -c .`
+        settings=`echo $settings | jq "del(.initLSlalom)" | jq -c .`
+        settings=`echo $settings | jq "del(.initRSlalom)" | jq -c .`
+        captureRate="1"
+        forceShutdown="0"
+    else
+        captureRate="4"
+        forceShutdown=`echo "$settings" | jq -r .forceShutdown`
+    fi
+    captureDir="$raceFolder/capture"
+    captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+    if [ "$ETROBO_OS" == "win" ]; then
+        captDir="$captureDir_winPath"
+    else
+        captDir="$captureDir"
+    fi
+
+    settings=`echo $settings | jq ".athrillHost|=\"127.0.0.1\"" | jq -c .`
+    settings=`echo $settings | jq ".commTimeOutFlag|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".debugMonitorON|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".frameRateMode|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".frameRate|=\"60\"" | jq -c .`
+    settings=`echo $settings | jq ".motorSound|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
+    settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
+    settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
+    settings=`echo $settings | jq ".Poles|=\"1\"" | jq -c .`
+
+    if [ "$class" == "entry" ]; then
+        settings=`echo $settings | jq ".EnvLightIntensityLevel|=\"3\"" | jq -c .`
+        settings=`echo $settings | jq ".EnvLightRotation|=\"0\"" | jq -c .`
+        settings=`echo $settings | jq ".LSpotLight|=\"0\"" | jq -c .`
+        settings=`echo $settings | jq ".RSpotLight|=\"0\"" | jq -c .`
+    fi
+fi
+echo $settings | jq -M . > __race/settings.json
+echo "race: update settings.json: done."
+echo
+
+if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    # zip it
+    target="${classPrefix}_${target}"
+    zip -r $target __race > /dev/null
+    if [ "$?" == "0" ]; then
+        echo "file archiver: archive succeed."
+    else
+        echo "file archiver: ARCHIVE ERROR"
+        exit 1
+    fi
+    rm -f "$raceFolder/$target"
+    cp -f "$target" "$raceFolder/"
+    echo
+    echo -n "file archiver: your $target file is stored in "
+    if [ "$ETROBO_OS" == "win" ]; then
+        echo "$raceFolder" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\/g'
+    else
+        echo "$raceFolder"
+    fi
+    echo
+    if [ "$mode" = "zip" ]; then
+        exit 0
+    fi
+    echo "comming soon: upload mode"
+else
+    sim $course launch __race
+fi

@@ -1,6 +1,8 @@
 # etrobo all-in-one installer/builder/launcher environment
 [ETロボコン](https://etrobo.jp/)のEV3/シミュレータ双方に対応する開発環境です。
 
+see INSTALL that is written by english language
+
 注：ここでは、`startetrobo`によってインストールされるファイル群を「**etroboパッケージ**」、`startetrobo`によって起動する開発環境を「**etrobo環境**」と呼びます。
 
 etrobo環境は、以下のソフトウェアおよび成果物の一部を利用し構成され、etroboパッケージはこれらを自動的に取得しインストールします。

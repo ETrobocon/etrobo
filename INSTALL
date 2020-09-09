@@ -1,0 +1,48 @@
+How to Install the 'etrobo environment'
+
+
+Windows:
+1. Install 'Windows Services for Linux'(WSL1)
+2. Install 'Ubuntu 18.04 LTS' for WSL from the Microsoft Store
+3. Install 'Microsoft Visual Studio Code'
+4. Open 'Windows Command Prompt' and run this command:
+
+cd /d "%USERPROFILE%\Desktop" & echo wsl if [ ! -f ~/startetrobo ]; then wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; fi; ~/startetrobo > "Start ETrobo.cmd"
+
+5. Double-click 'Start ETrobo.cmd' on your desktop, or run `./startetrobo` on Ubuntu terminal
+6. Follow instalation message
+7. After a VSCode is starting up automatically, open a integrated terminal of VSCode and run `make sample`
+
+Mac:
+1. Install 'Microsoft Visual Studio Code'
+2. Run VSCode
+3. Open 'Command Pallet', type `install code` and install 'PATH' by click this context
+4. Close VSCode
+5. Open 'Terminal' and run this command:
+
+cd Desktop; echo 'name=startetrobo_mac.command; if [ ! -f $name ]; then curl -O https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/$name; chmod +x ~/$name; fi; ~/$name' > "Start ETrobo.command"; chmod +x "Start ETrobo.command"
+
+5. Double-click 'Start ETrobo.command' on your desktop, or run `./startetrobo_mac.command` on Ubuntu terminal
+6. Follow instalation message
+7. After a VSCode is starting up automatically, open a integrated terminal of VSCode and run `make sample`
+
+
+ChromeOS:
+1. Install 'Linux(Beta)'
+2. Download a Debian package of 'Microsoft Visual Studio Code' from its download site
+3. Double-click it to install onto 'Linux(beta)'
+2. Open 'Terminal' in 'Linux app'
+3. Follow below section 3. of Linux installation
+
+
+Linux:
+1. Install 'Microsoft Visual Studio Code'
+2. Open 'Terminal'
+3. Run this command:
+
+wget https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo -O ~/startetrobo; chmod +x ~/startetrobo; ~/startetrobo
+
+4. Run `./startetrobo`
+5. Follow instalation message
+6. After a VSCode is starting up automatically, open a integrated terminal of VSCode and run `make sample`
+

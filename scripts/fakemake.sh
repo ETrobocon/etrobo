@@ -47,7 +47,7 @@ if [ "$1" = "manual" ]; then
 fi
 # `make unprefs` doesn't set preference to UnityETroboSim preferences
 unprefs=""
-if [ "$1" = "unprefs" ]; then
+if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
     unprefs="unprefs"
     shift
 fi

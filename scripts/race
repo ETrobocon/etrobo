@@ -155,7 +155,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        touch "$raceTemp/settings.json"
+        echo "{}" > "$raceTemp/settings.json"
         echo "dummy is created."
     fi
 

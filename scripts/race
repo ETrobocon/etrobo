@@ -404,6 +404,9 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         cmd.exe /C "explorer $winPath"
     else
         echo "$raceFolder"
+        if [ "$ETROBO_OS" == "mac" ]; then
+            open "$raceFolder"
+        fi
     fi
     echo
     if [ "$mode" = "zip" ]; then

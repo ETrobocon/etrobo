@@ -12,7 +12,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
     echo "The race folder contains 'Requests' and 'Results' folder."
-    echo "This race sequencer gets a .zip file that timestamp is the newest one"
+    echo "This race sequencer gets a .zip file that timestamp is the oldest one"
     echo "from 'Requests' folder and makes competition automatically."
     echo "After that, race result files are zipped into 'Results' folder as"
     echo "same .zip filename."
@@ -34,7 +34,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    final  ... (Reserved Feature) run as Championship Final daemon"
     echo
     echo "  CLASS Options:  (default: 'auto')"
-    echo "    auto   ... choose in dependign on filename prefix"
+    echo "    auto   ... choose in depending on filename prefix"
     echo "               if no classes are prefixed, choose specified class"
     echo "               in settings.json"
     echo "               if there aren't exists, choose 'advanced' class"
@@ -155,8 +155,8 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        echo "not found."
         touch "$raceTemp/settings.json"
+        echo "dummy is created."
     fi
 
     # prepare ev3rtfs
@@ -170,8 +170,8 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        echo "not found."
         mkdir -p "$raceTemp/__ev3rtfs"
+        echo "dummy is created."
     fi
 
     # prepare l_app
@@ -370,7 +370,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
     settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
     settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
-    settings=`echo $settings | jq ".Poles|=\"1\"" | jq -c .`
+    settings=`echo $settings | jq ".Poles|=\"0\"" | jq -c .`
 
     if [ "$class" == "entry" ]; then
         settings=`echo $settings | jq ".EnvLightIntensityLevel|=\"3\"" | jq -c .`
@@ -396,9 +396,12 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     rm -f "$raceFolder/$target"
     cp -f "$target" "$raceFolder/"
     echo
-    echo -n "file archiver: your $target file is stored in "
+    echo -n "file archiver: your '$target' file is stored in "
     if [ "$ETROBO_OS" == "win" ]; then
-        echo "$raceFolder" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\/g'
+        winPath="`echo \"$raceFolder\" | sed -E 's/^\\/mnt\\///' | sed -E 's/^(.{1})/\\U&:/' | sed -E 's/\\//\\\\/g'`"
+        echo "$winPath"
+        cd "$raceFolder"
+        cmd.exe /C "explorer $winPath"
     else
         echo "$raceFolder"
     fi
@@ -409,4 +412,5 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     echo "comming soon: upload mode"
 else
     sim $course launch __race
+    #ffmpeg -r 15 -i $captureDir/R_%08d.png  -vcodec libx264 -pix_fmt yuv420p $raceFolder/etroboR.mp4
 fi

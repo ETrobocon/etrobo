@@ -226,7 +226,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
     # `sim unprefs` doesn't load preferences from settings.json
     load_prefs="load"
-    if [ "$1" = "unprefs" ]; then
+    if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
         shift
         unset load_prefs
     fi

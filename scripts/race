@@ -12,7 +12,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
     echo "The race folder contains 'Requests' and 'Results' folder."
-    echo "This race sequencer gets a .zip file that timestamp is the newest one"
+    echo "This race sequencer gets a .zip file that timestamp is the oldest one"
     echo "from 'Requests' folder and makes competition automatically."
     echo "After that, race result files are zipped into 'Results' folder as"
     echo "same .zip filename."
@@ -34,10 +34,10 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    final  ... (Reserved Feature) run as Championship Final daemon"
     echo
     echo "  CLASS Options:  (default: 'auto')"
-    echo "    auto   ... choose in dependign on filename prefix"
+    echo "    auto   ... choose in depending on filename prefix"
     echo "               if no classes are prefixed, choose specified class"
     echo "               in settings.json"
-    echo "               if there aren't exists, choose 'advanced' class"
+    echo "               if there aren't exists, choose 'entry' class"
     echo "    advanced . choose 'advanced' class (or 'A_' prefixed .zip file)"
     echo "    primary .. choose 'primary' class  (or 'P_' prefixed .zip file)"
     echo "    entry  ... choose 'entry' class    (or 'E_' prefixed .zip file)"
@@ -155,8 +155,8 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        echo "not found."
-        touch "$raceTemp/settings.json"
+        echo "{}" > "$raceTemp/settings.json"
+        echo "dummy is created."
     fi
 
     # prepare ev3rtfs
@@ -170,8 +170,8 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        echo "not found."
         mkdir -p "$raceTemp/__ev3rtfs"
+        echo "dummy is created."
     fi
 
     # prepare l_app
@@ -179,19 +179,19 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     l_app="${projName}.asp"
     if [ -f "$proj/l_$l_app" ]; then
         l_app="l_$l_app"
-    elif [ -n `ls "$proj" | grep ^l_.*\.asp$` ]; then
-        l_app=`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep ^l_.*\.asp$`" ]; then
+        l_app="`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`"
     elif [ -f "$proj/$l_app" ]; then
         l_app="$l_app"
-    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
-        l_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$`" ]; then
+        l_app="`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$ | head -n 1`"
     else
         unset l_app
     fi
     if [ -n "$l_app" ];then
         cp -f "$proj/$l_app" "$raceTemp/l___race.asp"
         if [ "$?" == "0" ]; then
-            echo "'$l_app' is copied."
+            echo "'$l_app' is copied as l___race.asp."
         else
             echo "ERROR while coping."
             exit 1
@@ -206,19 +206,19 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     r_app="${projName}.asp"
     if [ -f "$proj/r_$r_app" ]; then
         r_app="r_$r_app"
-    elif [ -n `ls "$proj" | grep ^r_.*\.asp$` ]; then
-        r_app=`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep ^r_.*\.asp$`" ]; then
+        r_app="`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`"
     elif [ -f "$proj/$r_app" ]; then
         r_app="$r_app"
-    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
-        r_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$`" ]; then
+        r_app="`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`"
     else
         unset r_app
     fi
     if [ -n "$r_app" ];then
         cp -f "$proj/$r_app" "$raceTemp/r___race.asp"
         if [ "$?" == "0" ]; then
-            echo "'$r_app' is copied."
+            echo "'$r_app' is copied as r___race.asp."
         else
             echo "ERROR while coping."
             exit 1
@@ -288,10 +288,9 @@ if [ "$class" == "auto" ]; then
         "1" ) class="primary" ;;
         "2" ) class="entry" ;;
         "3" ) class="sample" ;;
-         *  ) class="advanced ;;"
+         *  ) class="entry" ;;
     esac
 fi
-echo
 echo "race: $class class is selected."
 # update JSON
 case "$class" in
@@ -370,7 +369,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
     settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
     settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
-    settings=`echo $settings | jq ".Poles|=\"1\"" | jq -c .`
+    settings=`echo $settings | jq ".Poles|=\"0\"" | jq -c .`
 
     if [ "$class" == "entry" ]; then
         settings=`echo $settings | jq ".EnvLightIntensityLevel|=\"3\"" | jq -c .`
@@ -395,18 +394,23 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     fi
     rm -f "$raceFolder/$target"
     cp -f "$target" "$raceFolder/"
-    echo
-    echo -n "file archiver: your $target file is stored in "
+    echo -n "file archiver: your '$target' file is stored in "
     if [ "$ETROBO_OS" == "win" ]; then
-        echo "$raceFolder" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\/g'
+        winPath="`echo \"$raceFolder\" | sed -E 's/^\\/mnt\\///' | sed -E 's/^(.{1})/\\U&:/' | sed -E 's/\\//\\\\/g'`"
+        echo "$winPath"
+        cd "$raceFolder"
+        cmd.exe /C "explorer $winPath"
     else
         echo "$raceFolder"
+        if [ "$ETROBO_OS" == "mac" ]; then
+            open "$raceFolder"
+        fi
     fi
-    echo
     if [ "$mode" = "zip" ]; then
         exit 0
     fi
     echo "comming soon: upload mode"
 else
     sim $course launch __race
+    #ffmpeg -r 15 -i $captureDir/R_%08d.png  -vcodec libx264 -pix_fmt yuv420p $raceFolder/etroboR.mp4
 fi

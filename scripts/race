@@ -179,19 +179,19 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     l_app="${projName}.asp"
     if [ -f "$proj/l_$l_app" ]; then
         l_app="l_$l_app"
-    elif [ -n `ls "$proj" | grep ^l_.*\.asp$` ]; then
-        l_app=`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep ^l_.*\.asp$`" ]; then
+        l_app="`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`"
     elif [ -f "$proj/$l_app" ]; then
         l_app="$l_app"
-    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
-        l_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$`" ]; then
+        l_app="`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$ | head -n 1`"
     else
         unset l_app
     fi
     if [ -n "$l_app" ];then
         cp -f "$proj/$l_app" "$raceTemp/l___race.asp"
         if [ "$?" == "0" ]; then
-            echo "'$l_app' is copied."
+            echo "'$l_app' is copied as l___race.asp."
         else
             echo "ERROR while coping."
             exit 1
@@ -206,19 +206,19 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     r_app="${projName}.asp"
     if [ -f "$proj/r_$r_app" ]; then
         r_app="r_$r_app"
-    elif [ -n `ls "$proj" | grep ^r_.*\.asp$` ]; then
-        r_app=`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep ^r_.*\.asp$`" ]; then
+        r_app="`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`"
     elif [ -f "$proj/$r_app" ]; then
         r_app="$r_app"
-    elif [ -n `ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$` ]; then
-        r_app=`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`
+    elif [ -n "`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$`" ]; then
+        r_app="`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`"
     else
         unset r_app
     fi
     if [ -n "$r_app" ];then
         cp -f "$proj/$r_app" "$raceTemp/r___race.asp"
         if [ "$?" == "0" ]; then
-            echo "'$r_app' is copied."
+            echo "'$r_app' is copied as r___race.asp."
         else
             echo "ERROR while coping."
             exit 1
@@ -291,7 +291,6 @@ if [ "$class" == "auto" ]; then
          *  ) class="entry" ;;
     esac
 fi
-echo
 echo "race: $class class is selected."
 # update JSON
 case "$class" in
@@ -395,7 +394,6 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     fi
     rm -f "$raceFolder/$target"
     cp -f "$target" "$raceFolder/"
-    echo
     echo -n "file archiver: your '$target' file is stored in "
     if [ "$ETROBO_OS" == "win" ]; then
         winPath="`echo \"$raceFolder\" | sed -E 's/^\\/mnt\\///' | sed -E 's/^(.{1})/\\U&:/' | sed -E 's/\\//\\\\/g'`"
@@ -408,7 +406,6 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             open "$raceFolder"
         fi
     fi
-    echo
     if [ "$mode" = "zip" ]; then
         exit 0
     fi

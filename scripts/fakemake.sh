@@ -45,6 +45,7 @@ if [ "$1" = "manual" ]; then
     manual_launch="manual"
     shift
 fi
+
 # `make unprefs` doesn't set preference to UnityETroboSim preferences
 unprefs=""
 if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
@@ -52,14 +53,21 @@ if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
     shift
 fi
 
+# `sim btcat` outputs Virtual BT into bt.log
+unset btcat
+if [ "$1" = "btcat" ]; then
+    shift
+    btcat="btcat"
+fi
+
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
     if [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
-        make $zip $import $courseSelect $manual_launch $unprefs app="etrobo_tr" sim up
+        make $zip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up
     else
         cd "$ETROBO_ROOT"
-        make $zip $import $courseSelect $manual_launch $unprefs app="sample_c4" sim up
+        make $zip $import $courseSelect $manual_launch $unprefs $btcat app="sample_c4" sim up
 #        cd "$ETROBO_ATHRILL_WORKSPACE"
 #        make $courseSelect img=athrillsample
 #        if [ $? -eq 0 ]; then
@@ -78,9 +86,9 @@ fi
 
 if [ "$1" = "start" ]; then
     if [ "$2" = "up" ]; then
-        sim $export $courseSelect $manual_launch $unprefs launch
+        sim $export $courseSelect $manual_launch $unprefs $btcat launch
     else
-        sim $export $courseSelect $manual_launch $unprefs only launch
+        sim $export $courseSelect $manual_launch $unprefs $btcat only launch
     fi
     exit 0
 fi
@@ -183,9 +191,9 @@ if [ $makeResult -eq 0 ]; then
 
             if [ "$simopt" = "up" ]; then
                 echo "launch sim"
-            	sim $export $courseSelect $manual_launch $unprefs launch $proj
+            	sim $export $courseSelect $manual_launch $unprefs $btcat launch $proj
             elif [ "$simopt" = "start" ]; then
-            	sim $export $courseSelect $manual_launch $unprefs only launch $proj
+            	sim $export $courseSelect $manual_launch $unprefs $btcat only launch $proj
             fi
         else
             echo fakemake on ASP3: one or more error occured while build for $proj

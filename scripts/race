@@ -37,7 +37,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    auto   ... choose in depending on filename prefix"
     echo "               if no classes are prefixed, choose specified class"
     echo "               in settings.json"
-    echo "               if there aren't exists, choose 'advanced' class"
+    echo "               if there aren't exists, choose 'entry' class"
     echo "    advanced . choose 'advanced' class (or 'A_' prefixed .zip file)"
     echo "    primary .. choose 'primary' class  (or 'P_' prefixed .zip file)"
     echo "    entry  ... choose 'entry' class    (or 'E_' prefixed .zip file)"
@@ -155,7 +155,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit 1
         fi
     else
-        touch "$raceTemp/settings.json"
+        echo "{}" > "$raceTemp/settings.json"
         echo "dummy is created."
     fi
 
@@ -288,7 +288,7 @@ if [ "$class" == "auto" ]; then
         "1" ) class="primary" ;;
         "2" ) class="entry" ;;
         "3" ) class="sample" ;;
-         *  ) class="advanced ;;"
+         *  ) class="entry" ;;
     esac
 fi
 echo
@@ -404,6 +404,9 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         cmd.exe /C "explorer $winPath"
     else
         echo "$raceFolder"
+        if [ "$ETROBO_OS" == "mac" ]; then
+            open "$raceFolder"
+        fi
     fi
     echo
     if [ "$mode" = "zip" ]; then

@@ -19,7 +19,7 @@ target="$ETROBO_ATHRILL_WORKSPACE/asp"
 #  (you should use `export launch` for export file into simdist/projName)
 unset prefs
 unset prefs_stop
-if [ "$1" = "prefs" ] || [ "$1" = "export" ]; then
+if [ "$1" = "prefs" ] || [ "$1" = "export" ] || [ "$1" = "import" ]; then
     prefs="$1"
     shift
     if [ -z "`sim check sim`" ]; then
@@ -146,11 +146,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # check athrill app
         l_pid=`ps aux | grep -v grep | grep device_config.txt | awk '{print $2}'`
         r_pid=`ps aux | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
+        # check btcat
+        bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
 
-        if [ "$2" != "apps" ] && [ "$2" != "l_app" ] && [ "$2" != "r_app" ]; then
+        if [ -z "$2" ] || [ "$2" == "sim" ]; then
             echo $pid
         fi
-        if [ "$2" != "sim" ]; then
+        if [ "$2" == "bt" ]; then
+            echo $bt_pid
+        elif [ "$2" != "sim" ]; then
             if [ "$2" == "l_app" ]; then
                 echo $l_pid
             elif [ "$2" == "r_app" ]; then
@@ -167,7 +171,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$1" = "stop" ]; then
         # stop UnityETroboSim
-        if [ "$2" != "apps" ] && [ "$2" != "l_app" ] && [ "$2" != "r_app" ]; then
+        if [ -z "$2" ] || [ "$2" == "sim" ]; then
             pid=`sim check sim`
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then
@@ -180,18 +184,29 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             done
         fi
         # stop athrill apps
-        if [ "$2" != "sim" ]; then
+        if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "l_app" ]; then
             l_pid=`sim check l_app`
             while [ -n "$l_pid" ]; do
                 kill $l_pid
                 sleep 0.1
                 l_pid=`sim check l_app`
             done
+        fi
+        if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "r_app" ]; then
             r_pid=`sim check r_app`
             while [ -n "$r_pid" ]; do
                 kill $r_pid
                 sleep 0.1
                 r_pid=`sim check r_app`
+            done
+        fi
+        # stop btcat
+        if [ -z "$2" ] || [ "$2" == "bt" ]; then
+            bt_pid=`sim check bt`
+            while [ -n "$bt_pid" ]; do
+                kill $bt_pid
+                sleep 0.1
+                bt_pid=`sim check bt`
             done
         fi
         exit 0
@@ -214,6 +229,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "unprefs" ]; then
         shift
         unset load_prefs
+    fi
+
+    # `sim btcat` outputs Virtual BT into bt.log
+    unset btcat
+    if [ "$1" = "btcat" ]; then
+        shift
+        btcat="btcat"
     fi
 
     #
@@ -268,6 +290,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         cd "simdist/$projName"
         target="${app_prefix}${projName}.asp"
+        if [ -n "$btcat" ]; then
+            btcat app=$projName bt.log &
+        fi
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
         target="dummy"
@@ -332,7 +357,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             # return or export prefs
             if [ -n "$prefs" ]; then
                 invoker="curl -s -X GET ${ETROBO_SIM_COMM}?GET=PREFS | jq -M ."
-                if [ "$prefs" == "export" ]; then
+                if [ "$prefs" == "export" ] || [ "$prefs" == "import" ]; then
                     eval "$invoker" > settings.json
                 else
                     eval "$invoker"

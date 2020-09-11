@@ -1,2 +1,18 @@
 #!/usr/bin/env bash
-cat "$ETROBO_ROOT/ev3rt-athrill-v850e2m/sdk/workspace/__ev3rt_bt_out"
+projName="`echo \"$1\" | grep ^app= | sed -E 's/^app=(.*)$/\1/'`"
+if [ -z "$projName" ]; then
+    projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+else
+    shift
+fi
+proj="$ETROBO_HRP3_WORKSPACE/simdist/$projName"
+btout="$proj/__ev3rt_bt_out"
+while [ -z "`ls $ETROBO_HRP3_WORKSPACE/simdist/sample_c4` | grep ^__ev3rt_bt_out" ]; do
+    sleep 0.1
+done
+echo "[ btcat: connected to Virtual BT on $projName ]"
+if [ -z "$1" ]; then
+    cat "$btout"
+else
+    cat "$btout" > "$proj/$1"
+fi

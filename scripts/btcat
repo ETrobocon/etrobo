@@ -7,9 +7,11 @@ else
 fi
 proj="$ETROBO_HRP3_WORKSPACE/simdist/$projName"
 btout="$proj/__ev3rt_bt_out"
-while [ -z "`ls $ETROBO_HRP3_WORKSPACE/simdist/sample_c4` | grep ^__ev3rt_bt_out" ]; do
+echo "[ btcat: attempt to connect with Virtual BT on $projName ]"
+while [ -z "`ls \"$proj\"` | grep ^__ev3rt_bt_out" ]; do
     sleep 0.1
 done
+sleep 1 # ToDo: magic number
 echo "[ btcat: connected to Virtual BT on $projName ]"
 if [ -z "$1" ]; then
     cat "$btout"

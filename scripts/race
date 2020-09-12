@@ -411,6 +411,6 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     fi
     echo "comming soon: upload mode"
 else
-    sim $course launch __race
+    sim $course btcat launch __race
     #ffmpeg -r 15 -i $captureDir/R_%08d.png  -vcodec libx264 -pix_fmt yuv420p $raceFolder/etroboR.mp4
 fi

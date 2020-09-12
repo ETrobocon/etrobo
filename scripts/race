@@ -241,6 +241,7 @@ else
             echo "race sequencer: UNZIP ERROR"
             exit 1
         fi
+        rm "$simdist/$target"
         if [ ! -d __race ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit 1
@@ -271,7 +272,7 @@ else
 fi
 
 #
-# determine a class
+# determine a class and requestID
 #
 if [ "$class" == "auto" ]; then
     classPrefix=`echo $target | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
@@ -281,6 +282,11 @@ if [ "$class" == "auto" ]; then
         "E" ) class="entry" ;;
         "S" ) class="sample" ;;
     esac
+    if [ -n "$classPrefix" ]; then
+        requestID="`echo $target | sed -E 's/^.{1}_(.*).zip$/\1/'`" 
+    else
+        requestID="`echo $target | sed -E 's/^(.*).zip$/\1/'`" 
+    fi
 fi
 if [ "$class" == "auto" ]; then
     case "$etclass" in
@@ -305,20 +311,22 @@ settings=`echo $settings | jq ".etclass|=\"$etclass\"" | jq -c .`
 # determine a course
 #
 if [ "$course" == "auto" ]; then
-    if [ "$RHackEV" == "1" ]; then
-        course="right"
-    else
+    if [ "$LHackEV" == "1" ]; then
         course="left"
+    else
+        course="right"
     fi
 fi
 echo "race: $course course is selected."
 # update JSON
-if [ "$course" == "right" ]; then
-    LHackEV="0"
-    RHackEV="1"
-else
+if [ "$course" == "left" ]; then
+    coursePrefix="L"
     LHackEV="1"
     RHackEV="0"
+else
+    coursePrefix="R"
+    LHackEV="0"
+    RHackEV="1"
 fi
 settings=`echo $settings | jq ".LHackEV|=\"$LHackEV\"" | jq -c .`
 settings=`echo $settings | jq ".RHackEV|=\"$RHackEV\"" | jq -c .`
@@ -411,6 +419,35 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     fi
     echo "comming soon: upload mode"
 else
-    sim $course btcat launch __race
-    #ffmpeg -r 15 -i $captureDir/R_%08d.png  -vcodec libx264 -pix_fmt yuv420p $raceFolder/etroboR.mp4
+    # launch sim
+    echo "race sequencer: launch race on $course course"
+    cd "$simdist/__race"
+    sim $course btcat launch __race > console.log
+
+    # prepare result folder
+    echo "race sequencer: prepare result folder"
+    dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
+    result="$raceFolder/$dest"
+    mkdir "$result"
+    cp "$captureDir/$coursePrefix.csv" "$result/$dest.csv"
+    cp console.log "$result/"
+    cp bt.log "$result/"
+    cp -rf __ev3rtfs "$result/"
+
+    # render race video
+    echo "race sequencer: render race video"
+    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p "$result/$dest.mp4"
+
+    # zip result files
+    echo "race sequencer: zip result files"
+    cd "$raceFolder"
+    zip -r "Results/$target" $dest > /dev/null
+    if [ "$?" != "0" ]; then
+        echo "race sequencer: result file archive ERROR!!"
+        exit 1
+    fi
+    rm -rf $dest
+    rm -rf "$simdist/__race"
+    
+    echo "race sequencer: race finish successfully."
 fi

@@ -40,7 +40,6 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             fi
         done
         if [ -n "$main_loop" ]; then
-            echo "[ raceserv: invoke race $mode \"$raceFolder\" ]" 
             race $mode "$raceFolder"
             race_error="$?"
             manifest="`ls \"$raceFolder\" | grep .manifest$`"

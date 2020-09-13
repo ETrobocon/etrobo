@@ -290,9 +290,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         cd "simdist/$projName"
         target="${app_prefix}${projName}.asp"
-#        if [ -n "$btcat" ]; then
-#            btcat app=$projName bt.log &
-#        fi
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
         target="dummy"
@@ -307,6 +304,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             else
                 ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
             fi
+        fi
+
+        # launch btcat
+        if [ -n "$btcat" ]; then
+            btcat app=$projName bt.log &
         fi
 
         # thread terminator

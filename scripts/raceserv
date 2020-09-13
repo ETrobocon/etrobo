@@ -54,6 +54,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 zip $zipname ERROR.txt > /dev/null
                 cp -f $zipname "$raceFolder/Results/"
                 rm $zipname
+                rm ERROR.txt
             else
                 echo "[ raceserv: go to the next race ]"
             fi

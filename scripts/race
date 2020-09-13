@@ -413,6 +413,13 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         echo "file archiver: ARCHIVE ERROR"
         exit 1
     fi
+
+    fileSize=`wc -c "$target" | awk '{print $1}'`
+    if [ $filesize -gt 30000000 ]; then
+        echo "file archiver: ARCHIVE ERROR: too large file ($filesize bytes)"
+        exit 1
+    fi
+
     rm -f "$raceFolder/$target"
     cp -f "$target" "$raceFolder/"
     echo -n "file archiver: your '$target' file is stored in "

@@ -48,7 +48,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             zip_error="$?"
             if [ "$race_error" == "1" ] || [ "$zip_error" == "1" ]; then
                 echo "[ raceserv: WARNING : an error occured while race ]"
-                
+                rm -f "$raceFolder/*.manifest"
                 touch "$raceFolder/Results/$zipname"
             else
                 echo "[ raceserv: go to the next race ]"

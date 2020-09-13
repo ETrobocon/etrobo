@@ -295,7 +295,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="dummy"
     fi
 
-    if [ -f "$target" ]; then
+    if [ ! -f "$target" ]; then
         echo "$target: file not exists."
         exit 1
     fi

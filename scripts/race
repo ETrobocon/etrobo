@@ -433,6 +433,10 @@ else
     echo "race sequencer: launch race on $course course"
     cd "$simdist/__race"
     sim $course btcat launch __race > console.log
+    if [ "$?" != "0" ];then
+        echo "race sequencer: no athrill app ERROR!!"
+        exit 1
+    fi
     sim stop
 
     # prepare result folder

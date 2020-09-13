@@ -370,7 +370,8 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
 #        forceShutdown=`echo "$settings" | jq -r .forceShutdown`
         forceShutdown="1"
     fi
-    captureDir="$raceFolder/capture"
+#    captureDir="$raceFolder/capture"
+    captureDir="/mnt/d/capture"
     rm -rf "$captureDir"
     captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
     if [ "$ETROBO_OS" == "win" ]; then
@@ -434,7 +435,7 @@ else
     cd "$simdist/__race"
     sim $course btcat launch __race > console.log
     if [ "$?" != "0" ];then
-        echo "race sequencer: no athrill app ERROR!!"
+        echo "race sequencer: athrill app ERROR!!"
         exit 1
     fi
     sim stop
@@ -456,7 +457,7 @@ else
     ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p "$result/$dest.mp4"
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
-        exit 1
+        echo "video encode error: This error appears when your HackEV did flying-start." > ERROR.txt
     fi
 
     # zip result files
@@ -465,7 +466,7 @@ else
     zip -r "Results/$target" $dest > /dev/null
     if [ "$?" != "0" ]; then
         echo "race sequencer: result file archive ERROR!!"
-        exit 1
+        exit 2
     fi
     rm -rf $dest
     rm -rf "$simdist/__race"

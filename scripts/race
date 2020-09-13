@@ -100,14 +100,14 @@ if [ "$ETROBO_OS" == "win" ]; then
 fi
 raceTemp="$simdist/__race"
 raceFolder="$raceFolder/_race"
-if [ -n "`echo $1 | grep ^\/`" ]; then
+if [ -n "`echo \"$1\" | grep ^\/`" ]; then
     raceFolder="$1"
     shift
 fi
 if [ ! -d "$raceFolder" ]; then
     # race folder must be there
     # if it's on zip mode, make new folders
-    if [ "$mode" == "zip" ]; then
+    if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         mkdir -p "$raceFolder/Requests"
         mkdir -p "$raceFolder/Results"
     else
@@ -115,6 +115,7 @@ if [ ! -d "$raceFolder" ]; then
         exit 1
     fi
 fi
+echo "race: the race folder is '$raceFolder'"
 
 #
 # determine a project name
@@ -340,12 +341,6 @@ settings=`echo $settings | jq ".RHackEV|=\"$RHackEV\"" | jq -c .`
 # determine preferences for daemons
 #
 if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
-    # ToDo
-    settings=`echo $settings | jq "del(.frameRateMode)" | jq -c .`
-    settings=`echo $settings | jq "del(.frameRate)" | jq -c .`
-    settings=`echo $settings | jq "del(.captureRate)" | jq -c .`
-    settings=`echo $settings | jq "del(.captureDir)" | jq -c .`
-    settings=`echo $settings | jq "del(.forceShutdown)" | jq -c .`
     if [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         settings=`echo $settings | jq "del(.EnvLightIntensityLevel)" | jq -c .`
         settings=`echo $settings | jq "del(.EnvLightRotation)" | jq -c .`
@@ -381,27 +376,29 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         captDir="$captureDir"
     fi
 
+    echo "race sequencer: captureDir = $captureDir"
+
     # ToDo
-    settings=`echo $settings | jq "del(.athrillHost)" | jq -c .`
-    settings=`echo $settings | jq "del(.commTimeOutFlag)" | jq -c .`
-    settings=`echo $settings | jq "del(.debugMonitorON)" | jq -c .`
-    settings=`echo $settings | jq "del(.frameRateMode)" | jq -c .`
-    settings=`echo $settings | jq "del(.frameRate)" | jq -c .`
-    settings=`echo $settings | jq "del(.motorSound)" | jq -c .`
-    settings=`echo $settings | jq "del(.captureRate)" | jq -c .`
-    settings=`echo $settings | jq "del(.captureDir)" | jq -c .`
-    settings=`echo $settings | jq "del(.forceShutdown)" | jq -c .`
-    settings=`echo $settings | jq "del(.Poles)" | jq -c .`
-#    settings=`echo $settings | jq ".athrillHost|=\"127.0.0.1\"" | jq -c .`
-#    settings=`echo $settings | jq ".commTimeOutFlag|=\"0\"" | jq -c .`
-#    settings=`echo $settings | jq ".debugMonitorON|=\"0\"" | jq -c .`
-#    settings=`echo $settings | jq ".frameRateMode|=\"0\"" | jq -c .`
-#    settings=`echo $settings | jq ".frameRate|=\"60\"" | jq -c .`
-#    settings=`echo $settings | jq ".motorSound|=\"0\"" | jq -c .`
-#    settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
-#    settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
-#    settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
-#    settings=`echo $settings | jq ".Poles|=\"0\"" | jq -c .`
+#    settings=`echo $settings | jq "del(.athrillHost)" | jq -c .`
+#    settings=`echo $settings | jq "del(.commTimeOutFlag)" | jq -c .`
+#    settings=`echo $settings | jq "del(.debugMonitorON)" | jq -c .`
+#    settings=`echo $settings | jq "del(.frameRateMode)" | jq -c .`
+#    settings=`echo $settings | jq "del(.frameRate)" | jq -c .`
+#    settings=`echo $settings | jq "del(.motorSound)" | jq -c .`
+#    settings=`echo $settings | jq "del(.captureRate)" | jq -c .`
+#    settings=`echo $settings | jq "del(.captureDir)" | jq -c .`
+#    settings=`echo $settings | jq "del(.forceShutdown)" | jq -c .`
+#    settings=`echo $settings | jq "del(.Poles)" | jq -c .`
+    settings=`echo $settings | jq ".athrillHost|=\"127.0.0.1\"" | jq -c .`
+    settings=`echo $settings | jq ".commTimeOutFlag|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".debugMonitorON|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".frameRateMode|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".frameRate|=\"60\"" | jq -c .`
+    settings=`echo $settings | jq ".motorSound|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
+    settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
+    settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
+    settings=`echo $settings | jq ".Poles|=\"0\"" | jq -c .`
 
     if [ "$class" == "entry" ]; then
         settings=`echo $settings | jq ".EnvLightIntensityLevel|=\"3\"" | jq -c .`
@@ -450,7 +447,7 @@ else
     sim stop
 
     # prepare result folder
-    echo "race sequencer: prepare result folder"
+    echo "race sequencer: prepare result folder with '$captureDir'"
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"

@@ -17,7 +17,8 @@ if [ "$1" == "unlimited" ]; then
     shift
 fi
 
-if [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
+    mode="$1"
     raceFolder="$2"
     main_loop="loop"
     while [ -n "$main_loop" ]; do
@@ -25,23 +26,33 @@ if [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fin
         wait_loop="loop"
         while [ -n "$wait_loop" ]; do
             sleep 1
+            # raceserv stop
+            if [ -f "$raceFolder/stop" ]; then
+                rm -f "$raceFolder/stop"
+                unset wait_loop
+                unset main_loop
+            fi
+            # wait requests
             ls="`ls \"$raceFolder/Requests\" 2>&1`"
             ls "$raceFolder/Requests" > /dev/null 2>&1 
             if [ "$?" == "0" ] && [ -n "$ls"  ]; then
                 unset wait_loop
             fi
         done
-        race $mode $raceFolder
-        manifest="`ls \"$raceFolder\" | grep .manifest$`"
-        zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
-        if [ "$?" == "1" ]; then
-            echo "[ raceserv: WARNING : an error occured while race ]"
-            touch "$raceFolder/Results/$zipname"
-        else
-            echo "[ raceserv: go to the next race ]"
+        if [ -n "$main_loop" ]; then
+            echo "[ raceserv: invoke race $mode \"$raceFolder\" ]" 
+            race $mode "$raceFolder"
+            manifest="`ls \"$raceFolder\" | grep .manifest$`"
+            zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
+            if [ "$?" == "1" ]; then
+                echo "[ raceserv: WARNING : an error occured while race ]"
+                touch "$raceFolder/Results/$zipname"
+            else
+                echo "[ raceserv: go to the next race ]"
+            fi
+            rm -f "$raceFolder/$manifest"
         fi
-        rm "$raceFolder/$manifest"
     done
 else
-    echo "usage: raceserv [unlimited] fp1|fp2|final"
+    echo "usage: raceserv [unlimited] fp1|fp2|final /path/to/raceFolder"
 fi

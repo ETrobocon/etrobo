@@ -237,7 +237,11 @@ else
         echo "race sequencer: get $target"
         cp "$raceFolder/Requests/$target" "$simdist"
         unzip -o $target > /dev/null
-        if [ "$?" != "0" ]; then
+        unzip_error="$?"
+        if [ "$mode" != "get" ]; then
+            rm -f "$raceFolder/Requests/$target"
+        fi
+        if [ "$unzip_error" != "0" ]; then
             echo "race sequencer: UNZIP ERROR"
             exit 1
         fi
@@ -361,6 +365,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         forceShutdown=`echo "$settings" | jq -r .forceShutdown`
     fi
     captureDir="$raceFolder/capture"
+    rm -rf "$captureDir"
     captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
     if [ "$ETROBO_OS" == "win" ]; then
         captDir="$captureDir_winPath"

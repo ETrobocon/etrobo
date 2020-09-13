@@ -290,9 +290,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         cd "simdist/$projName"
         target="${app_prefix}${projName}.asp"
-        if [ -n "$btcat" ]; then
-            btcat app=$projName bt.log &
-        fi
+#        if [ -n "$btcat" ]; then
+#            btcat app=$projName bt.log &
+#        fi
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
         target="dummy"

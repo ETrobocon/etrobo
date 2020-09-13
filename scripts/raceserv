@@ -25,12 +25,13 @@ if [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fin
         wait_loop="loop"
         while [ -n "$wait_loop" ]; do
             sleep 1
-            ls="`ls \"$raceFolder/Requests\" > /dev/null 2>&1`"
+            ls="`ls \"$raceFolder/Requests\" 2>&1`"
+            ls "$raceFolder/Requests" > /dev/null 2>&1 
             if [ "$?" == "0" ] && [ -n "$ls"  ]; then
                 unset wait_loop
             fi
         done
-        race $mode raceFolder
+        race $mode $raceFolder
         if [ "$?" == "1" ]; then
             echo "[ raceserv: WARNING : an error occured while race ]"
         else

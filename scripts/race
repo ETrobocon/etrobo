@@ -258,7 +258,6 @@ else
             echo "race sequencer: $target isn't contain '*___race.asp' file."
             exit 1
         fi
-        fi
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
         fi

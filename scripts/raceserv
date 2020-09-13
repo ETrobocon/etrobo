@@ -32,11 +32,15 @@ if [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fin
             fi
         done
         race $mode $raceFolder
+        manifest="`ls \"$raceFolder\" | grep .manifest$`"
+        zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
         if [ "$?" == "1" ]; then
             echo "[ raceserv: WARNING : an error occured while race ]"
+            touch "$raceFolder/Results/$zipname"
         else
             echo "[ raceserv: go to the next race ]"
         fi
+        rm "$raceFolder/$manifest"
     done
 else
     echo "usage: raceserv [unlimited] fp1|fp2|final"

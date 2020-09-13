@@ -40,7 +40,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             fi
         done
         if [ -n "$main_loop" ]; then
-            rm -f "$raceFolder/*.manifest"
+            rm -f "$raceFolder/"*.manifest
             race $mode "$raceFolder"
             race_error="$?"
             manifest="`ls \"$raceFolder\" | grep .manifest$`"
@@ -48,7 +48,8 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             zip_error="$?"
             if [ "$race_error" == "1" ] || [ "$zip_error" == "1" ]; then
                 echo "[ raceserv: WARNING : an error occured while race ]"
-                rm -f "$raceFolder/*.manifest"
+                rm -f "$raceFolder/"*.manifest
+                echo  
                 touch "$raceFolder/Results/$zipname"
             else
                 echo "[ raceserv: go to the next race ]"

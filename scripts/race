@@ -373,8 +373,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
 #        forceShutdown=`echo "$settings" | jq -r .forceShutdown`
         forceShutdown="1"
     fi
-#    captureDir="$raceFolder/capture"
-    captureDir="/mnt/d/capture"
+    captureDir="$raceFolder/capture"
     rm -rf "$captureDir"
     captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
     if [ "$ETROBO_OS" == "win" ]; then

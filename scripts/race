@@ -254,7 +254,7 @@ else
         if [ ! -d __race ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit 1
-        elif [ ! -f "l___race.asp" ] || [ ! -f "r___race.asp" ]; then
+        elif [ ! -f "__race/l___race.asp" ] || [ ! -f "__race/r___race.asp" ]; then
             echo "race sequencer: $target isn't contain '*___race.asp' file."
             exit 1
         fi

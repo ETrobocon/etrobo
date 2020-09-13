@@ -254,6 +254,10 @@ else
         if [ ! -d __race ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit 1
+        elif [ ! -f "l___race.asp" ] || [ ! -f "r___race.asp" ]; then
+            echo "race sequencer: $target isn't contain '*___race.asp' file."
+            exit 1
+        fi
         fi
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
@@ -434,10 +438,10 @@ else
     echo "race sequencer: launch race on $course course"
     cd "$simdist/__race"
     sim $course btcat launch __race > console.log
-    if [ "$?" != "0" ];then
-        echo "race sequencer: athrill app ERROR!!"
-        exit 1
-    fi
+#    if [ "$?" != "0" ];then
+#        echo "race sequencer: athrill app ERROR!!"
+#        exit 1
+#    fi
     sim stop
 
     # prepare result folder

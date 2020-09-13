@@ -119,7 +119,11 @@ fi
 #
 # determine a project name
 #
-projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+if [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+    projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+else
+    projName="__race"
+fi
 if [ -n "$1" ]; then
     projName="$1"
     shift

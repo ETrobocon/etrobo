@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 projName="`echo \"$1\" | grep ^app= | sed -E 's/^app=(.*)$/\1/'`"
 if [ -z "$projName" ]; then
-    projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+    if [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+        projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+    else
+        projName="__race"
+    fi
 else
     shift
 fi
@@ -18,10 +22,10 @@ while [ -z "`ls \"$proj\"` | grep ^__ev3rt_bt_out" ]; do
 done
 
 if [ -z "$btlog" ]; then
-    cat "$btout" 2>&1 # | grep -v "__ev3rt_bt_out: No such file or directory$"
+    cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$"
     while [ "$?" != "0" ]; do
         sleep 0.1
-        cat "$btout" 2>&1 # | grep -v "__ev3rt_bt_out: No such file or directory$"
+        cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$"
     done
 else
     cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$" > "$proj/$btlog"

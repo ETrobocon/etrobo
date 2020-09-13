@@ -311,22 +311,22 @@ settings=`echo $settings | jq ".etclass|=\"$etclass\"" | jq -c .`
 # determine a course
 #
 if [ "$course" == "auto" ]; then
-    if [ "$LHackEV" == "1" ]; then
-        course="left"
-    else
+    if [ "$RHackEV" == "1" ]; then
         course="right"
+    else
+        course="left"
     fi
 fi
 echo "race: $course course is selected."
 # update JSON
-if [ "$course" == "left" ]; then
-    coursePrefix="L"
-    LHackEV="1"
-    RHackEV="0"
-else
+if [ "$course" == "right" ]; then
     coursePrefix="R"
     LHackEV="0"
     RHackEV="1"
+else
+    coursePrefix="L"
+    LHackEV="1"
+    RHackEV="0"
 fi
 settings=`echo $settings | jq ".LHackEV|=\"$LHackEV\"" | jq -c .`
 settings=`echo $settings | jq ".RHackEV|=\"$RHackEV\"" | jq -c .`
@@ -423,6 +423,7 @@ else
     echo "race sequencer: launch race on $course course"
     cd "$simdist/__race"
     sim $course btcat launch __race > console.log
+    sim stop
 
     # prepare result folder
     echo "race sequencer: prepare result folder"
@@ -434,9 +435,13 @@ else
     cp bt.log "$result/"
     cp -rf __ev3rtfs "$result/"
 
-    # render race video
-    echo "race sequencer: render race video"
+    # encode race video
+    echo "race sequencer: encode race video"
     ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p "$result/$dest.mp4"
+    if [ "$?" != "0" ];then
+        echo "race sequencer: ffmpeg encoding ERROR!!"
+        exit 1
+    fi
 
     # zip result files
     echo "race sequencer: zip result files"
@@ -449,5 +454,5 @@ else
     rm -rf $dest
     rm -rf "$simdist/__race"
     
-    echo "race sequencer: race finish successfully."
+    echo "race sequencer: race (requestID=$requestID) is finished successfully."
 fi

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# raceserv, ET robocon race server
+#   raceserv 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# fp0 ... 2020/09/13 13:00～2020/09/13 16:00
+# fp1 ... 2020/09/16 12:00～2020/09/22 20:00
+# fp2 ... 2020/10/17 12:00～2020/10/25 20:00
+#
+
+unset unlimited
+if [ "$1" == "unlimited" ]; then
+    unlimited="unlimited"
+    shift
+fi
+
+if [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
+    raceFolder="$2"
+    main_loop="loop"
+    while [ -n "$main_loop" ]; do
+        echo "[ raceserv: waiting for POST ]"
+        wait_loop="loop"
+        while [ -n "$wait_loop" ]; do
+            sleep 1
+            ls="`ls \"$raceFolder/Requests\" > /dev/null 2>&1`"
+            if [ "$?" == "0" ] && [ -n "$ls"  ]; then
+                unset wait_loop
+            fi
+        done
+        race $mode raceFolder
+        if [ "$?" == "1" ]; then
+            echo "[ raceserv: WARNING : an error occured while race ]"
+        else
+            echo "[ raceserv: go to the next race ]"
+        fi
+    done
+else
+    echo "usage: raceserv [unlimited] fp1|fp2|final"
+fi

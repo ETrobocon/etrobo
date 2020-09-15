@@ -403,7 +403,13 @@ echo $settings | jq -M . > __race/settings.json
 echo "race: update settings.json: done."
 echo
 
+#
+# file archiver: create zip file
+#
 if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    # calc md5sum
+    #sum="`(find workspace/simdist/sample_c4 -type f -exec md5sum -b {} \; && find workspace/simdist/sample_c4) | env LC_ALL=C sort | md5sum -b`"
+
     # zip it
     target="${classPrefix}_${target}"
     zip -r $target __race > /dev/null
@@ -414,9 +420,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         exit 1
     fi
 
-    wc -c $target | awk '{print $1}'
     fileSize="`wc -c $target | awk '{print $1}'`"
-    echo "fileSize: $fileSize"
     if [ $fileSize -gt 30000000 ]; then
         echo "file archiver: ARCHIVE ERROR: too large file ($fileSize bytes)"
         exit 1

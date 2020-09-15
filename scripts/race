@@ -261,6 +261,17 @@ else
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
         fi
+
+        # calc md5sum
+        unset sum
+        if [ -f __race/__race.md5sum ]; then
+            sum="`cat __race/__race.md5sum`"
+            rm -f __race/__race.md5sum
+        fi
+        if [ "`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`" != "$sum" ]; then
+            echo "race sequencer: ERROR: mismatch md5sum"
+            exit 1
+        fi
     else
         echo "race sequencer: Requests empty."
         exit 2
@@ -403,7 +414,14 @@ echo $settings | jq -M . > __race/settings.json
 echo "race: update settings.json: done."
 echo
 
+#
+# file archiver: create zip file
+#
 if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    # calc md5sum
+    sum="`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`"
+    echo $sum > __race/__race.md5sum
+
     # zip it
     target="${classPrefix}_${target}"
     zip -r $target __race > /dev/null
@@ -414,9 +432,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         exit 1
     fi
 
-    wc -c $target | awk '{print $1}'
     fileSize="`wc -c $target | awk '{print $1}'`"
-    echo "fileSize: $fileSize"
     if [ $fileSize -gt 30000000 ]; then
         echo "file archiver: ARCHIVE ERROR: too large file ($fileSize bytes)"
         exit 1

@@ -175,6 +175,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "stop" ]; then
         # stop UnityETroboSim
         if [ -z "$2" ] || [ "$2" == "sim" ]; then
+            shift
             pid=`sim check sim`
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then
@@ -188,6 +189,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         # stop athrill apps
         if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "l_app" ]; then
+            shift
             l_pid=`sim check l_app`
             while [ -n "$l_pid" ]; do
                 kill $l_pid
@@ -196,6 +198,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             done
         fi
         if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "r_app" ]; then
+            shift
             r_pid=`sim check r_app`
             while [ -n "$r_pid" ]; do
                 kill $r_pid
@@ -205,6 +208,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
         # stop btcat
         if [ -z "$2" ] || [ "$2" == "bt" ]; then
+            shift
             bt_pid=`sim check bt`
             while [ -n "$bt_pid" ]; do
                 kill $bt_pid
@@ -321,7 +325,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # thread terminator
         loop="loop"
         trap "unset loop; echo ' now terminating...'" SIGINT
-        trap "unset loop; sim stop bt; sim stop $app_select" EXIT
+        trap "unset loop; sim stop $app_select bt" EXIT
 
         # launch UnityETroboSim at background
         if [ "$sim_opt" != "only" ]; then

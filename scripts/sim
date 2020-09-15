@@ -149,7 +149,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # check btcat
         bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
         if [ -z "$bt_pid" ]; then
-            bt_pid=`ps aux | grep __ev3rt_bt_out | awk '{print $2}'`
+            bt_pid=`ps aux | grep -v grep | grep __ev3rt_bt_out | awk '{print $2}'`
         fi
 
         if [ -z "$2" ] || [ "$2" == "sim" ]; then
@@ -208,8 +208,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             bt_pid=`sim check bt`
             while [ -n "$bt_pid" ]; do
                 kill $bt_pid
-                sleep 0.1
-                bt_pid=`sim check bt`
+                #sleep 0.1
+                #bt_pid=`sim check bt`
             done
         fi
         exit 0

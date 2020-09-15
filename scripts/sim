@@ -321,7 +321,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # thread terminator
         loop="loop"
         trap "unset loop; echo ' now terminating...'" SIGINT
-        trap "unset loop; sim stop btcat; sim stop $app_select" EXIT
+        trap "unset loop; sim stop bt; sim stop $app_select" EXIT
 
         # launch UnityETroboSim at background
         if [ "$sim_opt" != "only" ]; then

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# console pipe, input from stdin and output to both console and stdout
+#   consolepipe 
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+if [ -p /dev/stdin ]; then
+    stdin="`cat -`"
+    echo "$stdin" > "/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+    echo "$stdin"
+fi

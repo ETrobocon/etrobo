@@ -393,7 +393,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         captDir="$captureDir"
     fi
     settings=`echo $settings | jq ".athrillHost|=\"127.0.0.1\"" | jq -c .`
-    settings=`echo $settings | jq ".commTimeOutFlag|=\"0\"" | jq -c .`
+    settings=`echo $settings | jq ".commTimeOutFlag|=\"1\"" | jq -c .`
     settings=`echo $settings | jq ".debugMonitorON|=\"0\"" | jq -c .`
     settings=`echo $settings | jq ".frameRateMode|=\"0\"" | jq -c .`
     settings=`echo $settings | jq ".frameRate|=\"60\"" | jq -c .`

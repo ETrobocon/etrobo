@@ -20,6 +20,7 @@ fi
 if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
     mode="$1"
     raceFolder="$2"
+    rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
     main_loop="loop"
     while [ -n "$main_loop" ]; do
@@ -49,7 +50,6 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             zip_error="$?"
             if [ "$race_error" == "1" ] || [ "$zip_error" == "1" ]; then
                 echo "[ raceserv: WARNING : an error occured while race ]"
-                rm -f "$raceFolder/"*.manifest
                 echo "an error has occured." > ERROR.txt
                 zip $zipname ERROR.txt > /dev/null
                 cp -f $zipname "$raceFolder/Results/"
@@ -59,6 +59,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 echo "[ raceserv: go to the next race ]"
             fi
         fi
+        rm -f "$raceFolder/"*.manifest
     done
 else
     echo "usage: raceserv [unlimited] fp1|fp2|final /path/to/raceFolder"

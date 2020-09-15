@@ -475,7 +475,7 @@ else
     echo "race sequencer: zip result files"
     cd "$raceFolder"
     zip -r "Results/$target" $dest > /dev/null
-    if [ "$?" != "0" ]; then
+    if [ "$?" != "0" ] && [ "$?" != "143" ]; then
         echo "race sequencer: result file archive ERROR!!"
         exit 2
     fi

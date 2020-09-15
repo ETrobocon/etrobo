@@ -148,7 +148,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         r_pid=`ps aux | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
         # check btcat
         bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
-        if [ -n "$bt_pid" ]; then
+        if [ -z "$bt_pid" ]; then
             bt_pid=`ps aux | grep __ev3rt_bt_out | awk '{print $2}'`
         fi
 

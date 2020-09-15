@@ -476,13 +476,13 @@ else
     cp "$captureDir/$coursePrefix.csv" "$result/$dest.csv"
     cp console.log "$result/"
     cp -rf __ev3rtfs "$result/"
-    if [ "`wc -c bt.log | awk '{print $1}'`" != "0" ]; then
+    if [ -f bt.log ] && [ "`wc -c bt.log | awk '{print $1}'`" != "0" ]; then
         cp bt.log "$result/"
     fi
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p "$result/$dest.mp4"
+    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 16 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         echo "video encode error: This error appears when your HackEV did flying-start." > ERROR.txt

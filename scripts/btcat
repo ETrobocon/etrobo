@@ -9,28 +9,36 @@ if [ -z "$projName" ]; then
 else
     shift
 fi
+
+sleep 1 # ToDo: magic number
+
 proj="$ETROBO_HRP3_WORKSPACE/simdist/$projName"
 btout="$proj/__ev3rt_bt_out"
 btlog="$1"
+timer=15
 echo "[ btcat: attempt to connect with Virtual BT on $projName ]"
-while [ -z "`ls \"$proj\"` | grep ^__ev3rt_bt_out" ]; do
-    sleep 0.1
+loop="loop"
+while [ -n "$loop" ]; do
+    if [ ! -p "$bt_out" ]; then
+        unset loop
+    else
+        sleep 1
+        timer=$(($timer - 1))
+        if [ "$timer" == "0" ]; then
+            unset loop
+        fi
+    fi
 done
-sleep 1 # ToDo: magic number
-while [ -z "`ls \"$proj\"` | grep ^__ev3rt_bt_out" ]; do
-    sleep 0.1
-done
+if [ "$timer" == "0" ]; then
+    echo "[ btcat: Virtual BT not found ]"
+    exit 1
+fi
+
+echo "[ btcat: connected with Virtual BT on $projName ]"
 
 if [ -z "$btlog" ]; then
-    cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$"
-    while [ "$?" != "0" ]; do
-        sleep 0.1
-        cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$"
-    done
+    cat "$btout" 2> /dev/null
 else
-    cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$" > "$proj/$btlog"
-    while [ "$?" != "0" ]; do
-        sleep 0.1
-        cat "$btout" 2>&1 | grep -v "__ev3rt_bt_out: No such file or directory$" > "$proj/$btlog"
-    done
+    cat "$btout" > "$proj/$btlog" 2> /dev/null
 fi
+echo "[ btcat: terminated. ]"

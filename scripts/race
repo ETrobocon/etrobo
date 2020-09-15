@@ -445,7 +445,8 @@ else
     echo "race sequencer: launch race on $course course"
     cd "$simdist/__race"
     sim $course btcat launch __race > console.log
-    if [ "$?" != "0" ];then
+    sim_error="$?"
+    if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
         echo "race sequencer: athrill app ERROR!!"
         exit 1
     fi
@@ -475,7 +476,7 @@ else
     echo "race sequencer: zip result files"
     cd "$raceFolder"
     zip -r "Results/$target" $dest > /dev/null
-    if [ "$?" != "0" ] && [ "$?" != "143" ]; then
+    if [ "$?" != "0" ]; then
         echo "race sequencer: result file archive ERROR!!"
         exit 2
     fi

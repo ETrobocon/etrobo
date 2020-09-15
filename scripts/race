@@ -419,12 +419,8 @@ echo
 #
 if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     # calc md5sum
-<<<<<<< HEAD
     sum="`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`"
     echo $sum > __race/__race.md5sum
-=======
-    #sum="`(find workspace/simdist/sample_c4 -type f -exec md5sum -b {} \; && find workspace/simdist/sample_c4) | env LC_ALL=C sort | md5sum -b`"
->>>>>>> 2e14984a209d65384a085a0f7ac1724fa2e3a556
 
     # zip it
     target="${classPrefix}_${target}"

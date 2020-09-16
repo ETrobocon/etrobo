@@ -281,11 +281,19 @@ fi
 #
 # get settings.json
 #
-settings=`cat __race/settings.json | jq -c .`
-etclass=`echo "$settings" | jq -r .etclass`
-LHackEV=`echo "$settings" | jq -r .LHackEV`
-RHackEV=`echo "$settings" | jq -r .RHackEV`
-captureDir=`echo "$settings" | jq -r .captureDir`
+if [ -f __race/settings.json ]; then
+    settings=`cat __race/settings.json | jq -c .`
+    if [ -n "$settings" ]; then
+        etclass=`echo "$settings" | jq -r .etclass`
+        LHackEV=`echo "$settings" | jq -r .LHackEV`
+        RHackEV=`echo "$settings" | jq -r .RHackEV`
+        captureDir=`echo "$settings" | jq -r .captureDir`
+    else
+        settings="{}"
+        echo "[ race: WARNING: illiegal settings.json ]"
+    fi
+fi
+
 # detect Windows path
 if [ -n "`echo $captureDir | grep ':\\\\'`" ]; then
     captureDir_winPath="$captureDir"

@@ -443,6 +443,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         unset gate1
         unset gate2
         unset goal
+        start_time=`date "+%s"`
         while [ -n "$loop" ] && [ -n "`sim check sim`" ]; do
             sleep 0.1
             json=`curl -s -X GET $ETROBO_SIM_COMM`
@@ -475,6 +476,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "[ launcher: $sim_select: GOAL!  Goal Time: $goal ]"
                 fi
             else
+                unset loop
+            fi
+            if [ $((`date "+%s"` - start_time)) -gt 600 ]; then
+                echo "[ launcher: past 10 minute from `date --date=@$start_time`. ]"
                 unset loop
             fi
         done

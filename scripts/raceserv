@@ -21,14 +21,8 @@ if [ -n "`echo $1 | grep ^ver=`" ]; then
 fi
 
 unset vm
-unset simRunner
 if [ "$1" == "vm" ]; then
     vm="vm"
-    simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
-    if [ -n "$simRunner" ]; then
-        $simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
-        echo "[ raceserv: entering VM mode with $simRunner ]"
-    fi
     shift
 fi
 
@@ -38,6 +32,16 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     raceFolder="$2"
     rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
+
+    # prepare simRunner
+    unset simRunner
+    if [ -n "$vm" ]; then
+        simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
+        if [ -n "$simRunner" ]; then
+            $simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+            echo "[ raceserv: entering VM mode with $simRunner ]"
+        fi
+    fi
 
     #
     # server main loop

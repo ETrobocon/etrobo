@@ -67,6 +67,17 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     exit 0
 fi
 
+echo "race: invoker: $@"
+#
+# `ver=<version>` option selects version of UnityETroboSim
+#
+unset sim_ver
+opt="$1"
+if [ -n "`echo $opt | grep ^ver=`" ]; then
+    sim_ver="ver `echo $1 | grep ^ver= | sed -E 's/^ver=(.*)$/\1/'`"
+    shift
+fi
+
 #
 # get options
 #
@@ -294,6 +305,10 @@ if [ -f __race/settings.json ]; then
     fi
 fi
 
+if [ -z "$captureDir" ] || [ "$captureDir" == "null" ]; then
+    captureDir="$raceFolder/capture"
+fi
+
 # detect Windows path
 if [ -n "`echo $captureDir | grep ':\\\\'`" ]; then
     captureDir_winPath="$captureDir"
@@ -392,7 +407,6 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
 #        forceShutdown=`echo "$settings" | jq -r .forceShutdown`
         forceShutdown="1"
     fi
-    captureDir="$raceFolder/capture"
     rm -rf "$captureDir"
     captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
     if [ "$ETROBO_OS" == "win" ]; then
@@ -468,16 +482,18 @@ else
     # launch sim
     echo "race sequencer: launch race on $course course"
     cd "$simdist/__race"
-    sim $course btcat launch __race > console.log
+    sim $sim_ver $course btcat launch __race > console.log
     sim_error="$?"
     if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
         echo "race sequencer: athrill app ERROR!!"
         exit 1
     fi
-    sim stop
+    if [ -n "`sim check`" ]; then
+        sim stop
+    fi
 
     # prepare result folder
-    echo "race sequencer: prepare result folder with '$captureDir'"
+    echo "race sequencer: prepare result folder"
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"
@@ -490,7 +506,7 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 16 "$result/$dest.mp4" 
+    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         echo "video encode error: This error appears when your HackEV did flying-start." > ERROR.txt

@@ -11,6 +11,15 @@
 # fp2 ... 2020/10/17 12:00～2020/10/25 20:00
 #
 
+#
+# `ver=<version>` option selects version of UnityETroboSim
+#
+unset sim_ver
+if [ -n "`echo $1 | grep ^ver=`" ]; then
+    sim_ver="ver=`echo $1 | grep ^ver= | sed -E 's/^ver=(.*)$/\1/'`"
+    shift
+fi
+
 unset unlimited
 if [ "$1" == "unlimited" ]; then
     unlimited="unlimited"
@@ -43,7 +52,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         done
         if [ -n "$main_loop" ]; then
             rm -f "$raceFolder/"*.manifest
-            race $mode "$raceFolder"
+            race $sim_ver $mode "$raceFolder"
             race_error="$?"
             manifest="`ls \"$raceFolder\" | grep .manifest$`"
             zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"

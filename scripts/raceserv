@@ -20,19 +20,33 @@ if [ -n "`echo $1 | grep ^ver=`" ]; then
     shift
 fi
 
-unset unlimited
-if [ "$1" == "unlimited" ]; then
-    unlimited="unlimited"
+unset vm
+unset simRunner
+if [ "$1" == "vm" ]; then
+    vm="vm"
+    simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
+    if [ -n "$simRunner" ]; then
+        $simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+        echo "[ raceserv: entering VM mode with $simRunner ]"
+    fi
     shift
 fi
 
 if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
+    # prepare race folder
     mode="$1"
     raceFolder="$2"
     rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
+
+    #
+    # server main loop
+    #
+    # to stop server safely, `touch stop` on race folder
+    #
     main_loop="loop"
     while [ -n "$main_loop" ]; do
+        echo
         echo "[ raceserv: waiting for POST ]"
         wait_loop="loop"
         while [ -n "$wait_loop" ]; do
@@ -51,12 +65,18 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             fi
         done
         if [ -n "$main_loop" ]; then
-            rm -f "$raceFolder/"*.manifest
+            #
+            # invoke race
+            #
             race $sim_ver $mode "$raceFolder"
             race_error="$?"
+
+            # get zip filename from manifest
             manifest="`ls \"$raceFolder\" | grep .manifest$`"
             zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
             zip_error="$?"
+
+            # put ERROR.txt into zip file 
             if [ "$race_error" == "1" ] || [ "$zip_error" == "1" ]; then
                 echo "[ raceserv: WARNING : an error occured while race ]"
                 echo "an error has occured." > ERROR.txt
@@ -64,12 +84,16 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 cp -f $zipname "$raceFolder/Results/"
                 rm $zipname
                 rm ERROR.txt
-            else
-                echo "[ raceserv: go to the next race ]"
+            fi
+
+            # request post via ETroboSimRunner.Relay
+            if [ -n "$simRunner" ]; then
+                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.exe /p" >NUL 2>&1
+                echo "[ raceserv: request post via ETroboSimRunner.Relay ]"
             fi
         fi
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [unlimited] fp1|fp2|final /path/to/raceFolder"
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|final /path/to/raceFolder"
 fi

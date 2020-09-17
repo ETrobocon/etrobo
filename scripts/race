@@ -67,7 +67,6 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     exit 0
 fi
 
-echo "race: invoker: $@"
 #
 # `ver=<version>` option selects version of UnityETroboSim
 #

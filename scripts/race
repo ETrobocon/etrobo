@@ -110,8 +110,10 @@ if [ "$ETROBO_OS" == "win" ]; then
 fi
 raceTemp="$simdist/__race"
 raceFolder="$raceFolder/_race"
+unset captureDir
 if [ -n "`echo \"$1\" | grep ^\/`" ]; then
     raceFolder="$1"
+    captureDir="$raceFolder/capture"
     shift
 fi
 if [ ! -d "$raceFolder" ]; then
@@ -297,18 +299,19 @@ if [ -f __race/settings.json ]; then
         etclass=`echo "$settings" | jq -r .etclass`
         LHackEV=`echo "$settings" | jq -r .LHackEV`
         RHackEV=`echo "$settings" | jq -r .RHackEV`
-        captureDir=`echo "$settings" | jq -r .captureDir`
+        if [ -z "$captureDir" ]; then
+            captureDir=`echo "$settings" | jq -r .captureDir`
+            if [ -z "$captureDir" ] || [ "$captureDir" == "null" ]; then
+                captureDir="$raceFolder/capture"
+            fi
+        fi
     else
         settings="{}"
         echo "[ race: WARNING: illiegal settings.json ]"
     fi
 fi
 
-if [ -z "$captureDir" ] || [ "$captureDir" == "null" ]; then
-    captureDir="$raceFolder/capture"
-fi
-
-# detect Windows path
+# determine a capture directory and its Windows path
 if [ -n "`echo $captureDir | grep ':\\\\'`" ]; then
     captureDir_winPath="$captureDir"
     captureDir="`echo \"$captureDir\" | sed -E 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -E 's/://' | sed -E 's/\\\\/\//g'`"
@@ -403,11 +406,9 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         forceShutdown="0"
     else
         captureRate="4"
-#        forceShutdown=`echo "$settings" | jq -r .forceShutdown`
         forceShutdown="1"
     fi
     rm -rf "$captureDir"
-    captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
     if [ "$ETROBO_OS" == "win" ]; then
         captDir="$captureDir_winPath"
     else

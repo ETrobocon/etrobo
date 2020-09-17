@@ -179,7 +179,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             pid="`sim check sim`"
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then
-                    taskkill.exe /pid $pid > /dev/null
+                    taskkill.exe /pid $pid >NUL 2>&1
                 else
                     kill $pid
                 fi

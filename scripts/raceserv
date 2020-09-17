@@ -51,7 +51,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     main_loop="loop"
     while [ -n "$main_loop" ]; do
         echo
-        echo "[ raceserv: waiting for POST ]"
+        echo "[ raceserv: waiting for Requests ]"
         wait_loop="loop"
         while [ -n "$wait_loop" ]; do
             sleep 1
@@ -92,7 +92,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
 
             # request post via ETroboSimRunner.Relay
             if [ -n "$simRunner" ]; then
-                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.exe /p" >NUL 2>&1
+                cmd.exe /C "cd /D ${simRunner}&\"ETroboSimRunner.exe\" \"/p\"" >NUL 2>&1
                 echo "[ raceserv: request post via ETroboSimRunner.Relay ]"
             fi
         fi

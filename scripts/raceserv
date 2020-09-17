@@ -39,7 +39,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
         if [ -n "$simRunner" ]; then
             simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
-            echo "[ raceserv: entering VM mode with $simRunner ]"
+            echo "[ raceserv: entering VM mode with SimRunner ]"
         fi
     fi
 
@@ -92,7 +92,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
 
             # request post via ETroboSimRunner.Relay
             if [ -n "$simRunner" ]; then
-                cmd.exe /C "cd /D ${simRunner}&\"ETroboSimRunner.exe\" \"/p\"" >NUL 2>&1
+                cmd.exe /C "cd /D ${simRunner}&put.cmd" >NUL 2>&1
                 echo "[ raceserv: request post via ETroboSimRunner.Relay ]"
             fi
         fi

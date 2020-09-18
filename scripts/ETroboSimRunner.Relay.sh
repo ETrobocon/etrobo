@@ -34,7 +34,7 @@ if [ "$?" == "0" ]; then
             simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
         else
             echo "ETroboSimRunner.Relay not found."
-#            exit 1
+            exit 1
         fi
 
         # task scheduler main loop

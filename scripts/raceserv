@@ -92,8 +92,8 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
 
             # request post via ETroboSimRunner.Relay
             if [ -n "$simRunner" ]; then
-                cmd.exe /C "cd /D ${simRunner}&put.cmd" >NUL 2>&1
                 echo "[ raceserv: request post via ETroboSimRunner.Relay ]"
+                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1 &
             fi
         fi
         rm -f "$raceFolder/"*.manifest

@@ -33,14 +33,9 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
 
-    # prepare simRunner
-    unset simRunner
+    # launch taskscheduler for ETroboSimRunner.Relay
     if [ -n "$vm" ]; then
-        simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
-        if [ -n "$simRunner" ]; then
-            simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
-            echo "[ raceserv: entering VM mode with SimRunner ]"
-        fi
+        ETroboSimRunner.Relay.sh serv "$raceFolder"
     fi
 
     #
@@ -90,10 +85,9 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 rm ERROR.txt
             fi
 
-            # request post via ETroboSimRunner.Relay
-            if [ -n "$simRunner" ]; then
-                echo "[ raceserv: request post via ETroboSimRunner.Relay ]"
-                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1 &
+            # request post and get via ETroboSimRunner.Relay
+            if [ -n "$vm" ]; then
+                ETroboSimRunner.Relay.sh "$raceFolder"
             fi
         fi
         rm -f "$raceFolder/"*.manifest

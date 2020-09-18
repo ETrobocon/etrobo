@@ -35,7 +35,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
 
     # launch taskscheduler for ETroboSimRunner.Relay
     if [ -n "$vm" ]; then
-        ETroboSimRunner.Relay.sh serv "$raceFolder"
+        ETroboSimRunner.Relay.sh serv "$raceFolder" &
     fi
 
     #

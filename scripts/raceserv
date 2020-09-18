@@ -12,6 +12,28 @@
 #
 
 #
+# define error codes
+#
+ERR_OK=0
+ERR_ERR=1
+ERR_ARC_PROJECT_NOT_FOUND=101
+ERR_ARC_COPY_FAILED=102
+ERR_ARC_FILE_NOT_FOUND=103
+ERR_ARC_ZIP_FAILED=104
+ERR_ARC_ZIP_TOO_LARGE=105
+ERR_SEQ_RACEFOLDER_NOT_FOUND=201
+ERR_SEQ_UNZIP_FAILED=202
+ERR_SEQ_RACE_NOT_FOUND=203
+ERR_SEQ_ASP_NOT_FOUND=204
+ERR_SEQ_MD5SUM_MISMATCH=205
+ERR_SEQ_REQUESTS_EMPTY=206
+ERR_SEQ_SIM_LAUNCH_FAILED=207
+ERR_SEQ_FFMPEG_FAILED=208
+ERR_SEQ_ZIP_FAILED=209
+
+exit_code=ERR_OK
+
+#
 # `ver=<version>` option selects version of UnityETroboSim
 #
 unset sim_ver
@@ -73,16 +95,33 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             # get zip filename from manifest
             manifest="`ls \"$raceFolder\" | grep .manifest$`"
             zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
-            zip_error="$?"
+            if [ "$?" == "$ERR_OK" ] && [ "$race_error" != "ERR_SEQ_ZIP_FAILED" ]; then
+                # put ERROR.txt into zip file 
+                if [ "$race_error" != "$ERR_OK" ]; then
+                    case "$race_error" in
+                        "$ERR_SEQ_UNZIP_FAILED" ) 
+                            mes="illegal zip file: unzip failed." ;;
+                        "$ERR_SEQ_RACE_NOT_FOUND" ) 
+                            mes="illegal zip file: __race folder not found." ;;
+                        "$ERR_SEQ_ASP_NOT_FOUND" ) 
+                            mes="illegal zip file: .asp file not found." ;;
+                        "$ERR_SEQ_MD5SUM_MISMATCH" ) 
+                            mes="illegal zip file: MD5 check sum mismatched." ;;
+                        "$ERR_SEQ_FFMPEG_FAILED" ) 
+                            mes="video encode error: This error appears when your HackEV did flying-start." ;;
+                        * ) 
+                            mes="an error has occured while this race." ;;
+                    esac
 
-            # put ERROR.txt into zip file 
-            if [ "$race_error" == "1" ] || [ "$zip_error" == "1" ]; then
-                echo "[ raceserv: WARNING : an error occured while race ]"
-                echo "an error has occured." > ERROR.txt
-                zip $zipname ERROR.txt > /dev/null
-                cp -f $zipname "$raceFolder/Results/"
-                rm $zipname
-                rm ERROR.txt
+                    echo "[ raceserv: ERROR: $mes ]"
+                    echo "$mes" > ERROR.txt
+                    zip $zipname ERROR.txt > /dev/null
+                    cp -f $zipname "$raceFolder/Results/"
+                    rm $zipname
+                    rm ERROR.txt
+                fi
+            else
+                echo "[ raceserv: WARNING : result zip file creation failed!!! ]"
             fi
 
             # request post and get via ETroboSimRunner.Relay

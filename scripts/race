@@ -68,6 +68,28 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
 fi
 
 #
+# define error codes
+#
+ERR_OK=0
+ERR_ERR=1
+ERR_ARC_PROJECT_NOT_FOUND=101
+ERR_ARC_COPY_FAILED=102
+ERR_ARC_FILE_NOT_FOUND=103
+ERR_ARC_ZIP_FAILED=104
+ERR_ARC_ZIP_TOO_LARGE=105
+ERR_SEQ_RACEFOLDER_NOT_FOUND=201
+ERR_SEQ_UNZIP_FAILED=202
+ERR_SEQ_RACE_NOT_FOUND=203
+ERR_SEQ_ASP_NOT_FOUND=204
+ERR_SEQ_MD5SUM_MISMATCH=205
+ERR_SEQ_REQUESTS_EMPTY=206
+ERR_SEQ_SIM_LAUNCH_FAILED=207
+ERR_SEQ_FFMPEG_FAILED=208
+ERR_SEQ_ZIP_FAILED=209
+
+exit_code=$ERR_OK
+
+#
 # `ver=<version>` option selects version of UnityETroboSim
 #
 unset sim_ver
@@ -124,7 +146,7 @@ if [ ! -d "$raceFolder" ]; then
         mkdir -p "$raceFolder/Results"
     else
         echo "race sequencer: the race folder '$raceFolder' is not found."
-        exit 1
+        exit $ERR_SEQ_RACEFOLDER_NOT_FOUND
     fi
 fi
 
@@ -143,7 +165,7 @@ fi
 proj="$simdist/$projName"
 if [ ! -d "$proj" ] && [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     echo "file archiver: project '$projName' is not found at '$simdist'."
-    exit 1
+    exit $ERR_ARC_PROJECT_NOT_FOUND
 fi
 
 #
@@ -168,7 +190,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             echo "is copied."
         else
             echo "ERROR while coping."
-            exit 1
+            exit $ERR_ARC_COPY_FAILED
         fi
     else
         echo "{}" > "$raceTemp/settings.json"
@@ -183,7 +205,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             echo "is copied."
         else
             echo "ERROR while coping."
-            exit 1
+            exit $ERR_ARC_COPY_FAILED
         fi
     else
         mkdir -p "$raceTemp/__ev3rtfs"
@@ -210,11 +232,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             echo "'$l_app' is copied as l___race.asp."
         else
             echo "ERROR while coping."
-            exit 1
+            exit $ERR_ARC_COPY_FAILED
         fi
     else
         echo "not found."
-        exit 1
+        exit $ERR_ARC_FILE_NOT_FOUND
     fi
 
     # prepare r_app
@@ -237,11 +259,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             echo "'$r_app' is copied as r___race.asp."
         else
             echo "ERROR while coping."
-            exit 1
+            exit $ERR_ARC_COPY_FAILED
         fi
     else
         echo "not found."
-        exit 1
+        exit $ERR_ARC_FILE_NOT_FOUND
     fi
     target="upload.zip"
 else
@@ -260,15 +282,15 @@ else
         fi
         if [ "$unzip_error" != "0" ]; then
             echo "race sequencer: UNZIP ERROR"
-            exit 1
+            exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$simdist/$target"
         if [ ! -d __race ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
-            exit 1
+            exit $ERR_SEQ_RACE_NOT_FOUND
         elif [ ! -f "__race/l___race.asp" ] || [ ! -f "__race/r___race.asp" ]; then
             echo "race sequencer: $target isn't contain '*___race.asp' file."
-            exit 1
+            exit $ERR_SEQ_ASP_NOT_FOUND
         fi
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
@@ -282,11 +304,11 @@ else
         fi
         if [ "`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`" != "$sum" ]; then
             echo "race sequencer: ERROR: mismatch md5sum"
-            exit 1
+            exit $ERR_SEQ_MD5SUM_MISMATCH
         fi
     else
         echo "race sequencer: Requests empty."
-        exit 2
+        exit $ERR_SEQ_REQUESTS_EMPTY
     fi
 fi
 
@@ -451,13 +473,13 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         echo "file archiver: archive succeed."
     else
         echo "file archiver: ARCHIVE ERROR"
-        exit 1
+        exit $ERR_ARC_ZIP_FAILED
     fi
 
     fileSize="`wc -c $target | awk '{print $1}'`"
     if [ $fileSize -gt 30000000 ]; then
         echo "file archiver: ARCHIVE ERROR: too large file ($fileSize bytes)"
-        exit 1
+        exit $ERR_ARC_ZIP_TOO_LARGE
     fi
 
     rm -f "$raceFolder/$target"
@@ -475,7 +497,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         fi
     fi
     if [ "$mode" = "zip" ]; then
-        exit 0
+        exit $exit_code
     fi
     echo "comming soon: upload mode"
 else
@@ -486,7 +508,7 @@ else
     sim_error="$?"
     if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
         echo "race sequencer: athrill app ERROR!!"
-        exit 1
+        exit $ERR_SEQ_SIM_LAUNCH_FAILED
     fi
     if [ -n "`sim check`" ]; then
         sim stop
@@ -497,11 +519,21 @@ else
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"
-    cp "$captureDir/$coursePrefix.csv" "$result/$dest.csv"
-    cp console.log "$result/"
-    cp -rf __ev3rtfs "$result/"
-    if [ -f bt.log ] && [ "`wc -c bt.log | awk '{print $1}'`" != "0" ]; then
-        cp bt.log "$result/"
+    src="$captureDir/$coursePrefix.csv"
+    if [ -f "$src" ]; then
+        cp "$src" "$result/$dest.csv"
+    fi
+    src="console.log"
+    if [ -f "$src" ]; then
+        cp "$src" "$result/"
+    fi
+    src="__ev3rtfs"
+    if [ -d "$src" ]; then
+        cp -rf "$src" "$result/"
+    fi
+    src="bt.log"
+    if [ -f "$src" ] && [ "`wc -c "$src" | awk '{print $1}'`" != "0" ]; then
+        cp "$src" "$result/"
     fi
 
     # encode race video
@@ -509,7 +541,7 @@ else
     ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
-        echo "video encode error: This error appears when your HackEV did flying-start." > ERROR.txt
+        exit_code=$ERR_SEQ_FFMPEG_FAILED
     fi
 
     # zip result files
@@ -518,10 +550,11 @@ else
     zip -r "Results/$target" $dest > /dev/null
     if [ "$?" != "0" ]; then
         echo "race sequencer: result file archive ERROR!!"
-        exit 2
+        exit $ERR_SEQ_ZIP_FAILED
     fi
     rm -rf $dest
     rm -rf "$simdist/__race"
     
     echo "race sequencer: race (requestID=$requestID) is finished successfully."
 fi
+exit $exit_code

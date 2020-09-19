@@ -264,6 +264,11 @@ else
         "$BeerHall/usr/local/bin/brew" install jq
     fi
     #
+    # 2020_v3.1 Hotfix for base-platform of etrobo core package
+    if [ -n "$BeerHall" ] && [ `which md5sum > /dev/null; echo $?` = 1 ]; then
+        "$BeerHall/usr/local/bin/brew" install md5sha1sum
+    fi
+    #
     # 2020_v3.5 Hotfix for base-platform of etrobo core package
     # this hotfix is only needed for race officials
     #

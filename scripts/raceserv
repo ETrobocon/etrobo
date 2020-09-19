@@ -100,13 +100,13 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 if [ "$race_error" != "$ERR_OK" ]; then
                     case "$race_error" in
                         "$ERR_SEQ_UNZIP_FAILED" ) 
-                            mes="illegal zip file: unzip failed." ;;
+                            mes="illegal zip file: unzip failed. you should run 'race zip'." ;;
                         "$ERR_SEQ_RACE_NOT_FOUND" ) 
-                            mes="illegal zip file: __race folder not found." ;;
+                            mes="illegal zip file: __race folder not found. you should run 'race zip'." ;;
                         "$ERR_SEQ_ASP_NOT_FOUND" ) 
-                            mes="illegal zip file: .asp file not found." ;;
+                            mes="illegal zip file: .asp file not found. you should run 'make app=<projName> sim up' first." ;;
                         "$ERR_SEQ_MD5SUM_MISMATCH" ) 
-                            mes="illegal zip file: MD5 check sum mismatched." ;;
+                            mes="illegal zip file: MD5 check sum mismatched. you should run 'update' first." ;;
                         "$ERR_SEQ_FFMPEG_FAILED" ) 
                             mes="video encode error: This error appears when your HackEV did flying-start." ;;
                         * ) 

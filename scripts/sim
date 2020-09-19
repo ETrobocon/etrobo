@@ -408,6 +408,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             if [ "$comm_ready" == "ready" ]; then
+                rm -f result.json
                 # put HackEV onto specified course and wait connected
                 curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
                 sleep 1     # @ToDo: its magic number
@@ -465,6 +466,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -n "$json" ]; then
                 if [ "`echo $json | jq -r .measurement.mode`" == "END" ]; then
                     echo "[ launcher: end of this race ]"
+                    echo "$json" | jq . > result.json
                     unset loop
                 fi
 

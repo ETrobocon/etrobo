@@ -527,6 +527,10 @@ else
     if [ -f "$src" ]; then
         cp "$src" "$result/"
     fi
+    src="result.json"
+    if [ -f "$src" ]; then
+        cp "$src" "$result/"
+    fi
     src="__ev3rtfs"
     if [ -d "$src" ]; then
         cp -rf "$src" "$result/"

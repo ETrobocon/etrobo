@@ -170,6 +170,17 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     #
+    # `sim status` shows status
+    #
+    if [ "$1" = "status" ]; then
+        json=`curl -s -X GET $ETROBO_SIM_COMM 2>&1`
+        if [ "$?" == "0" ];then
+            echo "$json" | jq .
+        fi
+        exit 0
+    fi
+
+    #
     # `sim stop` command terminates sim, l_app and r_app
     #
     if [ "$1" = "stop" ]; then

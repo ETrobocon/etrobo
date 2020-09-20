@@ -412,9 +412,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 # put HackEV onto specified course and wait connected
                 curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
                 sleep 1     # @ToDo: its magic number
+                counter=0
                 response=`curl -s -X GET $ETROBO_SIM_COMM`
                 while [ -z "`echo "$response" | jq -r .$sim_select.mode | grep CONNECTING`" ] && [ -n "$loop" ]; do
                     sleep 0.1
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 10 ]; then
+                        unset loop
+                    fi
                     response=`curl -s -X GET $ETROBO_SIM_COMM`
                 done
                 echo "[ launcher: ready to start on $sim_select course ]"
@@ -425,8 +430,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "[ launcher: Go to the start, Ready? ]"
                     json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
                     sleep 1     # @ToDo: its magic number
+                    counter=0
                     while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
-                        sleep 0.001
+                        sleep 0.1
+                        counter=$(( $counter + 1 ))
+                        if [ $counter -ge 10 ]; then
+                            unset loop
+                        fi
                         json=`curl -s -X GET $ETROBO_SIM_COMM`
                     done
                     # auto start

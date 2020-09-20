@@ -317,7 +317,7 @@ fi
 eval $(jq -r "to_entries|map(\"d_\(.key)=\\\"\(.value|tostring)\\\"\")|.[]" "$ETROBO_ROOT/dist/settings.json.default")
 # spread settings.json values to envvar
 if [ -f __race/settings.json ]; then
-    eval $(jq -r "to_entries|map(\"\(.key)=\\\"\(.value|tostring)\\\"\")|.[]" __race/settings.json)
+    eval $(cat  __race/settings.json | jq '.captureDir|=""' | jq -r "to_entries|map(\"\(.key)=\\\"\(.value|tostring)\\\"\")|.[]")
 fi
 # merge settings
 while read var;do

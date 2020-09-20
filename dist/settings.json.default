@@ -1,5 +1,5 @@
 {
-  "etclass": "0",
+  "etclass": "2",
   "LHackEV": "1",
   "RHackEV": "0",
   "initLNumberCase": "1",
@@ -34,6 +34,6 @@
   "motorSound": "0",
   "frameRateMode": "0",
   "frameRate": "0",
-  "captureDir": "c:\\Users\\jt\\.vscode\\extensions\\ms-vscode-remote.remote-wsl-0.44.5\\capture",
+  "captureDir": "",
   "athrillHost": "127.0.0.1"
 }

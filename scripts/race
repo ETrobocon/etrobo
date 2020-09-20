@@ -132,10 +132,8 @@ if [ "$ETROBO_OS" == "win" ]; then
 fi
 raceTemp="$simdist/__race"
 raceFolder="$raceFolder/_race"
-unset captureDir
 if [ -n "`echo \"$1\" | grep ^\/`" ]; then
     raceFolder="$1"
-    captureDir="$raceFolder/capture"
     shift
 fi
 if [ ! -d "$raceFolder" ]; then
@@ -183,18 +181,18 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     echo "file archiver: start"
 
     # prepare settings.json
-    echo -n "file archiver: settings.json "
-    if [ -f "$proj/settings.json" ]; then
+    echo -n "file archiver: settings.json"
+    if [ -f "$proj/settings.json" ] && [ "`wc -c \"$proj/settings.json\" | awk '{print $1}'`" != "0" ]; then
         cp "$proj/settings.json" "$raceTemp/"
         if [ "$?" == "0" ]; then
-            echo "is copied."
+            echo " is copied."
         else
-            echo "ERROR while coping."
+            echo ": ERROR while coping."
             exit $ERR_ARC_COPY_FAILED
         fi
     else
-        echo "{}" > "$raceTemp/settings.json"
-        echo "dummy is created."
+        cp "$ETROBO_ROOT/dist/settings.json.default" "$raceTemp/settings.json"
+        echo ".default is copied."
     fi
 
     # prepare ev3rtfs
@@ -313,33 +311,20 @@ else
 fi
 
 #
-# get settings.json
+# get settings.json and merge with settings.json.default
 #
+# spread default values to d_ prefixed envvar
+eval $(jq -r "to_entries|map(\"d_\(.key)=\\\"\(.value|tostring)\\\"\")|.[]" "$ETROBO_ROOT/dist/settings.json.default")
+# spread settings.json values to envvar
 if [ -f __race/settings.json ]; then
-    settings=`cat __race/settings.json | jq -c .`
-    if [ -n "$settings" ]; then
-        etclass=`echo "$settings" | jq -r .etclass`
-        LHackEV=`echo "$settings" | jq -r .LHackEV`
-        RHackEV=`echo "$settings" | jq -r .RHackEV`
-        if [ -z "$captureDir" ]; then
-            captureDir=`echo "$settings" | jq -r .captureDir`
-            if [ -z "$captureDir" ] || [ "$captureDir" == "null" ]; then
-                captureDir="$raceFolder/capture"
-            fi
-        fi
-    else
-        settings="{}"
-        echo "[ race: WARNING: illiegal settings.json ]"
+    eval $(jq -r "to_entries|map(\"\(.key)=\\\"\(.value|tostring)\\\"\")|.[]" __race/settings.json)
+fi
+# merge settings
+while read var;do
+    if [ -z "`eval \"echo \\\$\$var\"`" ]; then
+        eval "$var=\$d_$var"
     fi
-fi
-
-# determine a capture directory and its Windows path
-if [ -n "`echo $captureDir | grep ':\\\\'`" ]; then
-    captureDir_winPath="$captureDir"
-    captureDir="`echo \"$captureDir\" | sed -E 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -E 's/://' | sed -E 's/\\\\/\//g'`"
-else
-    captureDir_winPath="`echo \"$captureDir\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
-fi
+done < <(jq 'keys_unsorted' "$ETROBO_ROOT/dist/settings.json.default" | jq -r .[])
 
 #
 # determine a class and requestID
@@ -367,15 +352,13 @@ if [ "$class" == "auto" ]; then
          *  ) class="entry" ;;
     esac
 fi
-echo "race: $class class is selected."
-# update JSON
 case "$class" in
     "advanced" ) etclass="0"; classPrefix="A" ;;
     "primary"  ) etclass="1"; classPrefix="P" ;;
     "entry"    ) etclass="2"; classPrefix="E" ;;
     "sample"   ) etclass="3"; classPrefix="S" ;;
 esac
-settings=`echo $settings | jq ".etclass|=\"$etclass\"" | jq -c .`
+echo "race: $class class is selected."
 
 #
 # determine a course
@@ -387,8 +370,6 @@ if [ "$course" == "auto" ]; then
         course="left"
     fi
 fi
-echo "race: $course course is selected."
-# update JSON
 if [ "$course" == "right" ]; then
     coursePrefix="R"
     LHackEV="0"
@@ -398,63 +379,86 @@ else
     LHackEV="1"
     RHackEV="0"
 fi
-settings=`echo $settings | jq ".LHackEV|=\"$LHackEV\"" | jq -c .`
-settings=`echo $settings | jq ".RHackEV|=\"$RHackEV\"" | jq -c .`
+echo "race: $course course is selected."
 
 #
-# determine preferences for daemons
+# determine a capture directory and its pathes
+#
+# captureDir ... relational envvar with settings.json
+# captDir ... value for rewrite settings.json
+# captDir_bashPath ... capture directory for etrobo core
+# captDir_winPath ... capture directory for windows
+unset captDir
+unset captDir_bashPath
+unset captDir_winPath
+if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
+    unset captDir
+    unset captDir_bashPath
+    unset captDir_winPath
+else
+    captDir_bashPath="$raceFolder/capture"
+    captDir_winPath="`echo \"$captDir_bashPath\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+    rm -rf "$captDir_bashPath"
+    if [ "$ETROBO_OS" == "win" ]; then
+        captDir="$captDir_winPath"
+    else
+        captDir="$captDir_bashPath"
+    fi
+fi
+
+#
+# determine preferences for competition
 #
 if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     if [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
-        settings=`echo $settings | jq "del(.EnvLightIntensityLevel)" | jq -c .`
-        settings=`echo $settings | jq "del(.EnvLightRotation)" | jq -c .`
-        settings=`echo $settings | jq "del(.LSpotLight)" | jq -c .`
-        settings=`echo $settings | jq "del(.RSpotLight)" | jq -c .`
-        settings=`echo $settings | jq "del(.SponsorLogo_GroupA)" | jq -c .`
-        settings=`echo $settings | jq "del(.SponsorLogo_GroupB)" | jq -c .`
-        settings=`echo $settings | jq "del(.SponsorLogo_GroupC)" | jq -c .`
-        settings=`echo $settings | jq "del(.SponsorLogo_PhysicMaterial)" | jq -c .`
+        EnvLightIntensityLevel=$d_EnvLightIntensityLevel
+        EnvLightRotation=$d_EnvLightRotation
+        LSpotLight=$d_LSpotLight
+        RSpotLight=$d_RSpotLight
+        SponsorLogo_GroupA=$d_SponsorLogo_GroupA
+        SponsorLogo_GroupB=$d_SponsorLogo_GroupB
+        SponsorLogo_GroupC=$d_SponsorLogo_GroupC
+        SponsorLogo_PhysicMaterial=$d_SponsorLogo_PhysicMaterial
     fi
     if [ "$mode" == "final" ]; then
-        settings=`echo $settings | jq "del(.initLBlockLayout)" | jq -c .`
-        settings=`echo $settings | jq "del(.initLNumberCase)" | jq -c .`
-        settings=`echo $settings | jq "del(.initLNumberBlock)" | jq -c .`
-        settings=`echo $settings | jq "del(.initRBlockLayout)" | jq -c .`
-        settings=`echo $settings | jq "del(.initRNumberCase)" | jq -c .`
-        settings=`echo $settings | jq "del(.initRNumberBlock)" | jq -c .`
-        settings=`echo $settings | jq "del(.initLSlalom)" | jq -c .`
-        settings=`echo $settings | jq "del(.initRSlalom)" | jq -c .`
+        initLBlockLayout=$d_initLBlockLayout
+        initLNumberCase=$d_initLNumberCase
+        initLNumberBlock=$d_initLNumberBlock
+        initRBlockLayout=$d_initRBlockLayout
+        initRNumberCase=$d_initRNumberCase
+        initRNumberBlock=$d_initRNumberBlock
+        initLSlalom=$d_initLSlalom
+        initRSlalom=$d_initRSlalom
         captureRate="1"
         forceShutdown="0"
     else
         captureRate="4"
         forceShutdown="1"
     fi
-    rm -rf "$captureDir"
-    if [ "$ETROBO_OS" == "win" ]; then
-        captDir="$captureDir_winPath"
-    else
-        captDir="$captureDir"
-    fi
-    settings=`echo $settings | jq ".athrillHost|=\"127.0.0.1\"" | jq -c .`
-    settings=`echo $settings | jq ".commTimeOutFlag|=\"1\"" | jq -c .`
-    settings=`echo $settings | jq ".debugMonitorON|=\"0\"" | jq -c .`
-    settings=`echo $settings | jq ".frameRateMode|=\"0\"" | jq -c .`
-    settings=`echo $settings | jq ".frameRate|=\"60\"" | jq -c .`
-    settings=`echo $settings | jq ".motorSound|=\"0\"" | jq -c .`
-    settings=`echo $settings | jq ".captureRate|=\"$captureRate\"" | jq -c .`
-    settings=`echo $settings | jq ".captureDir|=\"$captDir\"" | jq -c .`
-    settings=`echo $settings | jq ".forceShutdown|=\"$forceShutdown\"" | jq -c .`
-    settings=`echo $settings | jq ".Poles|=\"0\"" | jq -c .`
+    athrillHost="127.0.0.1"
+    commTimeOutFlag="1"
+    debugMonitorON="0"
+    frameRateMode="0"
+    frameRate="60"
+    motorSound="0"
+    captureRate="$captureRate"
+    captureDir="$captDir"
+    forceShutdown="$forceShutdown"
+    Poles="0"
 
     if [ "$class" == "entry" ]; then
-        settings=`echo $settings | jq ".EnvLightIntensityLevel|=\"3\"" | jq -c .`
-        settings=`echo $settings | jq ".EnvLightRotation|=\"0\"" | jq -c .`
-        settings=`echo $settings | jq ".LSpotLight|=\"0\"" | jq -c .`
-        settings=`echo $settings | jq ".RSpotLight|=\"0\"" | jq -c .`
+        EnvLightIntensityLevel="3"
+        EnvLightRotation="0"
+        LSpotLight="0"
+        RSpotLight="0"
     fi
 fi
-echo $settings | jq -M . > __race/settings.json
+# gathering settings.json from envvar
+json="{}"
+while read var; do
+    json=$(echo $json | jq -c ".+{\"$var\":\"$(eval echo \"\$$var\")\"}")
+done < <(jq 'keys_unsorted' "$ETROBO_ROOT/dist/settings.json.default" | jq -r .[])
+echo "$json" | jq -M . > __race/settings.json
 echo "race: update settings.json: done."
 echo
 
@@ -519,7 +523,7 @@ else
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"
-    src="$captureDir/$coursePrefix.csv"
+    src="$captDir_bashPath/$coursePrefix.csv"
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
     fi
@@ -542,7 +546,7 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 15 -i "$captureDir/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffmpeg -r 15 -i "$captDir_bashPath/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED

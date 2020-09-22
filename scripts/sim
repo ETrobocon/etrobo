@@ -342,7 +342,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         if [ "$sim_opt" != "only" ]; then
             if [ -z `sim check sim` ]; then
                 if [ -f "$ETROBO_SIM_LOG" ]; then
-                    mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
+                    mv -f "$ETROBO_SIM_LOG" "$(dirname \"$ETROBO_SIM_LOG\")/Player-prev.log"
                 fi
                 eval "$ETROBO_LAUNCH_SIM"
             fi

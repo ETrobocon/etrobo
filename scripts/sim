@@ -6,12 +6,7 @@
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-
-# default filenames for launcher
-athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
-memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
-device_config_path="$ETROBO_ATHRILL_SDK/common"
-target="$ETROBO_ATHRILL_WORKSPACE/asp"
+# for developer: Athrill2 launcher has been moved to `launch_athrill.sh`
 
 #
 # `sim prefs` returns prefernces
@@ -35,7 +30,6 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SIM_NAME
     unset ETROBO_SIM_LOG
     unset ETROBO_SIM_COMM
-    unset ETROBO_LAUNCH_ASP
     unset ETROBO_LAUNCH_SIM
 else
     # export default envvars
@@ -54,30 +48,6 @@ else
         unset ETROBO_SIM_LOG
     fi
 
-    #
-    # memory.txt hotfix
-    #
-    # @todo: this process has to move into build_athrill.sh
-    if [ ! -f "${memory_txt}.org" ]; then
-        cp "$memory_txt" "${memory_txt}.org"
-        cat $ETROBO_ATHRILL_SDK/common/memory.txt | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"
-        rm "$memory_txt"
-        cp "${memory_txt}.tmp" "$memory_txt"
-        rm "${memory_txt}.tmp"
-    fi
-
-    # search & select a path to device_config.txt
-    # select priority: 
-    # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
-    # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
-    # 3. $ETROBO_ATHRILL_SDK/common
-    if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
-        device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
-    elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
-        device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
-    fi
-    device_config_txt="$device_config_path/device_config.txt"
-
     # course select
     app_prefix=""
     app_select="l_app"
@@ -91,7 +61,6 @@ else
         app_select="r_app"
         sim_select="right"
         app_req='{"LHackEV":0,"RHackEV":1}'
-        device_config_txt="$device_config_path/device_config_r.txt"
         shift
     fi
     ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
@@ -99,7 +68,6 @@ else
         ip="localhost"
     fi
     export ETROBO_SIM_COMM="http://$ip:54000/"
-    export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
 
     #
     # `ver [version]` option selects version of UnityETroboSim

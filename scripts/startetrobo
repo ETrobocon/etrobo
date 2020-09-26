@@ -172,6 +172,12 @@ if [ "$1" = "clean" ]; then
             sudo rm -rf /opt/gcc-arm-none-eabi*/
             if [ "$host" = "win" ]; then
                 userProfile="$(cmd.exe /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+                if [ -z $userProfile ]; then
+                    userProfile="/mnt/c/Users/`whoami`"                    
+                    echo "*** WARNING ***"
+                    echo "You are (probably) logged into this WSL via SSH."
+                    echo "\$ETROBO_USERPROFILE is automatically set as $userProfile."
+                fi
             else
                 userProfile="$HOME"
             fi

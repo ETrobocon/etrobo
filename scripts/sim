@@ -94,7 +94,7 @@ else
         device_config_txt="$device_config_path/device_config_r.txt"
         shift
     fi
-    ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
+    ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/" | sed -E "s/\r//"`
     if [ -z "$ip" ]; then
         ip="localhost"
     fi

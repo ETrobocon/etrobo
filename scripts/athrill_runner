@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Athrill2 application launcher
-#   launch_athrill.sh
+# Athrill2 application thread runner
+#   launch_runner.sh
 # Author: jtFuruhata
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "usage: launch_athrill.sh [left|right] <projName>"
+    echo "usage: athrill_runner [left|right] <projName>"
     exit 0
 fi
 
@@ -23,7 +23,6 @@ else
 fi
 
 # default filenames for launcher
-simdist="$ETROBO_HRP3_WORKSPACE/simdist"
 athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
 memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
 device_config_path="$ETROBO_ATHRILL_SDK/common"

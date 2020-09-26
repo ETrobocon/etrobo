@@ -183,7 +183,7 @@ if [ $makeResult -eq 0 ]; then
             #           |- __ev3rt_bt_out
             #           |- [__ev3rtfs]
             #
-            simdist="$ETROBO_HRP3_WORKSPACE/simdist/$proj"
+            simdist="$ETROBO_SIM_DIST/$proj"
             if [ ! -d "$simdist" ]; then
                 mkdir -p "$simdist"
             fi

@@ -6,7 +6,7 @@
 # Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-# for developer: Athrill2 launcher has been moved to `launch_athrill.sh`
+# for developer: Athrill2 launcher has been moved to `athrill_launcher/runner`
 
 #
 # `sim prefs` returns prefernces
@@ -29,8 +29,10 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SIM_COMPANY
     unset ETROBO_SIM_NAME
     unset ETROBO_SIM_LOG
+    unset ETROBO_SIM_DIST
     unset ETROBO_SIM_COMM
     unset ETROBO_LAUNCH_SIM
+    . athrill_launcher unset
 else
     # export default envvars
     export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim.*gz$ | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
@@ -47,6 +49,8 @@ else
     else
         unset ETROBO_SIM_LOG
     fi
+    export ETROBO_SIM_DIST="$ETROBO_HRP3_WORKSPACE/simdist"
+    . athrill_launcher env
 
     # course select
     app_prefix=""
@@ -63,7 +67,7 @@ else
         app_req='{"LHackEV":0,"RHackEV":1}'
         shift
     fi
-    ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
+    ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
     if [ -z "$ip" ]; then
         ip="localhost"
     fi
@@ -257,34 +261,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         unset sim_opt
     fi
 
-    unset target
-    if [ "$1" = "launchws" ]; then
-        if [ -f "$ETROBO_ATHRILL_WORKSPACE/currentasp" ]; then
-            target=`cat "$ETROBO_ATHRILL_WORKSPACE/currentasp"`
-        fi
-        if [ -n "$2" ]; then
-            target="$2"
-        fi
-        echo "$target" > "$ETROBO_ATHRILL_WORKSPACE/currentasp"
-        target="$ETROBO_ATHRILL_WORKSPACE/$target"
-    elif [ "$1" = "launch" ]; then
-        cd "$ETROBO_HRP3_WORKSPACE"
-        projName="$2"
-        if [ -z "$projName" ] && [ -f currentapp ]; then
-            currentapp=`head -n 1 currentapp`
-            projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
-        fi
-        cd "simdist/$projName"
-        target="${app_prefix}${projName}.asp"
-    elif [ -z "$sim_opt" ]; then
+    if [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
-        target="dummy"
     fi
+    target="dummy"
 
-    if [ "$target" != "dummy" ] && [ ! -f "$target" ]; then
-        echo "$target: file not exists."
-        exit 1
-    fi
     # launch a athrill app at background
     if [ -n "$target" ]; then
         if [ "$sim_opt" != "skipASP" ]; then

@@ -125,12 +125,11 @@ fi
 #
 # prepare envver for simdist, temporary and race folder
 #
-simdist="$ETROBO_HRP3_WORKSPACE/simdist"
-raceFolder="$simdist"
+raceFolder="$ETROBO_SIM_DIST"
 if [ "$ETROBO_OS" == "win" ]; then
     raceFolder="$ETROBO_USERPROFILE/etrobosim"
 fi
-raceTemp="$simdist/__race"
+raceTemp="$ETROBO_SIM_DIST/__race"
 raceFolder="$raceFolder/_race"
 if [ -n "`echo \"$1\" | grep ^\/`" ]; then
     raceFolder="$1"
@@ -160,9 +159,9 @@ if [ -n "$1" ]; then
     projName="$1"
     shift
 fi
-proj="$simdist/$projName"
+proj="$ETROBO_SIM_DIST/$projName"
 if [ ! -d "$proj" ] && [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
-    echo "file archiver: project '$projName' is not found at '$simdist'."
+    echo "file archiver: project '$projName' is not found at '$ETROBO_SIM_DIST'."
     exit $ERR_ARC_PROJECT_NOT_FOUND
 fi
 
@@ -171,7 +170,7 @@ fi
 #
 rm -rf "$raceTemp"
 mkdir -p "$raceTemp"
-cd "$simdist"
+cd "$ETROBO_SIM_DIST"
 rm -f *.zip
 
 if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
@@ -272,7 +271,7 @@ else
     if [ -n "$target" ]; then
         echo "race sequencer: get $target"
         touch "$raceFolder/${target}.manifest"
-        cp "$raceFolder/Requests/$target" "$simdist"
+        cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
         unzip -o $target > /dev/null
         unzip_error="$?"
         if [ "$mode" != "get" ]; then
@@ -282,7 +281,7 @@ else
             echo "race sequencer: UNZIP ERROR"
             exit $ERR_SEQ_UNZIP_FAILED
         fi
-        rm "$simdist/$target"
+        rm "$ETROBO_SIM_DIST/$target"
         if [ ! -d __race ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit $ERR_SEQ_RACE_NOT_FOUND
@@ -507,7 +506,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
 else
     # launch sim
     echo "race sequencer: launch race on $course course"
-    cd "$simdist/__race"
+    cd "$ETROBO_SIM_DIST/__race"
     sim $sim_ver $course btcat launch __race > console.log
     sim_error="$?"
     if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
@@ -561,7 +560,7 @@ else
         exit $ERR_SEQ_ZIP_FAILED
     fi
     rm -rf $dest
-    rm -rf "$simdist/__race"
+    rm -rf "$ETROBO_SIM_DIST/__race"
     
     echo "race sequencer: race (requestID=$requestID) is finished successfully."
 fi

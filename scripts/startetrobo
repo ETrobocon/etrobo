@@ -171,7 +171,7 @@ if [ "$1" = "clean" ]; then
             echo "remove /opt/gcc-arm-none-eabi*/"
             sudo rm -rf /opt/gcc-arm-none-eabi*/
             if [ "$host" = "win" ]; then
-                compec="`which cmd.exe`"
+                comspec="`which cmd.exe`"
                 if [ -z "$comspec" ]; then
                     comspec="/mnt/c/Windows/System32/cmd.exe"
                 fi

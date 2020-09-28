@@ -26,6 +26,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_KERNEL
     unset ETROBO_KERNEL_POSTFIX
     unset ETROBO_USERPROFILE
+    unset ETROBO_MODE_CUI
     unset ETROBO_SIM_VER
     unset ETROBO_SIM_NAME
     unset ETROBO_EXE_POSTFIX
@@ -55,7 +56,15 @@ else
             export ETROBO_OS="win"
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
-            export ETROBO_USERPROFILE="$(cmd.exe /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+            comspec="`which cmd.exe`"
+            if [ -z "$comspec" ]; then
+                comspec="/mnt/c/Windows/System32/cmd.exe"
+                export ETROBO_MODE_CUI="true"
+            fi
+            export ETROBO_USERPROFILE="$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+            if [ -z "$ETROBO_USERPROFILE" ]; then
+                export ETROBO_USERPROFILE="/mnt/c/Users/`whoami`"
+            fi
             #export ETROBO_LAUNCH_SIM='cmd.exe /c "%USERPROFILE%\\etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}\\${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
             export ETROBO_EXE_POSTFIX=".exe"
         elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then

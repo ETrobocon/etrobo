@@ -366,7 +366,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 while [ -z "`echo "$response" | jq -r .$sim_select.mode | grep CONNECTING`" ] && [ -n "$loop" ]; do
                     sleep 0.1
                     counter=$(( $counter + 1 ))
-                    if [ $counter -ge 10 ]; then
+                    if [ $counter -ge 100 ]; then
                         echo "[ launcher: autostart sequence timeout before PREPARE ]"
                         unset loop
                     fi
@@ -384,7 +384,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
                         sleep 0.1
                         counter=$(( $counter + 1 ))
-                        if [ $counter -ge 10 ]; then
+                        if [ $counter -ge 100 ]; then
                             echo "[ launcher: autostart sequence timeout after PREPARE ]"
                             unset loop
                         fi

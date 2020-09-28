@@ -171,7 +171,14 @@ if [ "$1" = "clean" ]; then
             echo "remove /opt/gcc-arm-none-eabi*/"
             sudo rm -rf /opt/gcc-arm-none-eabi*/
             if [ "$host" = "win" ]; then
-                userProfile="$(cmd.exe /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+                comspec="`which cmd.exe`"
+                if [ -z "$comspec" ]; then
+                    comspec="/mnt/c/Windows/System32/cmd.exe"
+                fi
+                userProfile="$(\"$comspec\" /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+                if [ -z $userProfile ]; then
+                    userProfile="/mnt/c/Users/`whoami`"
+                fi
             else
                 userProfile="$HOME"
             fi

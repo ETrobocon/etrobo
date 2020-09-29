@@ -78,7 +78,9 @@ if [ -z "$mode_env" ]; then
         projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
     fi
     target="${app_prefix}${projName}.asp"
-
+    if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+        target="${projName}.asp"
+    fi
     if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
         cd "$ETROBO_SIM_DIST/$projName"
         ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &

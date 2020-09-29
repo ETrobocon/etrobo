@@ -261,25 +261,28 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         unset sim_opt
     fi
 
-    if [ -z "$sim_opt" ]; then
+    unset target
+    if [ "$1" = "launch" ]; then
+        target="$2"
+    elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
+        target="__dummy__"
     fi
-    target="dummy"
 
     # launch a athrill app at background
     if [ -n "$target" ]; then
         if [ "$sim_opt" != "skipASP" ]; then
             if [ "$sim_opt" == "only" ] && [ -z `sim check sim` ]; then
-                ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target"
+                athrill_launcher $sim_select $target
                 # execution will deadlock here. to terminate, user have to hit Ctrl+C key.
             else
-                ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+                athrill_launcher $sim_select $target &
             fi
         fi
 
         # launch btcat
         if [ -n "$btcat" ]; then
-            btcat app=$projName bt.log &
+            btcat app=$target bt.log &
         fi
 
         # thread terminator

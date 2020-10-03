@@ -83,7 +83,9 @@ if [ -z "$mode_env" ]; then
     fi
     if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
         cd "$ETROBO_SIM_DIST/$projName"
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &
+        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &# | consolepipe &
+        echo "launch: runnerPID=$!  launcherPID=$$"
+        ps aux | grep athrill_launcher
     else
         echo "[ athrill_launcher: $target: file not exists. ]"
         exit 1

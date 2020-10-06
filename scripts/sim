@@ -229,25 +229,24 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     #
-    # new procedure of launching athrill apps from `simdist`:
+    # nextgen procedure of launching athrill apps from `simdist`:
     #
-    # new `sim launch` launches athrill apps from under the `workspace/simdist/[projName]` folder.
-    # `sim launchws` launches athrill apps from under the `$ETROBO_ATHRILL_WS` folder, just old `sim launch`.
+    # nextgen `sim launch` launches athrill apps via athrill_launcher/runner.
+    # `sim launchws` is no longer working.
     #
     # $ETROBO_ATHRILL_WORKSPACE
     #   |- athrill2
-    # $ETROBO_HRP3_WORKSPACE
-    #   |- [simdist]
-    #       |- [projName]
-    #           |- log.txt
-    #           |- l_projName.asp
-    #           |- r_projName.asp
-    #           |- settings.json
-    #           |- __ev3rt_bt_in
-    #           |- __ev3rt_bt_out
-    #           |- [__ev3rtfs]
-    #
-    # `wait` option is no longer using, sim always wait for launch UnityETroboSim without `only launch[ws]`
+    # $ETROBO_SIM_DIST
+    #   |- [projName]
+    #   |   |- log.txt
+    #   |   |- l_projName.asp
+    #   |   |- r_projName.asp
+    #   |   |- settings.json
+    #   |   |- __ev3rt_bt_in
+    #   |   |- __ev3rt_bt_out
+    #   |   |- [__ev3rtfs]
+    #   |- l_app.status
+    #   |- r_app.status
     #
     # `sim launch [projName]` lanches both the UnityETroboSim and a Athrill app
     # `sim only launch [projName]` only lanches a Athrill app
@@ -261,28 +260,37 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         unset sim_opt
     fi
 
+    unset projName
     unset target
     if [ "$1" = "launch" ]; then
-        target="$2"
+        projName="$2"
+        if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+            currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+            projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+        fi
+        target="${app_prefix}${projName}.asp"
+        if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+            target="${projName}.asp"
+        fi
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
         target="__dummy__"
     fi
 
     # launch a athrill app at background
-    if [ -n "$target" ]; then
+    if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
         if [ "$sim_opt" != "skipASP" ]; then
             if [ "$sim_opt" == "only" ] && [ -z `sim check sim` ]; then
-                athrill_launcher $sim_select $target
+                athrill_launcher $app_prefix $projName
                 # execution will deadlock here. to terminate, user have to hit Ctrl+C key.
             else
-                athrill_launcher $sim_select $target &
+                athrill_launcher $app_prefix $projName &
             fi
         fi
 
         # launch btcat
         if [ -n "$btcat" ]; then
-            btcat app=$target bt.log &
+            btcat app=$projName bt.log &
         fi
 
         # thread terminator
@@ -375,37 +383,42 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     fi
                     response=`curl -s -X GET $ETROBO_SIM_COMM`
                 done
-                echo "[ launcher: ready to start on $sim_select course ]"
 
-                # auto start sequence
-                if [ "$ETROBO_SIM_VER" != "$ETROBO_PUBLIC_VER" ]; then
-                    # request PREPARE and wait READY
-                    echo "[ launcher: Go to the start, Ready? ]"
-                    json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
-                    sleep 1     # @ToDo: its magic number
-                    counter=0
-                    while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
-                        sleep 0.1
-                        counter=$(( $counter + 1 ))
-                        if [ $counter -ge 100 ]; then
-                            echo "[ launcher: autostart sequence timeout after PREPARE ]"
-                            unset loop
+                if [ -z `sim check sim` ]; then
+                    unset loop
+                else
+                    echo "[ launcher: ready to start on $sim_select course ]"
+
+                    # auto start sequence
+                    if [ "$ETROBO_SIM_VER" != "$ETROBO_PUBLIC_VER" ]; then
+                        # request PREPARE and wait READY
+                        echo "[ launcher: Go to the start, Ready? ]"
+                        json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
+                        sleep 1     # @ToDo: its magic number
+                        counter=0
+                        while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
+                            sleep 0.1
+                            counter=$(( $counter + 1 ))
+                            if [ $counter -ge 100 ]; then
+                                echo "[ launcher: autostart sequence timeout after PREPARE ]"
+                                unset loop
+                            fi
+                            json=`curl -s -X GET $ETROBO_SIM_COMM`
+                        done
+                        # auto start
+                        echo -n "[ launcher: 3..."
+                        sleep 1
+                        echo -n "2..."
+                        sleep 1
+                        echo -n "1..."
+                        sleep 1
+                        if [ -n "$auto_start" ]; then
+                            json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
+                            echo " ]"
+                            echo "[ launcher: Go!!!!!!!! ]"
+                        else
+                            echo "[ launcher: $sim_select: manual start ]"
                         fi
-                        json=`curl -s -X GET $ETROBO_SIM_COMM`
-                    done
-                    # auto start
-                    echo -n "[ launcher: 3..."
-                    sleep 1
-                    echo -n "2..."
-                    sleep 1
-                    echo -n "1..."
-                    sleep 1
-                    if [ -n "$auto_start" ]; then
-                        json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
-                        echo " ]"
-                        echo "[ launcher: Go!!!!!!!! ]"
-                    else
-                        echo "[ launcher: $sim_select: manual start ]"
                     fi
                 fi
             else

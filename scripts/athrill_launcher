@@ -56,10 +56,10 @@ device_config_txt="$device_config_path/device_config.txt"
 app_prefix=""
 app_select="l_app"
 sim_select="left"
-if [ "$1" = "l" ] || [ "$1" = "left" ] || [ "$1" = "l_app" ]; then
+if [ "$1" = "l" ] || [ "$1" = "left" ] || [ "$1" = "l_app" ] || [ "$1" = "l_" ]; then
     app_prefix="l_"
     shift
-elif [ "$1" = "r" ] || [ "$1" = "right" ] || [ "$1" = "r_app" ]; then
+elif [ "$1" = "r" ] || [ "$1" = "right" ] || [ "$1" = "r_app" ] || [ "$1" = "r_" ]; then
     app_prefix="r_"
     app_select="r_app"
     sim_select="right"
@@ -70,22 +70,33 @@ fi
 # export the path to device_config.txt
 export ETROBO_ATHRILL_CONFIG="$device_config_txt"
 
-# invoke launcher
+# start launcher
 if [ -z "$mode_env" ]; then
+    # check for already running
+    if [ -f "$ETROBO_SIM_DIST/${app_select}.status" ]; then
+        echo "[ athrill_launcher: $app_select is already running. ]"
+        exit 1
+    else
+        touch "$ETROBO_SIM_DIST/${app_select}.status"
+    fi
+
+    # determine the target file
     projName="$1"
-    if [ -z "$projName" ] && [ -f currentapp ]; then
-        currentapp=`head -n 1 currentapp`
+    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
         projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
     fi
     target="${app_prefix}${projName}.asp"
     if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
         target="${projName}.asp"
     fi
+
+    # invoke runner
     if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
         cd "$ETROBO_SIM_DIST/$projName"
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" &# | consolepipe &
-        echo "launch: runnerPID=$!  launcherPID=$$"
-        ps aux | grep athrill_launcher
+        athrill_runner "$ETROBO_SIM_DIST/${app_select}.status" "$athrill2" "$memory_txt" "$device_config_txt" "$target" > $ETROBO_HRP3_WORKSPACE/test.log &
+        echo "[ athrill_launcher: launch: $target ]"
+        echo "[ athrill_launcher: runnerPID=$!  launcherPID=$$ ]"
     else
         echo "[ athrill_launcher: $target: file not exists. ]"
         exit 1

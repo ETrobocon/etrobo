@@ -160,6 +160,7 @@ if [ $makeResult -eq 0 ]; then
         make img="$proj"
         if [ $? -eq 0 ]; then
             mv -f "${incFile}.org" "$incFile"
+            v850-elf-strip --keep-symbol=_ev3_main_task asp
             echo fakemake on ASP3: build succeed: ${app_prefix}${proj}.asp
             cp -f asp "${app_prefix}${proj}.asp"
             echo "${app_prefix}${proj}.asp" > currentasp

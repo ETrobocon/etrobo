@@ -9,6 +9,13 @@
 
 cd "$ETROBO_HRP3_WORKSPACE"
 
+# `make nostrip` strips symbols
+unset nostrip
+if [ "$1" = "nostrip" ]; then
+    nostrip="$1"
+    shift
+fi
+
 # `make import` imports from UnityETroboSim preferences to settings.json
 import=""
 export=""
@@ -160,7 +167,10 @@ if [ $makeResult -eq 0 ]; then
         make img="$proj"
         if [ $? -eq 0 ]; then
             mv -f "${incFile}.org" "$incFile"
-            v850-elf-strip --keep-symbol=_ev3_main_task asp
+            if [ -z "$nostrip" ]; then
+                echo fakemake on ASP3: strip debug symbols
+                v850-elf-strip --keep-symbol=_ev3_main_task asp
+            fi
             echo fakemake on ASP3: build succeed: ${app_prefix}${proj}.asp
             cp -f asp "${app_prefix}${proj}.asp"
             echo "${app_prefix}${proj}.asp" > currentasp

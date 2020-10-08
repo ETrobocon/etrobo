@@ -10,7 +10,8 @@
 cd "$ETROBO_HRP3_WORKSPACE"
 
 # `make nostrip` strips symbols
-unset nostrip
+#unset nostrip
+nostrip="nostrip"   # ToDo: debug symbol strip
 if [ "$1" = "nostrip" ]; then
     nostrip="$1"
     shift

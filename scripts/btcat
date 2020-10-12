@@ -1,4 +1,50 @@
 #!/usr/bin/env bash
+#
+# Athrill2 virtual BT cat/echo
+#   btcat
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: btcat [COURSE] [app=<projName>] [<logFileName>]"
+    echo "       btcat echo [COURSE] [app=<projName>] [<message>]"
+fi
+
+# run as btecho
+unset btecho
+if [ "$1" == "echo" ]; then
+    btecho="btecho"
+    shift
+fi
+
+# search & select a path to device_config.txt
+# select priority: 
+# 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
+# 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
+# 3. $ETROBO_ATHRILL_SDK/common
+if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
+    device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
+    device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+fi
+device_config_txt="$device_config_path/device_config.txt"
+
+# COURSE select
+app_prefix=""
+app_select="l_app"
+sim_select="left"
+if [ "$1" = "l" ] || [ "$1" = "left" ] || [ "$1" = "l_app" ] || [ "$1" = "l_" ]; then
+    app_prefix="l_"
+    shift
+elif [ "$1" = "r" ] || [ "$1" = "right" ] || [ "$1" = "r_app" ] || [ "$1" = "r_" ]; then
+    app_prefix="r_"
+    app_select="r_app"
+    sim_select="right"
+    device_config_txt="$device_config_path/device_config_r.txt"
+    shift
+fi
+
 projName="`echo \"$1\" | grep ^app= | sed -E 's/^app=(.*)$/\1/'`"
 if [ -z "$projName" ]; then
     if [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
@@ -10,16 +56,28 @@ else
     shift
 fi
 
-sleep 1 # ToDo: magic number
+#sleep 1 # ToDo: magic number
 
-proj="$ETROBO_HRP3_WORKSPACE/simdist/$projName"
-btout="$proj/__ev3rt_bt_out"
+console="/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+selector="DEVICE_CONFIG_BT_BASENAME"
+bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
+proj="$ETROBO_SIM_DIST/$projName"
+btout="$proj/${bt_select}_out"
+btin="$proj/${bt_select}_in"
 btlog="$1"
+
+# run as btecho
+if [ -n "$btecho" ]; then
+    echo "$@" > "$btin"
+    exit 0
+fi
+
+# run as btcat
 timer=15
 echo "[ btcat: attempt to connect with Virtual BT on $projName ]"
 loop="loop"
 while [ -n "$loop" ]; do
-    if [ ! -p "$bt_out" ]; then
+    if [ -p "$btout" ]; then
         unset loop
     else
         sleep 1
@@ -38,7 +96,8 @@ echo "[ btcat: connected with Virtual BT on $projName ]"
 
 if [ -z "$btlog" ]; then
     cat "$btout" 2> /dev/null
+    echo "[ btcat: terminated. ]"
 else
-    cat "$btout" > "$proj/$btlog" 2> /dev/null
+    cat "$btout" > "$proj/${app_prefix}${btlog}" 2> /dev/null
+    echo "[ btcat: terminated. ]" | tee $console
 fi
-echo "[ btcat: terminated. ]"

@@ -205,8 +205,19 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
             exit $ERR_ARC_COPY_FAILED
         fi
     else
-        mkdir -p "$raceTemp/__ev3rtfs"
-        echo "dummy is created."
+        echo "doesn't exists."
+    fi
+    echo -n "file archiver: __ev3rtfs_r "
+    if [ -d "$proj/__ev3rtfs_r" ]; then
+        cp -r "$proj/__ev3rtfs_r" "$raceTemp/"
+        if [ "$?" == "0" ]; then
+            echo "is copied."
+        else
+            echo "ERROR while coping."
+            exit $ERR_ARC_COPY_FAILED
+        fi
+    else
+        echo "doesn't exists."
     fi
 
     # prepare l_app
@@ -507,7 +518,7 @@ else
     # launch sim
     echo "race sequencer: launch race on $course course"
     cd "$ETROBO_SIM_DIST/__race"
-    sim $sim_ver $course btcat launch __race > console.log
+    sim $sim_ver $course stdout btcat launch __race > console.log
     sim_error="$?"
     if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
         echo "race sequencer: athrill app ERROR!!"
@@ -538,7 +549,23 @@ else
     if [ -d "$src" ]; then
         cp -rf "$src" "$result/"
     fi
-    src="bt.log"
+    src="__ev3rtfs_r"
+    if [ -d "$src" ]; then
+        cp -rf "$src" "$result/"
+    fi
+    src="l_app.log"
+    if [ -f "$src" ] && [ "`wc -c "$src" | awk '{print $1}'`" != "0" ]; then
+        cp "$src" "$result/"
+    fi
+    src="l_app.bt"
+    if [ -f "$src" ] && [ "`wc -c "$src" | awk '{print $1}'`" != "0" ]; then
+        cp "$src" "$result/"
+    fi
+    src="r_app.log"
+    if [ -f "$src" ] && [ "`wc -c "$src" | awk '{print $1}'`" != "0" ]; then
+        cp "$src" "$result/"
+    fi
+    src="r_app.bt"
     if [ -f "$src" ] && [ "`wc -c "$src" | awk '{print $1}'`" != "0" ]; then
         cp "$src" "$result/"
     fi

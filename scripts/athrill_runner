@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+#
+# Athrill2 application thread runner
+#   athrill_runner.sh
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# `athrill_runner` is just a thread which runs a Athrill app and outputs running status.
+# This thread must be terminated safely by `asp` which invoked this.
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: athrill_runner <appSelect> </path/to/athrill2> </path/to/memory.txt> </path/to/device_config.txt> <appFileName> [stdout] [btcat]"
+    exit 0
+fi
+
+app_select="$1"
+athrill2="$2"
+memory_txt="$3"
+device_config_txt="$4"
+target="$5"
+
+console="/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+if [ "$6" == "stdout" ]; then
+    console_athrill="/dev/null"
+    shift
+else
+    console_athrill="$console"
+fi
+btcat="$6"
+
+status="$ETROBO_SIM_DIST/${app_select}.status"
+runner="$ETROBO_SIM_DIST/${app_select}.runner"
+projName=$(basename $(pwd))
+
+# make trap
+loop="loop"
+unset athrill_pid
+unset btcat_pid
+runner_pid=$$
+trap "unset loop" SIGTERM SIGINT EXIT
+
+${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
+| tee $console_athrill \
+| while [ -n "$loop" ]; do
+    if [ -z "$athrill_pid" ]; then
+        athrill_pid="`ps -f --ppid $runner_pid | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2}'`"
+        echo $athrill_pid >> "$runner"
+        echo $runner_pid >> "$runner"
+        echo "[ athrill_runner #$runner_pid: Athrill VM is running on #$athrill_pid ]" | tee $console > /dev/null
+    else
+        # get athrill status
+        read -t 1 line
+        if [ "$?" == "0" ]; then
+            echo "$line"
+        fi
+
+        if [ "`echo $line | grep \"^ELF STRING TABLE SECTION LOADED:\"`" ]; then
+            echo "[ $app_select runner: V850E2M VCPU is powered on ]" | tee $console
+            echo "-2 $SECONDS" >> "$status"
+        elif [ "`echo $line | grep \"^athrill_device_func_call=\"`" ]; then
+            echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
+            echo "-1 $SECONDS" >> "$status"
+        elif [ "`echo $line | grep \"^System logging task is started.\"`" ]; then
+            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
+            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
+            echo "1 $SECONDS" >> "$status"
+        elif [ "`echo $line | grep \"^DEVICE_CONFIG_BT_BASENAME\"`" ]; then
+            echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
+            echo "2 $SECONDS" >> "$status"
+            # launch btcat
+            if [ "$btcat" ]; then
+                btcat $app_select app=$projName app.bt &
+                btcat_pid=$!
+                echo "bt $btcat_pid" >> "$runner"
+                echo "[ $app_select runner: launch btcat #$btcat_pid]" | tee $console
+            fi
+        fi
+        
+
+        # terminate this thread
+        if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
+            echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
+            echo "0 $SECONDS" >> "$status"
+            unset loop
+        fi
+        if [ ! -f "$runner" ]; then
+            echo "[ $app_select runner: exit: force shutdown requested ]" | tee $console
+            echo "0 $SECONDS" >> "$status"
+            unset loop
+        fi
+        # terminate btcat if necessory
+        if [ -z "$loop" ] && [ "$btcat_pid" ] && [ -n "`ps -fp $btcat_pid | sed '1d'`" ]; then
+            kill $btcat_pid
+            wait $btcat_pid
+            echo "[ $app_select runner: exit: btcat is force shutted down ]" | tee $console
+        fi
+    fi
+done
+
+rm -f "$runner"
+echo "0" >> "$status"
+echo "[ athrill_runner #$runner_pid: terminated. ]" | tee $console > /dev/null

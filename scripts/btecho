@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-projName="`echo \"$1\" | grep ^app= | sed -E 's/^app=(.*)$/\1/'`"
-if [ -z "$projName" ]; then
-    projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
-fi
-echo "$@" > "$ETROBO_HRP3_WORKSPACE/simdist/$projName/__ev3rt_bt_in"
+#
+# now btecho is synonim of `btcat echo`
+#
+btcat echo "$@"

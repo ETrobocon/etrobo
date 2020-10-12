@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# console pipe, input from stdin and output to both console and stdout
+#   console
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# `console` is no longer needed, use `tee`.
+# see `athrill_runner`
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: console [pipe] [echo] [<message>]"
+    echo
+    echo "Output <message> to both console and stdout"
+    echo "On pipe mode, input from stdin and ignore <message>"
+    echo "On echo mode, output to console only"
+    exit 0
+fi
+
+# mode selection
+echo_on="echo"
+stdout_on="out"
+unset pipe_on
+if [ "$1" == "pipe" ]; then
+    unset pipe_mode
+    pipe_on="pipe"
+    shift
+fi
+if [ "$1" == "echo" ]; then
+    pipe_mode="echo"
+    unset stdout_on
+    shift
+fi
+
+# pipe mode
+if [ "$pipe_on" ]; then
+    if [ -p /dev/stdin ]; then
+        while read line; do
+            console $pipe_mode "$line"
+        done
+        exit 0
+    else
+        exit 1
+    fi
+fi
+
+# output for console
+if [ "$echo_on" ]; then
+    echo "$@" > "/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+fi
+# output for stdout
+if [ "$stdout_on" ]; then
+    echo "$@"
+fi

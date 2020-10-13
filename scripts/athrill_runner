@@ -20,7 +20,12 @@ memory_txt="$3"
 device_config_txt="$4"
 target="$5"
 
-console="/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+console="/dev/"
+if [ "$ETROBO_KERNEL" == "darwin" ]; then
+    console="/dev/tty"
+fi
+console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+
 if [ "$6" == "stdout" ]; then
     console_athrill="/dev/null"
     shift
@@ -44,7 +49,15 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
 | tee $console_athrill \
 | while [ -n "$loop" ]; do
     if [ -z "$athrill_pid" ]; then
-        athrill_pid="`ps -f --ppid $runner_pid | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2}'`"
+        if [ "$ETROBO_KERNEL" != "darwin" ]; then
+            athrill_pid="`ps -f --ppid $runner_pid | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2}'`"
+        else
+            athrill_pid=$(ps -f | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2" "$3}' | while read line; do if [ "`echo \"$line\" | awk '{print $2}'`" == "$runner_pid" ]; then echo "$line" | awk '{print $1}'; fi; done)
+        fi
+        echo "debug: runner=$runner_pid $athrill_pid" > $console
+        if [ -z "$athrill_pid" ]; then
+            athrill_pid=$runner_pid
+        fi
         echo $athrill_pid >> "$runner"
         echo $runner_pid >> "$runner"
         echo "[ athrill_runner #$runner_pid: Athrill VM is running on #$athrill_pid ]" | tee $console > /dev/null

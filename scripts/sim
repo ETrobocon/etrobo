@@ -195,7 +195,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "stdout" ]; then
         shift
         stdout="stdout"
-        console="/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+        console="/dev/"
+        if [ "$ETROBO_KERNEL" == "darwin" ]; then
+            console="/dev/tty"
+        fi
+        console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
     fi
 
     # `sim btcat` outputs Virtual BT into bt.log

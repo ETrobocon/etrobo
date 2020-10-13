@@ -58,7 +58,11 @@ fi
 
 #sleep 1 # ToDo: magic number
 
-console="/dev/`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+console="/dev/"
+if [ "$ETROBO_KERNEL" == "darwin" ]; then
+    console="/dev/tty"
+fi
+console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
 selector="DEVICE_CONFIG_BT_BASENAME"
 bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
 proj="$ETROBO_SIM_DIST/$projName"

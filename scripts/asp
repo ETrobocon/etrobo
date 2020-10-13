@@ -35,277 +35,277 @@ fi
 # unset/env option for etrobo env core
 if [ "$1" == "unset" ]; then
     unset ETROBO_ATHRILL_CONFIG
-    exit 0
-elif [ "$1" == "env" ]; then
-    mode_env="env"
-    shift
 else
-    unset mode_env
-fi
-
-# default filenames for launcher
-athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
-memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
-device_config_path="$ETROBO_ATHRILL_SDK/common"
-target="$ETROBO_ATHRILL_WORKSPACE/asp"
-
-#
-# memory.txt hotfix
-#
-# @todo: this process has to move into build_athrill.sh
-if [ -d "$ETROBO_ATHRILL_SDK" ] && [ ! -f "${memory_txt}.org" ]; then
-    cp "$memory_txt" "${memory_txt}.org"
-    cat $ETROBO_ATHRILL_SDK/common/memory.txt | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"
-    rm "$memory_txt"
-    cp "${memory_txt}.tmp" "$memory_txt"
-    rm "${memory_txt}.tmp"
-fi
-
-# search & select a path to device_config.txt
-# select priority: 
-# 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
-# 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
-# 3. $ETROBO_ATHRILL_SDK/common
-if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
-    device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
-elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
-    device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
-fi
-device_config_txt="$device_config_path/device_config.txt"
-
-# deep flag
-unset deep
-if [ "$1" == "deep" ]; then
-    deep="$1"
-    shift
-fi
-
-# deep flag
-unset stdout
-if [ "$1" == "stdout" ]; then
-    stdout="$1"
-    shift
-fi
-
-# MODE select
-mode="launch"
-if [ "$1" == "launch" ] || [ "$1" == "status" ] || [ "$1" == "check" ] || [ "$1" == "stop" ]; then
-    mode="$1"
-    shift
-fi
-
-# COURSE select
-app_prefix=""
-app_select="l_app"
-sim_select="left"
-if [ "$1" = "l" ] || [ "$1" = "left" ] || [ "$1" = "l_app" ] || [ "$1" = "l_" ]; then
-    app_prefix="l_"
-    shift
-elif [ "$1" = "r" ] || [ "$1" = "right" ] || [ "$1" = "r_app" ] || [ "$1" = "r_" ]; then
-    app_prefix="r_"
-    app_select="r_app"
-    sim_select="right"
-    device_config_txt="$device_config_path/device_config_r.txt"
-    shift
-fi
-
-# btcat flag
-unset btcat
-if [ "$1" == "bt" ] || [ "$1" == "btcat" ]; then
-    btcat="bt"
-    shift
-fi
-
-# export the path to device_config.txt
-export ETROBO_ATHRILL_CONFIG="$device_config_txt"
-
-if [ -z "$mode_env" ]; then
-    #
-    # `asp status` returns app status
-    #
-    if [ "$mode" == "status" ]; then
-        if [ "$1" == "--help" ]; then
-            echo "asp status code"
-            echo "   -3   ASP_ATHRL_LAUNCHED"
-            echo "   -2   ASP_ATHRL_POWERED"
-            echo "   -1   ASP_ATHRL_BOOTED"
-            echo "    0   ASP_TERMINATED"
-            echo "    1   ASP_EV3RT_BOOTED"
-            echo "    2   ASP_EV3RT_WITH_BT"
-        fi
-        cat "$ETROBO_SIM_DIST/${app_select}.status" | tail -n 1 | awk '{print $1}'
-        exit 0
-
-    #
-    # `asp check` returns PID of launcher which is specified course
-    #
-    elif [ "$mode" == "check" ]; then
-        cd "$ETROBO_SIM_DIST"
-
-        # get PIDs from .launcher
-        # on deep mode, search all thread of athrill apps 
-        unset l_pid
-        if [ -f "l_app.launcher" ]; then
-            l_pid=`cat "l_app.launcher" | head -n 1`
-        elif [ -n "$deep" ]; then
-            if [ -f "l_app.runner" ]; then
-                l_pid=`cat "l_app.runner" | head -n 1`
-            else
-                l_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check  | grep -v stop | awk '{print $2}'`
-                if [ -z "$l_pid" ]; then
-                    l_pid=`ps -af | grep -v grep | grep device_config.txt | awk '{print $2}'`
-                fi
-            fi
-        fi
-        unset r_pid
-        if [ -f "r_app.launcher" ]; then
-            r_pid=`cat "r_app.launcher" | head -n 1`
-        elif [ -n "$deep" ]; then
-            if [ -f "r_app.runner" ]; then
-                r_pid=`cat "r_app.runner" | head -n 1`
-            else
-                r_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check | grep -v stop | awk '{print $2}'`
-                if [ -z "$r_pid" ]; then
-                    r_pid=`ps -af | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
-                fi
-            fi
-            if [ "$l_pid" == "$r_pid" ]; then
-                unset r_pid
-            fi
-        fi
-
-        if [ -n "$app_prefix" ]; then
-            eval "echo \$${app_prefix}pid"
-        else
-            echo "$l_pid:$r_pid"
-        fi
-
-        # check btcat
-#        bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
-#        if [ -z "$bt_pid" ]; then
-#            bt_pid=`ps aux | grep -v grep | grep __ev3rt_bt | awk '{print $2}'`
-#        fi
-
-        exit 0
-    #
-    # `asp stop` terminates runner which is specified course
-    # on deep mode, try to terminate all athrill-related threads
-    #
-    elif [ "$mode" == "stop" ]; then
-        if [ -z "$app_prefix" ]; then
-            "$ETROBO_SCRIPTS/asp" $deep stop l_app
-            "$ETROBO_SCRIPTS/asp" $deep stop r_app
-        else
-            if [ "$deep" ]; then
-                "$ETROBO_SCRIPTS/asp" stop $app_select
-            fi
-            pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
-            while [ -n "$pid" ]; do
-                if [ "`ps -fp $pid | sed '1d'`" ]; then
-                    kill $pid
-                fi
-                sleep 0.1
-                pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
-            done
-        fi
-        exit 0
-
-    #
-    # `asp [launch] launches athrill apps
-    #
+    if [ "$1" == "env" ]; then
+        mode_env="env"
+        shift
     else
-        # determine the target file
-        projName="$1"
-        if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-            currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
-            projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
-        fi
-        target="${app_prefix}${projName}.asp"
-        if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
-            target="${projName}.asp"
-        fi
+        unset mode_env
+    fi
 
-        if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
-            cd "$ETROBO_SIM_DIST/$projName"
+    # default filenames for launcher
+    athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
+    memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
+    device_config_path="$ETROBO_ATHRILL_SDK/common"
+    target="$ETROBO_ATHRILL_WORKSPACE/asp"
 
-            # prepare course specific settings
-            selector="DEVICE_CONFIG_UART_BASENAME"
-            uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-            selector="DEVICE_CONFIG_BT_BASENAME"
-            bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-            selector="DEVICE_CONFIG_VIRTFS_TOP"
-            fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-            fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
+    #
+    # memory.txt hotfix
+    #
+    # @todo: this process has to move into build_athrill.sh
+    if [ -d "$ETROBO_ATHRILL_SDK" ] && [ ! -f "${memory_txt}.org" ]; then
+        cp "$memory_txt" "${memory_txt}.org"
+        cat $ETROBO_ATHRILL_SDK/common/memory.txt | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"
+        rm "$memory_txt"
+        cp "${memory_txt}.tmp" "$memory_txt"
+        rm "${memory_txt}.tmp"
+    fi
 
-            # prepare __ev3rtfs/_r
-            unset fs_cloned
-            if [ -d "$fs_basename" ] || [ -d "${fs_basename}_r" ]; then
-                if [ ! -d "$fs_select" ]; then
-                    if [ "$fs_select" == "$fs_basename" ]; then
-                        if [ -d "${fs_basename}_r" ]; then
-                            cp -rf "${fs_basename}_r" "$fs_select"
+    # search & select a path to device_config.txt
+    # select priority: 
+    # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
+    # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
+    # 3. $ETROBO_ATHRILL_SDK/common
+    if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
+        device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+    elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
+        device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+    fi
+    device_config_txt="$device_config_path/device_config.txt"
+
+    # deep flag
+    unset deep
+    if [ "$1" == "deep" ]; then
+        deep="$1"
+        shift
+    fi
+
+    # deep flag
+    unset stdout
+    if [ "$1" == "stdout" ]; then
+        stdout="$1"
+        shift
+    fi
+
+    # MODE select
+    mode="launch"
+    if [ "$1" == "launch" ] || [ "$1" == "status" ] || [ "$1" == "check" ] || [ "$1" == "stop" ]; then
+        mode="$1"
+        shift
+    fi
+
+    # COURSE select
+    app_prefix=""
+    app_select="l_app"
+    sim_select="left"
+    if [ "$1" = "l" ] || [ "$1" = "left" ] || [ "$1" = "l_app" ] || [ "$1" = "l_" ]; then
+        app_prefix="l_"
+        shift
+    elif [ "$1" = "r" ] || [ "$1" = "right" ] || [ "$1" = "r_app" ] || [ "$1" = "r_" ]; then
+        app_prefix="r_"
+        app_select="r_app"
+        sim_select="right"
+        device_config_txt="$device_config_path/device_config_r.txt"
+        shift
+    fi
+
+    # btcat flag
+    unset btcat
+    if [ "$1" == "bt" ] || [ "$1" == "btcat" ]; then
+        btcat="bt"
+        shift
+    fi
+
+    # export the path to device_config.txt
+    export ETROBO_ATHRILL_CONFIG="$device_config_txt"
+
+    if [ -z "$mode_env" ]; then
+        #
+        # `asp status` returns app status
+        #
+        if [ "$mode" == "status" ]; then
+            if [ "$1" == "--help" ]; then
+                echo "asp status code"
+                echo "   -3   ASP_ATHRL_LAUNCHED"
+                echo "   -2   ASP_ATHRL_POWERED"
+                echo "   -1   ASP_ATHRL_BOOTED"
+                echo "    0   ASP_TERMINATED"
+                echo "    1   ASP_EV3RT_BOOTED"
+                echo "    2   ASP_EV3RT_WITH_BT"
+            fi
+            cat "$ETROBO_SIM_DIST/${app_select}.status" | tail -n 1 | awk '{print $1}'
+            exit 0
+
+        #
+        # `asp check` returns PID of launcher which is specified course
+        #
+        elif [ "$mode" == "check" ]; then
+            cd "$ETROBO_SIM_DIST"
+
+            # get PIDs from .launcher
+            # on deep mode, search all thread of athrill apps 
+            unset l_pid
+            if [ -f "l_app.launcher" ]; then
+                l_pid=`cat "l_app.launcher" | head -n 1`
+            elif [ -n "$deep" ]; then
+                if [ -f "l_app.runner" ]; then
+                    l_pid=`cat "l_app.runner" | head -n 1`
+                else
+                    l_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check  | grep -v stop | awk '{print $2}'`
+                    if [ -z "$l_pid" ]; then
+                        l_pid=`ps -af | grep -v grep | grep device_config.txt | awk '{print $2}'`
+                    fi
+                fi
+            fi
+            unset r_pid
+            if [ -f "r_app.launcher" ]; then
+                r_pid=`cat "r_app.launcher" | head -n 1`
+            elif [ -n "$deep" ]; then
+                if [ -f "r_app.runner" ]; then
+                    r_pid=`cat "r_app.runner" | head -n 1`
+                else
+                    r_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check | grep -v stop | awk '{print $2}'`
+                    if [ -z "$r_pid" ]; then
+                        r_pid=`ps -af | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
+                    fi
+                fi
+                if [ "$l_pid" == "$r_pid" ]; then
+                    unset r_pid
+                fi
+            fi
+
+            if [ -n "$app_prefix" ]; then
+                eval "echo \$${app_prefix}pid"
+            else
+                echo "$l_pid:$r_pid"
+            fi
+
+            # check btcat
+    #        bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
+    #        if [ -z "$bt_pid" ]; then
+    #            bt_pid=`ps aux | grep -v grep | grep __ev3rt_bt | awk '{print $2}'`
+    #        fi
+
+            exit 0
+        #
+        # `asp stop` terminates runner which is specified course
+        # on deep mode, try to terminate all athrill-related threads
+        #
+        elif [ "$mode" == "stop" ]; then
+            if [ -z "$app_prefix" ]; then
+                "$ETROBO_SCRIPTS/asp" $deep stop l_app
+                "$ETROBO_SCRIPTS/asp" $deep stop r_app
+            else
+                if [ "$deep" ]; then
+                    "$ETROBO_SCRIPTS/asp" stop $app_select
+                fi
+                pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
+                while [ -n "$pid" ]; do
+                    if [ "`ps -fp $pid | sed '1d'`" ]; then
+                        kill $pid
+                    fi
+                    sleep 0.1
+                    pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
+                done
+            fi
+            exit 0
+
+        #
+        # `asp [launch] launches athrill apps
+        #
+        else
+            # determine the target file
+            projName="$1"
+            if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+                currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+                projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+            fi
+            target="${app_prefix}${projName}.asp"
+            if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+                target="${projName}.asp"
+            fi
+
+            if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+                cd "$ETROBO_SIM_DIST/$projName"
+
+                # prepare course specific settings
+                selector="DEVICE_CONFIG_UART_BASENAME"
+                uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+                selector="DEVICE_CONFIG_BT_BASENAME"
+                bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+                selector="DEVICE_CONFIG_VIRTFS_TOP"
+                fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+                fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
+
+                # prepare __ev3rtfs/_r
+                unset fs_cloned
+                if [ -d "$fs_basename" ] || [ -d "${fs_basename}_r" ]; then
+                    if [ ! -d "$fs_select" ]; then
+                        if [ "$fs_select" == "$fs_basename" ]; then
+                            if [ -d "${fs_basename}_r" ]; then
+                                cp -rf "${fs_basename}_r" "$fs_select"
+                                if [ "$?" == "0" ]; then
+                                    fs_cloned="cloned"
+                                else
+                                    echo "[ asp launcher: unable to clone ev3rtfs ]"
+                                fi
+                            fi
+                        else
+                            cp -rf "$fs_basename" "$fs_select"
                             if [ "$?" == "0" ]; then
                                 fs_cloned="cloned"
                             else
                                 echo "[ asp launcher: unable to clone ev3rtfs ]"
                             fi
                         fi
-                    else
-                        cp -rf "$fs_basename" "$fs_select"
-                        if [ "$?" == "0" ]; then
-                            fs_cloned="cloned"
-                        else
-                            echo "[ asp launcher: unable to clone ev3rtfs ]"
-                        fi
                     fi
                 fi
-            fi
 
-            # make trap
-            launcher_pid=$$
-            echo $launcher_pid > "$ETROBO_SIM_DIST/${app_select}.launcher"
-            trap "unset loop" SIGTERM SIGINT EXIT
+                # make trap
+                launcher_pid=$$
+                echo $launcher_pid > "$ETROBO_SIM_DIST/${app_select}.launcher"
+                trap "unset loop" SIGTERM SIGINT EXIT
 
-            # make status
-            rm -rf "$ETROBO_SIM_DIST/${app_select}.status"
-            echo "-3 0" > "$ETROBO_SIM_DIST/${app_select}.status"
+                # make status
+                rm -rf "$ETROBO_SIM_DIST/${app_select}.status"
+                echo "-3 0" > "$ETROBO_SIM_DIST/${app_select}.status"
 
-            # launch runner
-            if [ -n "$stdout" ]; then
-                athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" &
+                # launch runner
+                if [ -n "$stdout" ]; then
+                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" &
+                else
+                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" > "${app_select}.log" &
+                fi
+                touch "$ETROBO_SIM_DIST/${app_select}.runner"
+                runner_pid=$!
+                echo "[ asp launcher #$launcher_pid: launch $target as $app_select by runner #$runner_pid ]"
+
+                # loop until be trapped
+                loop=loop
+                while [ -n "$loop" ]; do
+                    # force shutdown request
+                    if [ ! -f "$ETROBO_SIM_DIST/${app_select}.launcher" ] || [ ! -f "$ETROBO_SIM_DIST/${app_select}.runner" ]; then
+                        unset loop
+                    fi
+                    sleep 0.1
+                done
+
+                rm -f "$ETROBO_SIM_DIST/${app_select}.launcher"
+                echo
+                if [ -f "$ETROBO_SIM_DIST/${app_select}.runner" ]; then
+                    if [ -n "$runner_pid" ] && [ -n "`ps -fp $runner_pid | sed '1d'`" ]; then
+                        kill `cat "$ETROBO_SIM_DIST/${app_select}.runner" | head -n 1`
+                    fi
+                fi
+    #            if [ -n "$fs_cloned" ]; then
+    #                rm -rf "$fs_select"
+    #            fi
+                wait $runner_pid
+                echo "[ asp launcher #$launcher_pid: terminated. ]"
             else
-                athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" > "${app_select}.log" &
+                echo "[ asp launcher: $target: file not exists. ]"
+                exit 1
             fi
-            touch "$ETROBO_SIM_DIST/${app_select}.runner"
-            runner_pid=$!
-            echo "[ asp launcher #$launcher_pid: launch $target as $app_select by runner #$runner_pid ]"
-
-            # loop until be trapped
-            loop=loop
-            while [ -n "$loop" ]; do
-                # force shutdown request
-                if [ ! -f "$ETROBO_SIM_DIST/${app_select}.launcher" ] || [ ! -f "$ETROBO_SIM_DIST/${app_select}.runner" ]; then
-                    unset loop
-                fi
-                sleep 0.1
-            done
-
-            rm -f "$ETROBO_SIM_DIST/${app_select}.launcher"
-            echo
-            if [ -f "$ETROBO_SIM_DIST/${app_select}.runner" ]; then
-                if [ -n "$runner_pid" ] && [ -n "`ps -fp $runner_pid | sed '1d'`" ]; then
-                    kill `cat "$ETROBO_SIM_DIST/${app_select}.runner" | head -n 1`
-                fi
-            fi
-#            if [ -n "$fs_cloned" ]; then
-#                rm -rf "$fs_select"
-#            fi
-            wait $runner_pid
-            echo "[ asp launcher #$launcher_pid: terminated. ]"
-        else
-            echo "[ asp launcher: $target: file not exists. ]"
-            exit 1
         fi
     fi
 fi
-

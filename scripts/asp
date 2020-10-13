@@ -112,9 +112,31 @@ else
     # btcat flag
     unset btcat
     if [ "$1" == "bt" ] || [ "$1" == "btcat" ]; then
-        btcat="bt"
+        btcat="btcat"
         shift
     fi
+
+    # determine the target file
+    projName="$1"
+    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+        projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+    fi
+    target="${app_prefix}${projName}.asp"
+    if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+        target="${projName}.asp"
+    fi
+
+    cd "$ETROBO_SIM_DIST/$projName"
+
+    # prepare course specific settings
+    selector="DEVICE_CONFIG_UART_BASENAME"
+    uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+    selector="DEVICE_CONFIG_BT_BASENAME"
+    bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+    selector="DEVICE_CONFIG_VIRTFS_TOP"
+    fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+    fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
 
     # export the path to device_config.txt
     export ETROBO_ATHRILL_CONFIG="$device_config_txt"
@@ -142,70 +164,105 @@ else
         elif [ "$mode" == "check" ]; then
             cd "$ETROBO_SIM_DIST"
 
-            # get PIDs from .launcher
-            # on deep mode, search all thread of athrill apps 
-            unset l_pid
-            if [ -f "l_app.launcher" ]; then
-                l_pid=`cat "l_app.launcher" | head -n 1`
-            elif [ -n "$deep" ]; then
-                if [ -f "l_app.runner" ]; then
+            # `check bt`
+            if [ -n "$btcat" ]; then
+                unset bt_pid
+                if [ -f "${app_select}.runner" ]; then
+                    bt_pid="`cat ${app_select}.runner | grep ^bt | awk '{print $2}'`"
+                fi
+                if [ -z "$bt_pid" ] && [ -n "$deep" ]; then
+                    bt_pid=`ps -af | grep -v grep | grep scripts/btcat | awk '{print $2}'`
+                    if [ -z "$bt_pid" ]; then
+                        bt_pid=`ps -af | grep -v grep | grep $bt_select | awk '{print $2}'`
+                    fi
+                fi
+                echo $bt_pid
+            else
+                # get PIDs from .launcher
+                # on deep mode, search all thread of athrill apps 
+                unset l_pid
+                if [ -f "l_app.launcher" ]; then
+                    l_pid=`cat "l_app.launcher" | head -n 1`
+                    if [ -n "$l_pid" ] && [ -z "`ps -fp $l_pid | sed '1d'`" ]; then
+                        unset l_pid
+                        rm -f "l_app.launcher"
+                    fi
+                fi
+                if [ -z "$l_pid" ] && [ -f "l_app.runner" ]; then
                     l_pid=`cat "l_app.runner" | head -n 1`
-                else
+                    if [ -n "$l_pid" ] && [ -z "`ps -fp $l_pid | sed '1d'`" ]; then
+                        unset l_pid
+                        rm -f "l_app.runner"
+                    fi
+                fi
+                if [ -z "$l_pid" ] && [ -n "$deep" ]; then
                     l_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check  | grep -v stop | awk '{print $2}'`
                     if [ -z "$l_pid" ]; then
                         l_pid=`ps -af | grep -v grep | grep device_config.txt | awk '{print $2}'`
                     fi
                 fi
-            fi
-            unset r_pid
-            if [ -f "r_app.launcher" ]; then
-                r_pid=`cat "r_app.launcher" | head -n 1`
-            elif [ -n "$deep" ]; then
-                if [ -f "r_app.runner" ]; then
+
+                unset r_pid
+                if [ -f "r_app.launcher" ]; then
+                    r_pid=`cat "r_app.launcher" | head -n 1`
+                    if [ -n "$r_pid" ] && [ -z "`ps -fp $r_pid | sed '1d'`" ]; then
+                        unset r_pid
+                        rm -f "r_app.launcher"
+                    fi
+                fi
+                if [ -z "$r_pid" ] && [ -f "r_app.runner" ]; then
                     r_pid=`cat "r_app.runner" | head -n 1`
-                else
-                    r_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check | grep -v stop | awk '{print $2}'`
+                    if [ -n "$r_pid" ] && [ -z "`ps -fp $r_pid | sed '1d'`" ]; then
+                        unset r_pid
+                        rm -f "r_app.runner"
+                    fi
+                fi
+                if [ -z "$r_pid" ] && [ -n "$deep" ]; then
+                    r_pid=`ps -af | grep -v grep | grep scripts/asp | grep -v check  | grep -v stop | awk '{print $2}'`
                     if [ -z "$r_pid" ]; then
                         r_pid=`ps -af | grep -v grep | grep device_config_r.txt | awk '{print $2}'`
                     fi
                 fi
-                if [ "$l_pid" == "$r_pid" ]; then
-                    unset r_pid
+
+                if [ -n "$app_prefix" ]; then
+                    eval "echo \$${app_prefix}pid"
+                else
+                    echo "$l_pid:$r_pid"
                 fi
             fi
-
-            if [ -n "$app_prefix" ]; then
-                eval "echo \$${app_prefix}pid"
-            else
-                echo "$l_pid:$r_pid"
-            fi
-
-            # check btcat
-    #        bt_pid=`ps aux | grep -v grep | grep btcat | awk '{print $2}'`
-    #        if [ -z "$bt_pid" ]; then
-    #            bt_pid=`ps aux | grep -v grep | grep __ev3rt_bt | awk '{print $2}'`
-    #        fi
-
             exit 0
         #
         # `asp stop` terminates runner which is specified course
         # on deep mode, try to terminate all athrill-related threads
         #
         elif [ "$mode" == "stop" ]; then
+            if [ -n "$btcat" ]; then
+                app_prefix="$btcat"
+                app_select="$btcat"
+            fi
             if [ -z "$app_prefix" ]; then
                 "$ETROBO_SCRIPTS/asp" $deep stop l_app
                 "$ETROBO_SCRIPTS/asp" $deep stop r_app
+                "$ETROBO_SCRIPTS/asp" $deep stop bt
             else
-                if [ "$deep" ]; then
-                    "$ETROBO_SCRIPTS/asp" stop $app_select
-                fi
+#                if [ "$deep" ]; then
+#                    "$ETROBO_SCRIPTS/asp" stop $app_select
+#                fi
                 pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
                 while [ -n "$pid" ]; do
+                    last_pid=$pid
                     if [ "`ps -fp $pid | sed '1d'`" ]; then
-                        kill $pid
+                        kill $pid 2>&1 > /dev/null
+                        if [ $? -eq 1 ]; then
+                            echo "[ asp controller: unable to kill #$pid ]"
+                        fi
                     fi
                     sleep 0.1
                     pid="`\"$ETROBO_SCRIPTS/asp\" $deep check $app_select`"
+                    if [ "$last_pid" == "$pid" ]; then
+                        echo "[ asp controller: terminating failed: same PID #$pid requested ]"
+                        unset pid
+                    fi
                 done
             fi
             exit 0
@@ -214,29 +271,7 @@ else
         # `asp [launch] launches athrill apps
         #
         else
-            # determine the target file
-            projName="$1"
-            if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-                currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
-                projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
-            fi
-            target="${app_prefix}${projName}.asp"
-            if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
-                target="${projName}.asp"
-            fi
-
             if [ -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
-                cd "$ETROBO_SIM_DIST/$projName"
-
-                # prepare course specific settings
-                selector="DEVICE_CONFIG_UART_BASENAME"
-                uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-                selector="DEVICE_CONFIG_BT_BASENAME"
-                bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-                selector="DEVICE_CONFIG_VIRTFS_TOP"
-                fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
-                fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
-
                 # prepare __ev3rtfs/_r
                 unset fs_cloned
                 if [ -d "$fs_basename" ] || [ -d "${fs_basename}_r" ]; then
@@ -272,9 +307,9 @@ else
 
                 # launch runner
                 if [ -n "$stdout" ]; then
-                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" &
+                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" $stdout $btcat &
                 else
-                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" "$stdout" "$btcat" > "${app_select}.log" &
+                    athrill_runner $app_select "$athrill2" "$memory_txt" "$device_config_txt" "$target" $stdout $btcat > "${app_select}.log" &
                 fi
                 touch "$ETROBO_SIM_DIST/${app_select}.runner"
                 runner_pid=$!

@@ -507,7 +507,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         done
 
         # terminate launcher
-        "$ETROBO_SCRIPTS/asp" stop
+        echo start termination
+        "$ETROBO_SCRIPTS/asp" stop $app_select
         if [ -n "$launcher_pid" ]; then
             wait $launcher_pid
         fi

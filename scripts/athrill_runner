@@ -34,6 +34,7 @@ else
 fi
 btcat="$6"
 
+
 status="$ETROBO_SIM_DIST/${app_select}.status"
 runner="$ETROBO_SIM_DIST/${app_select}.runner"
 projName=$(basename $(pwd))
@@ -55,7 +56,7 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
             athrill_pid=$(ps -f | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2" "$3}' | while read line; do if [ "`echo \"$line\" | awk '{print $2}'`" == "$runner_pid" ]; then echo "$line" | awk '{print $1}'; fi; done)
         fi
         if [ -z "$athrill_pid" ]; then
-            echo "[ athrill_runner #$runner_pid: FATAL ERROR: can't get Athrill_PID ] | tee $console
+            echo "[ athrill_runner #$runner_pid: FATAL ERROR: can't get Athrill_PID ]" | tee $console
             athrill_pid=$runner_pid
         fi
         echo $athrill_pid >> "$runner"
@@ -92,6 +93,9 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
         
 
         # terminate this thread
+        if [ "`echo $line | grep \"^ERROR can not open$\"`" ]; then
+            unset loop
+        fi
         if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
             echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
             echo "0 $SECONDS" >> "$status"

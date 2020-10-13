@@ -127,8 +127,6 @@ else
         target="${projName}.asp"
     fi
 
-    cd "$ETROBO_SIM_DIST/$projName"
-
     # prepare course specific settings
     selector="DEVICE_CONFIG_UART_BASENAME"
     uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
@@ -142,6 +140,7 @@ else
     export ETROBO_ATHRILL_CONFIG="$device_config_txt"
 
     if [ -z "$mode_env" ]; then
+        cd "$ETROBO_SIM_DIST/$projName"
         #
         # `asp status` returns app status
         #

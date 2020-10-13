@@ -54,8 +54,8 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
         else
             athrill_pid=$(ps -f | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2" "$3}' | while read line; do if [ "`echo \"$line\" | awk '{print $2}'`" == "$runner_pid" ]; then echo "$line" | awk '{print $1}'; fi; done)
         fi
-        echo "debug: runner=$runner_pid $athrill_pid" > $console
         if [ -z "$athrill_pid" ]; then
+            echo "[ athrill_runner #$runner_pid: FATAL ERROR: can't get Athrill_PID ] | tee $console
             athrill_pid=$runner_pid
         fi
         echo $athrill_pid >> "$runner"

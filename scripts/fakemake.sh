@@ -169,7 +169,7 @@ if [ $makeResult -eq 0 ]; then
             mv -f "${incFile}.org" "$incFile"
             if [ -z "$nostrip" ]; then
                 echo fakemake on ASP3: strip debug symbols
-                v850-elf-strip --keep-symbol=_ev3_main_task asp
+                v850-elf-strip --keep-symbol=_athrill_device_func_call --keep-symbol=_athrill_device_raise_interrupt asp
             fi
             echo fakemake on ASP3: build succeed: ${app_prefix}${proj}.asp
             cp -f asp "${app_prefix}${proj}.asp"

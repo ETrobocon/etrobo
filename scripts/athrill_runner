@@ -98,11 +98,13 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
         fi
         if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
             echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
+            echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
             echo "0 $SECONDS" >> "$status"
             unset loop
         fi
         if [ ! -f "$runner" ]; then
             echo "[ $app_select runner: exit: force shutdown requested ]" | tee $console
+            echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
             echo "0 $SECONDS" >> "$status"
             unset loop
         fi

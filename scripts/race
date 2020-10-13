@@ -95,7 +95,7 @@ exit_code=$ERR_OK
 unset sim_ver
 opt="$1"
 if [ -n "`echo $opt | grep ^ver=`" ]; then
-    sim_ver="ver `echo $1 | grep ^ver= | sed -E 's/^ver=(.*)$/\1/'`"
+    sim_ver="ver `echo $opt | grep ^ver= | sed -E 's/^ver=(.*)$/\1/'`"
     shift
 fi
 
@@ -518,15 +518,37 @@ else
     # launch sim
     echo "race sequencer: launch race on $course course"
     cd "$ETROBO_SIM_DIST/__race"
-    sim $sim_ver $course stdout btcat launch __race > console.log
-    sim_error="$?"
-    if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
-        echo "race sequencer: athrill app ERROR!!"
-        exit $ERR_SEQ_SIM_LAUNCH_FAILED
-    fi
+    sim $sim_ver $course stdout btcat launch __race > console.log &
+    sim_pid=$!
+    while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ]; do
+        # accept retire or cancel request
+        terminator="$raceFolder/retire"
+        canceller="$raceFolder/Requests/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
+        if [ -f "$terminator" ] || [ -f "$canceller" ]; then
+            kill $sim_pid
+            wait $sim_pid
+        fi
+        sleep 0.1
+    done
+#    sim_error="$?"
+#    if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
+#        echo "race sequencer: athrill app ERROR!!"
+#        exit $ERR_SEQ_SIM_LAUNCH_FAILED
+#    fi
     if [ -n "`sim check`" ]; then
         sim stop
     fi
+
+    # notify retire or cancel request
+    if [ -f "$terminator" ]; then
+        echo "race sequencer: 'retire' requested"
+        echo "NOTICE: This race was judgemented \"retire\" by a race marshall." >> console.log
+    else
+        echo "race sequencer: 'cancel' requested"
+        echo "NOTICE: This race was cancelled from web form." >> console.log
+    fi
+    rm -f "$canceller"
+    rm -f "$terminator"
 
     # prepare result folder
     echo "race sequencer: prepare result folder"

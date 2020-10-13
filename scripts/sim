@@ -507,10 +507,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         done
 
         # terminate launcher
-        echo start termination
         "$ETROBO_SCRIPTS/asp" stop $app_select
-        if [ -n "$launcher_pid" ]; then
-            wait $launcher_pid
+        if [ -n "$launcher_pid" ] && [ "`ps -fp $launcher_pid | sed '1d'`" ]; then
+            echo "[ launcher: NOTICE: this launcher is force terminated. ]"
+            kill $launcher_pid
         fi
+        wait $launcher_pid 2>&1 > /dev/null
     fi
 fi

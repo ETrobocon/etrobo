@@ -64,7 +64,7 @@ if [ "$ETROBO_KERNEL" == "darwin" ]; then
 fi
 console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
 selector="DEVICE_CONFIG_BT_BASENAME"
-bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
+bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\" | sed -E \"s/\ //g\"`"
 proj="$ETROBO_SIM_DIST/$projName"
 btout="$proj/${bt_select}_out"
 btin="$proj/${bt_select}_in"

@@ -67,7 +67,7 @@ else
         app_req='{"LHackEV":0,"RHackEV":1}'
         shift
     fi
-    ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ \t]*([^ \t]*$)/\1/"`
+    ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
     if [ -z "$ip" ]; then
         ip="localhost"
     fi

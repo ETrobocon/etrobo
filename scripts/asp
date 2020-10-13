@@ -230,11 +230,11 @@ if [ -z "$mode_env" ]; then
 
             # prepare course specific settings
             selector="DEVICE_CONFIG_UART_BASENAME"
-            uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
+            uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
             selector="DEVICE_CONFIG_BT_BASENAME"
-            bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
+            bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
             selector="DEVICE_CONFIG_VIRTFS_TOP"
-            fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ \t]*(.*)$/\1/\"`"
+            fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
             fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
 
             # prepare __ev3rtfs/_r

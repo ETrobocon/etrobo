@@ -292,13 +292,17 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 hook="UIHttpServer start"
                 comm_ready="init"
             fi
+            counter=0
             while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ]; do
-                sleep 0.1
                 if [ -z "`sim check sim`" ]; then
-                    echo "[ launcher: etrobosim was already terminated. ]" | tee $console
-                    unset loop
-                    unset comm_ready
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 30 ]; then
+                        echo "[ launcher: etrobosim was already terminated. ]" | tee $console
+                        unset loop
+                        unset comm_ready
+                    fi
                 fi
+                sleep 0.1
             done
             if [ "$sim_opt" != "skipASP" ] && [ -n "$loop" ]; then
                 echo "[ launcher: $hook detected ]"

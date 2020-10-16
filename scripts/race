@@ -520,13 +520,13 @@ else
     cd "$ETROBO_SIM_DIST/__race"
     sim $sim_ver $course stdout btcat launch __race > console.log &
     sim_pid=$!
-    while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ]; do
+    loop="loop"
+    while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ] && [ -n "$loop" ]; do
         # accept retire or cancel request
         terminator="$raceFolder/retire"
         canceller="$raceFolder/Requests/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
         if [ -f "$terminator" ] || [ -f "$canceller" ]; then
-            kill $sim_pid
-            wait $sim_pid
+            unset loop
         fi
         sleep 0.1
     done
@@ -535,17 +535,21 @@ else
 #        echo "race sequencer: athrill app ERROR!!"
 #        exit $ERR_SEQ_SIM_LAUNCH_FAILED
 #    fi
-    if [ -n "`sim check`" ]; then
-        sim stop
+
+    # force termination
+    if [ -n "`asp check`" ]; then
+        asp stop
+        sim stop sim
+        wait $sim_pid
     fi
 
     # notify retire or cancel request
-    if [ -f "$terminator" ]; then
-        echo "race sequencer: 'retire' requested"
-        echo "NOTICE: This race was judgemented \"retire\" by a race marshall." >> console.log
-    else
+    if [ -f "$canceller" ]; then
         echo "race sequencer: 'cancel' requested"
         echo "NOTICE: This race was cancelled from web form." >> console.log
+    else
+        echo "race sequencer: 'retire' requested"
+        echo "NOTICE: This race was judgemented \"retire\" by a race marshall." >> console.log
     fi
     rm -f "$canceller"
     rm -f "$terminator"

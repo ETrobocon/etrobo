@@ -79,9 +79,6 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
             echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
             echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
             echo "1 $SECONDS" >> "$status"
-        elif [ "`echo $line | grep \"^DEVICE_CONFIG_BT_BASENAME\"`" ]; then
-            echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
-            echo "2 $SECONDS" >> "$status"
             # launch btcat
             if [ "$btcat" ]; then
                 btcat $app_select app=$projName app.bt &
@@ -89,6 +86,9 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
                 echo "bt $btcat_pid" >> "$runner"
                 echo "[ $app_select runner: launch btcat #$btcat_pid]" | tee $console
             fi
+        elif [ "`echo $line | grep \"^DEVICE_CONFIG_BT_BASENAME\"`" ]; then
+            echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
+            echo "2 $SECONDS" >> "$status"
         fi
         
 

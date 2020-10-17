@@ -242,13 +242,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     unset projName
+    projName="$2"
+    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+        projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+    fi
     unset target
     if [ "$1" = "launch" ]; then
-        projName="$2"
-        if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-            currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
-            projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
-        fi
         target="${app_prefix}${projName}.asp"
         if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
             target="${projName}.asp"
@@ -313,7 +313,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                 json=`echo "$response" | sed '$d'`
                 code=`echo "$response" | tail -n 1`
-                while [ "$code" == "500" ] && [ -n "$loop" ]; do
+                while [ "$code" != "200" ] && [ -n "$loop" ]; do
                     sleep 0.1
                     response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                     json=`echo "$response" | sed '$d'`
@@ -336,6 +336,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 invoker="curl -s -X GET ${ETROBO_SIM_COMM}?GET=PREFS | jq -M ."
                 if [ "$prefs" == "export" ] || [ "$prefs" == "import" ]; then
                     eval "$invoker" > settings.json
+                    rm -f "$ETROBO_SIM_DIST/$projName/settings.json"
+                    cp -f settings.json "$ETROBO_SIM_DIST/$projName/settings.json"
                 else
                     eval "$invoker"
                 fi
@@ -511,10 +513,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         done
 
         # terminate launcher
+        sleep 1
         "$ETROBO_SCRIPTS/asp" stop $app_select
         if [ -n "$launcher_pid" ] && [ "`ps -fp $launcher_pid | sed '1d'`" ]; then
             echo "[ launcher: NOTICE: this launcher is force terminated. ]"
-            kill $launcher_pid
+            kill $launcher_pid 2>&1 > /dev/null
         fi
         wait $launcher_pid 2>&1 > /dev/null
     fi

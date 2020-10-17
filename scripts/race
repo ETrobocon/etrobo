@@ -547,7 +547,7 @@ else
     if [ -f "$canceller" ]; then
         echo "race sequencer: 'cancel' requested"
         echo "NOTICE: This race was cancelled from web form." >> console.log
-    else
+    elif [ -f "$terminator" ]; then
         echo "race sequencer: 'retire' requested"
         echo "NOTICE: This race was judgemented \"retire\" by a race marshall." >> console.log
     fi

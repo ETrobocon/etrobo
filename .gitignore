@@ -3,9 +3,9 @@
 !/LICENSE
 !/README.md
 !/scripts/
-!/dist/etrobosim2020_0.992_linux.tar.gz
-!/dist/etrobosim2020_0.992_mac.tar.gz
-!/dist/etrobosim2020_0.992_win.tar.gz
+!/dist/etrobosim2021_4.0-public_linux.tar.gz
+!/dist/etrobosim2021_4.0-public_mac.tar.gz
+!/dist/etrobosim2021_4.0-public_win.tar.gz
 !/dist/settings.json.default
 !/dist/sample_c4/
 !/dist/etroboc_common/

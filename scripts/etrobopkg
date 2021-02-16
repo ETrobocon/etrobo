@@ -41,8 +41,8 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.02.14a"
-    export ETROBO_PUBLIC_VER="2021_4.0-public"
+    export ETROBO_MANIFEST_VER="2021.02.16a"
+    export ETROBO_PUBLIC_VER="2021_4.19-public"
     export ETROBO_COMPETITION_VER="2020_4.0"
 
     #

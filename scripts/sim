@@ -285,13 +285,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 eval "$ETROBO_LAUNCH_SIM"
             fi
             # wait for starting up UnityETrobosim
-            if [ "$ETROBO_SIM_VER" == "$ETROBO_PUBLIC_VER" ]; then
-                hook="CONTROLLABLE"
-                unset comm_ready
-            else
-                hook="UIHttpServer start"
-                comm_ready="init"
-            fi
+            hook="UIHttpServer start"
+            comm_ready="init"
             counter=0
             while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ]; do
                 if [ -z "`sim check sim`" ]; then
@@ -419,7 +414,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     fi
 
                     # auto start sequence
-                    if [ "$ETROBO_SIM_VER" != "$ETROBO_PUBLIC_VER" ] && [ -n "$loop" ]; then
+                    if [ -n "$loop" ]; then
                         # request PREPARE and wait READY
                         echo "[ launcher: Go to the start, Ready? ]" | tee $console
                         json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`

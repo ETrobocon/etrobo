@@ -3,7 +3,7 @@ echo '-------------'
 echo ' startetrobo - etrobo all-in-one package installer/invoker'
 echo '-------------'
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -252,7 +252,7 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         echo 'an error occured during git clone. setup aborted.'
         exit 1
     fi
-else
+#else
     #
     # 2020_v3.5 Hotfix for base-platform of etrobo core package
     # this hotfix is only needed for race officials

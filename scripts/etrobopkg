@@ -6,6 +6,7 @@
 # See LICENSE
 #
 
+# check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
     echo "run startetrobo first."
     exit 1
@@ -14,11 +15,13 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
 fi
 cd "$ETROBO_ROOT"
 
+# hook `sim_public` option
 unset sim_public
 if [ "$1" == "sim_public" ]; then
     sim_public="$1"
 fi
 
+# hook `unset` option
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
     unset ETROBO_PUBLIC_VER
@@ -29,6 +32,7 @@ if [ "$1" == "unset" ]; then
     unset ETROBO_HRP3_GCC_URL
     unset ETROBO_HRP3_GCC_DIR
 else
+    # prepare envvar (also with `set` option)
     userProfile="$ETROBO_USERPROFILE"
     if [ -z "$userProfile" ]; then
         if [ -n "$HOME_ORG" ]; then
@@ -41,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.02.16a"
+    export ETROBO_MANIFEST_VER="2021.03.06a"
     export ETROBO_PUBLIC_VER="2021_4.19-public"
     export ETROBO_COMPETITION_VER="2020_4.0"
 
@@ -49,9 +53,9 @@ else
     # GNU Arm Embedded Toolchain
     # https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
     #
+    gnuarm="6_1-2017q1"
     export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
-    #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
-    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
+    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/${gnuarm}/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
     export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL_BASE`"
     export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
 fi
@@ -171,9 +175,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         file="$ETROBO_CACHE/$target"
         fileManifest="${file}.manifest"
         distManifest="$ETROBO_ROOT/dist/${target}.manifest"
+        unset manifestSize
         download=true
         request=true
 
+        # decide to download and to install
         if [ -f "$file" ]; then
             echo
             echo "cached $target ... checking with manifest"
@@ -189,19 +195,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ]; then
                 echo "$target is already up to date: size=$fileSize"
                 unset download
-                if [ -f "$distManifest" ]; then
-                    if [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
-                        unset request
-                    fi
+                if [ -f "$distManifest" ] && [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
+                    unset request
                 fi
             fi
         fi
 
-        if [ "$manifestSize" != "0" ]; then
-            echo "$url" > "$fileManifest"
-            echo "$ver $size" >> "$fileManifest"
-        fi
-
+        # download files to cache
         if [ $download ]; then
             echo "download from $url"
             rm -f "$distManifest"
@@ -225,6 +225,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`
                 query_q=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\4/'`
                 clitemp="$ETROBO_ROOT/dist/clitemp"
+                unset downloaded
 
                 echo
                 echo "Download $query_q from cybozu kintone app"
@@ -235,28 +236,31 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 if [ -n "$username" ] && [ -n "$password" ]; then
                     echo
                     rm -rf "$clitemp"
-                    cd "$ETROBO_ROOT"
                     query="--export -a $query_a -d $query_d -u $username -p $password"
                     fileID=`cli-kintone $query -c "\\\$id" -q "$query_c like \"$query_q\"" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
                     if [ -z "$fileID" ]; then
-                        echo "failed to log in. Please check your account and re-run startetrobo."
-                        exit 1
+                        echo "*****************"
+                        echo "* W A R N I N G *"
+                        echo "*****************"
+                        echo "failed to log in. Please check your account."
+                    else
+                        echo "authentication succeeded."
+                        echo "downloading now... please wait a minute."
+                        filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
+                        rm -f "$file"
+                        cp -f "$clitemp"/$filePath "$file"
+                        rm -rf "$clitemp"
+                        downloaded="true"
                     fi
-                    echo "authentication succeeded."
-                    echo "downloading now... please wait a minute."
-                    filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
-                    rm -f "$file"
-                    cp -f "$clitemp"/$filePath "$file"
-                    rm -rf "$clitemp"
-                else
+                fi
+                if [ "$downloaded" != "true" ]; then
                     echo "manual distribution is selected."
                     echo "if you want to use simulator for competition, run \`update sim\`."
                     rm -f "$file"
                     touch "$file"
                     size=0
                     fileSize=0
-                    echo "$url" > "$fileManifest"
-                    echo "$ver $size" >> "$fileManifest"
+                    unset manifestSize
                     unset request
                 fi
             fi
@@ -272,9 +276,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
         fi
 
+        # save file manifest
+        if [ "$manifestSize" != "0" ]; then
+            echo "$url" > "$fileManifest"
+            echo "$ver $size" >> "$fileManifest"
+        fi
+
         # install files
         if [ $request ]; then
-            cd "$ETROBO_ROOT"
             case $pkg in
             "gcc-arm" ) 
                 echo
@@ -331,6 +340,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 tar xzvf "$file" > /dev/null
                 cd ${target:0:-7}
                 tar xzvf athrill-gcc.tar.gz > /dev/null
+                cd "$ETROBO_ROOT"
                 ;;
             "cli-kintone" ) 
                 echo

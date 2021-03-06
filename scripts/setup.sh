@@ -2,7 +2,7 @@
 # etrobo all-in-one package installer/updater
 #   setup.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 

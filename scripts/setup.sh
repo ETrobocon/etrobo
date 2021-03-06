@@ -29,8 +29,6 @@ if [ "$1" = "update" ]; then
     option="$2"
     option2="$3"
     cd "$ETROBO_ROOT"
-    #echo "update etrobo package:"
-    #git pull --ff-only
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then
@@ -89,15 +87,8 @@ elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
 fi
 
 device_config="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
-#
-# device_config_r.txt hotfix
-#
-# @ToDo: remove in next year
-if [ -f "${device_config}_r.txt" ] && [ -z "`cat \"${device_config}_r.txt\" | grep ^DEVICE_CONFIG_UART_BASENAME.*_r$`" ]; then
-    rm -f "${device_config}_r.txt"
-fi
 # prepare device_config_r.txt
-if [ ! -f "${device_config}_r.txt" ]; then
+if [ -f "${device_config}.txt" ] && [ ! -f "${device_config}_r.txt" ]; then
     echo
     echo "Prepare ${device_config}_r.txt"
     cat "${device_config}.txt" \

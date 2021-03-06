@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.10a.210306"
+export BEERHALL_VER="5.11a.210307"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -234,9 +234,14 @@ if [ -z "$BEERHALL" ]; then
     brew link sqlite --force
     # xz (for subversion)
     brew install xz
-    # python@3.8 (for subversion)
-    brew install python@3.8
-    brew link python@3.8 --force
+    # mpdecimal (for python)
+    brew install mpdecimal
+    # tcl-tk (for python)
+    brew install tcl-tk
+    brew link tcl-tk --force
+    # python@3.9 (for scons)
+    brew install python@3.9
+    brew link python@3.9 --force
     # scons (for subversion)
     brew install scons
     # pcre (for subversion)
@@ -253,6 +258,8 @@ if [ -z "$BEERHALL" ]; then
     brew install gettext
     # lz4 (for subversion)
     brew install lz4
+    # berkeley-db (for perl)
+    brew install berkeley-db
     # perl (for subversion)
     brew install perl
     # utf8proc (for subversion)
@@ -261,7 +268,7 @@ if [ -z "$BEERHALL" ]; then
     brew install subversion
     export HOMEBREW_SVN="$BEERHALL/usr/local/bin/svn"
 
-    # libyaml (for ruby@2.5)
+    # libyaml (for ruby@2.7)
     brew install libyaml
     # libunistring (for wget)
     brew install libunistring
@@ -273,6 +280,29 @@ if [ -z "$BEERHALL" ]; then
     brew install pcre2
     # lzip (for make)
     brew install lzip
+    # oniguruma (for jq)
+    brew install oniguruma
+    # brotli (for curl)
+    brew install brotli
+    # libmetalink (for curl)
+    brew install libmetalink
+    # libssh2 (for curl)
+    brew install libssh2
+    # c-ares (for curl)
+    brew install c-ares
+    # jemalloc (for curl)
+    brew install jemalloc
+    # libev (for curl)
+    brew install libev
+    # nghttp2 (for curl)
+    brew install nghttp2
+    # openldap (for curl)
+    brew install openldap
+    brew link openldap --force
+    # rtmpdump (for curl)
+    brew install rtmpdump
+    # zstd (for curl)
+    brew install zstd
 
     # install BeerHall (for etrobo) formulae
 

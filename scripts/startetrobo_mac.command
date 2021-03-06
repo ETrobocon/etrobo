@@ -1,11 +1,11 @@
 #!/bin/bash
-export BEERHALL_VER="5.00g.200920"
+export BEERHALL_VER="5.10a.210306"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
 echo "------------"
 echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
-# Copyright (c) 2020 jtLab, Hokkaido Information University
+# Copyright (c) 2020-2021 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
@@ -208,6 +208,12 @@ if [ -z "$BEERHALL" ]; then
     brew upgrade
     brew install bash
 
+    # unlink md5sha1sum for old BeerHall
+    # (that is included in coreutils)
+    if [ "`brew list | grep md5sha1sum`" ]; then
+        brew unlink md5sha1sum
+    fi
+
     # install kegs
 
     # openjdk (for gettext)
@@ -270,10 +276,15 @@ if [ -z "$BEERHALL" ]; then
 
     # install BeerHall (for etrobo) formulae
 
-    brew install bash-completion findutils wget git ruby@2.5 flex make jq curl md5sha1sum
-    brew link ruby@2.5 --force
+    brew install bash-completion coreutils findutils wget git ruby@2.7 flex make jq curl
+    brew link ruby@2.7 --force
     brew link flex --force
     brew link curl --force
+    gem install shell
+
+    gnupath="/Users/jt/BeerHall/usr/local/opt/make/libexec/gnubin"
+    gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/coreutils/libexec/gnubin"
+    gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/findutils/libexec/gnubin"
 
 #    echo "modify gcc@7 filenames"
     cd "$BEERHALL/usr/local/bin"
@@ -282,11 +293,9 @@ if [ -z "$BEERHALL" ]; then
 #        mv "$line" "$fileName"
 #    done
 
-    echo "make aliases"
-    echo "gmake \"\$@\"" > make
-    echo "gfind \"\$@\"" > find
+    echo "make aliase to code"
     echo "\"/usr/local/bin/code\" \"\$@\"" > code
-    chmod +x make find code
+    chmod +x code
 
     echo "make symbolic link from \$BEERHALL/etc to \$BEERHALL/usr/local/etc"
     ln -s "$BEERHALL/usr/local/etc" "$BEERHALL/etc"
@@ -320,7 +329,12 @@ if [ -n "$makeBeerHall" ]; then
     echo 'export HOMEBREW_CACHE="$BEERHALL/usr/local/cache"' >> $beer
     echo 'export HOMEBREW_SVN="$BEERHALL/usr/local/bin/svn"'
     echo 'export HOMEBREW_TEMP="/tmp"' >> $beer
+    echo 'export BEERHALL_BIN="$BEERHALL/usr/local/bin"' >> $beer
+    echo 'export BEERHALL_MAKE="$BEERHALL/usr/local/opt/make/libexec/gnubin"' >> $beer
+    echo 'export BEERHALL_CORE="$BEERHALL/usr/local/opt/coreutils/libexec/gnubin"' >> $beer
+    echo 'export BEERHALL_FIND="$BEERHALL/usr/local/opt/findutils/libexec/gnubin"' >> $beer
     echo 'export BEERHALL_RUBY="$BEERHALL/usr/local/opt/ruby@2.5/bin"' >> $beer
+    echo 'export BEERHALL_PATH_TO_BIN="$BEERHALL_MAKE:$BEERHALL_CORE:$BEERHALL_FIND:$BEERHALL_RUBY:$BEERHALL_BIN"' >> $beer
     echo 'export BEERHALL_DARWIN_VER=`uname -a | sed -E "s/^.*Darwin Kernel Version (.*): .*$/\1/"`' >> $beer
     echo 'export BEERHALL_ARCH="x86_64-apple-darwin$BEERHALL_DARWIN_VER"' >> $beer
     #echo 'export BEERHALL_GCC_VER_FULL=`gcc --version | head -n 1 | sed -E "s/^.*GCC (.*)\).*$/\1/"`' >> $beer
@@ -328,7 +342,7 @@ if [ -n "$makeBeerHall" ]; then
     #echo 'export BEERHALL_GCC_VER_MAJOR=`echo "$BEERHALL_GCC_VER" | sed -E "s/^(.*)\..*\..*$/\1/"`' >> $beer
     echo 'export HOME="$BEERHALL"' >> $beer
     echo 'export SHELL="$BEERHALL/usr/local/bin/bash"' >> $beer
-    echo 'export PATH="$BEERHALL:$BEERHALL/usr/local/bin:$BEERHALL_RUBY:/usr/bin:/bin:/usr/sbin:/sbin"' >> $beer
+    echo 'export PATH="$BEERHALL:$BEERHALL_PATH_TO_BIN:/usr/bin:/bin:/usr/sbin:/sbin"' >> $beer
     echo 'export BEERHALL_PATH="$PATH"' >> $beer
     echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"' >> $beer
     echo 'export TERM_PROGRAM="BeerHall"' >> $beer

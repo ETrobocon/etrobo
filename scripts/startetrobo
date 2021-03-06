@@ -226,6 +226,7 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         sudo apt -y install ruby
         sudo apt -y install curl
         sudo apt -y install jq
+        sudo gem install shell
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh

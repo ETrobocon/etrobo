@@ -253,29 +253,6 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         exit 1
     fi
 else
-    # 2020_v2 Hotfix for base-platform of etrobo core package
-    if [ `which curl > /dev/null; echo $?` = 1 ]; then
-        echo "2020_v2 Hotfix for base-platform of etrobo core package: curl"
-
-        if [ -z "$BeerHall" ];then
-            sudo apt -y install curl
-        else
-            "$BeerHall/usr/local/bin/brew" install curl
-            "$BeerHall/usr/local/bin/brew" link curl --force
-        fi
-    fi
-    if [ -z "$BeerHall" ] && [ `which jq > /dev/null; echo $?` = 1 ]; then
-        echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
-        sudo apt -y install jq
-    elif [ -n "$BeerHall" ] && [ ! -f "$BeerHall/usr/local/bin/jq" ]; then
-        echo "2020_v2 Hotfix for base-platform of etrobo core package: jq"
-        "$BeerHall/usr/local/bin/brew" install jq
-    fi
-    #
-    # 2020_v3.1 Hotfix for base-platform of etrobo core package
-    if [ -n "$BeerHall" ] && [ `which md5sum > /dev/null; echo $?` = 1 ]; then
-        "$BeerHall/usr/local/bin/brew" install md5sha1sum
-    fi
     #
     # 2020_v3.5 Hotfix for base-platform of etrobo core package
     # this hotfix is only needed for race officials

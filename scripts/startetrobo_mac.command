@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.12a.210307"
+export BEERHALL_VER="5.20a.210307"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -202,8 +202,10 @@ if [ -z "$BEERHALL" ]; then
     echo "install HomeBrew, please wait a *few hours*"
     cd "$BEERHALL/usr"
     curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C local
-    export HOMEBREW_CACHE="$BEERHALL/usr/local/cache"
-    export PATH="$BEERHALL/usr/local/bin:$PATH"
+    export HOMEBREW_PREFIX="$BEERHALL/usr/local"
+    export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"
+    export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"
+    export PATH="$HOMEBREW_PREFIX/bin:$PATH"
     brew update
     brew upgrade
     brew install bash
@@ -266,7 +268,7 @@ if [ -z "$BEERHALL" ]; then
     brew install utf8proc
     # subversion (for homebrew core)
     brew install subversion
-    export HOMEBREW_SVN="$BEERHALL/usr/local/bin/svn"
+    export HOMEBREW_SVN="$HOMEBREW_PREFIX/bin/svn"
 
     # libyaml (for ruby@2.7)
     brew install libyaml
@@ -317,7 +319,7 @@ if [ -z "$BEERHALL" ]; then
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/findutils/libexec/gnubin"
 
 #    echo "modify gcc@7 filenames"
-    cd "$BEERHALL/usr/local/bin"
+    cd "$HOMEBREW_PREFIX/bin"
 #    ls | grep 7$ | while read line; do
 #        fileName=`echo "$line" | sed -E 's/(.*)-7/\1/'`
 #        mv "$line" "$fileName"
@@ -327,11 +329,11 @@ if [ -z "$BEERHALL" ]; then
     echo "\"/usr/local/bin/code\" \"\$@\"" > code
     chmod +x code
 
-    echo "make symbolic link from \$BEERHALL/etc to \$BEERHALL/usr/local/etc"
-    ln -s "$BEERHALL/usr/local/etc" "$BEERHALL/etc"
+    echo "make symbolic link from \$BEERHALL/etc to \$HOMEBREW_PREFIX/etc"
+    ln -s "$HOMEBREW_PREFIX/etc" "$BEERHALL/etc"
 
     echo "make symbolic link from /usr/local/lib to flex/lib"
-    ls $BEERHALL/usr/local/opt/flex/lib |
+    ls $HOMEBREW_PREFIX/opt/flex/lib |
     while read line; do
         if [ -e "/usr/local/lib/$line" ]; then
             if [ ! -e "/usr/local/lib/$line.BeerHallTmp" ]; then
@@ -341,7 +343,7 @@ if [ -z "$BEERHALL" ]; then
             fi
         fi
         sudo mkdir -p /usr/local/lib
-        sudo cp -f "$BEERHALL/usr/local/opt/flex/lib/$line" "/usr/local/lib/"
+        sudo cp -f "$HOMEBREW_PREFIX/opt/flex/lib/$line" "/usr/local/lib/"
     done
     makeBeerHall="build"
 fi
@@ -356,14 +358,16 @@ if [ -n "$makeBeerHall" ]; then
     echo 'fi' >> $beer
     echo "export BEERHALL=\"$BEERHALL\"" >> $beer
     echo "export BEERHALL_VER=\"$BEERHALL_VER\"" >> $beer
-    echo 'export HOMEBREW_CACHE="$BEERHALL/usr/local/cache"' >> $beer
-    echo 'export HOMEBREW_SVN="$BEERHALL/usr/local/bin/svn"'
+    echo 'export HOMEBREW_PREFIX="$BEERHALL/usr/local"' >> $beer
+    echo 'export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"' >> $beer
+    echo 'export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"' >> $beer
+    echo 'export HOMEBREW_SVN="$HOMEBREW_PREFIX/bin/svn"' >> $beer
     echo 'export HOMEBREW_TEMP="/tmp"' >> $beer
-    echo 'export BEERHALL_BIN="$BEERHALL/usr/local/bin"' >> $beer
-    echo 'export BEERHALL_MAKE="$BEERHALL/usr/local/opt/make/libexec/gnubin"' >> $beer
-    echo 'export BEERHALL_CORE="$BEERHALL/usr/local/opt/coreutils/libexec/gnubin"' >> $beer
-    echo 'export BEERHALL_FIND="$BEERHALL/usr/local/opt/findutils/libexec/gnubin"' >> $beer
-    echo 'export BEERHALL_RUBY="$BEERHALL/usr/local/opt/ruby@2.5/bin"' >> $beer
+    echo 'export BEERHALL_BIN="$HOMEBREW_PREFIX/bin"' >> $beer
+    echo 'export BEERHALL_MAKE="$HOMEBREW_PREFIX/opt/make/libexec/gnubin"' >> $beer
+    echo 'export BEERHALL_CORE="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin"' >> $beer
+    echo 'export BEERHALL_FIND="$HOMEBREW_PREFIX/opt/findutils/libexec/gnubin"' >> $beer
+    echo 'export BEERHALL_RUBY="$HOMEBREW_PREFIX/opt/ruby@2.5/bin"' >> $beer
     echo 'export BEERHALL_PATH_TO_BIN="$BEERHALL_MAKE:$BEERHALL_CORE:$BEERHALL_FIND:$BEERHALL_RUBY:$BEERHALL_BIN"' >> $beer
     echo 'export BEERHALL_DARWIN_VER=`uname -a | sed -E "s/^.*Darwin Kernel Version (.*): .*$/\1/"`' >> $beer
     echo 'export BEERHALL_ARCH="x86_64-apple-darwin$BEERHALL_DARWIN_VER"' >> $beer
@@ -371,7 +375,7 @@ if [ -n "$makeBeerHall" ]; then
     #echo 'export BEERHALL_GCC_VER="${BEERHALL_GCC_VER_FULL:0:5}"' >> $beer
     #echo 'export BEERHALL_GCC_VER_MAJOR=`echo "$BEERHALL_GCC_VER" | sed -E "s/^(.*)\..*\..*$/\1/"`' >> $beer
     echo 'export HOME="$BEERHALL"' >> $beer
-    echo 'export SHELL="$BEERHALL/usr/local/bin/bash"' >> $beer
+    echo 'export SHELL="$HOMEBREW_PREFIX/bin/bash"' >> $beer
     echo 'export PATH="$BEERHALL:$BEERHALL_PATH_TO_BIN:/usr/bin:/bin:/usr/sbin:/sbin"' >> $beer
     echo 'export BEERHALL_PATH="$PATH"' >> $beer
     echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"' >> $beer
@@ -404,10 +408,10 @@ if [ -n "$makeBeerHall" ]; then
     # for startetrobo
     echo "download startetrobo"
     cd "$BEERHALL"
-    "$BEERHALL/usr/local/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
+    "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
     chmod +x startetrobo
 else
-    export PATH="$BEERHALL/usr/local/bin:$PATH"
+    export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 fi
 
 cd "$BEERHALL"

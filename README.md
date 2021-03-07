@@ -39,6 +39,14 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
+## 2021年度に向けた対応方針
+
+- Linuxは引き続きDebian 10を用い、Ubuntuは18.04から20.04に移行しました。引き続き18.04もご利用いただけますが、広範な動作確認は今後行われません（が、動くはずで、サポートも行います）。
+- 今後WSL2への対応を行います。ただし、WSL2のサポートはWindows 10 version 2004 (May 2020 Update)以降とします。これ以前のバージョンのWindows 10を使い続ける必要のある方は（私もです）、引き続きWSL1のままでご使用ください。
+- Macの動作環境（BeerHall）の基本コマンドは、GNU coreutilに移行しました。
+- M1チップ上でのネィティブ動作はUnityコア次第というところまで来ていますが、4月1日から使えるかどうかは判りません。
+- 現在Big Surでは動作確認を行っていませんが、4月1日までに対応を行います。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認は行われなくなります（が、動くはずで、サポートも行います）。
+- Chrome OS上での動作確認はChromeBook実機上のみとし、Chromium OSに関しては今後広範な動作確認が行われなくなります（が、動くはずで、サポートも行います）。
 
 ## 動作環境
 
@@ -49,11 +57,11 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
     - これより前のWindows 10や、Windows 7などでは動作しません。
 - Windows Services for Linux (WSL1)のインストール
     - インストールにWindowsの管理者権限が必要です。
-    - Virtual Machine Platform (WSL2)には対応していません
-- WSL向けUbuntu 18.04のインストール
+    - Virtual Machine Platform (WSL2)には近日中に対応します。
+- WSL向けUbuntu 20.04（または18.04）のインストール
     - 環境の利用にはsudoers権限が必要です。
     - 16.04でも動作する可能性はありますが、未検証です。
-    - 20.04へは近日中に対応します。
+    - 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
 - Visual Studio Code(「Remote - WSL」拡張機能）のインストール
 
 ### Mac
@@ -62,18 +70,19 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
         - MacBook Pro (Retina, Mid 2012)
         - macOS Mojave 10.14.6
         - Xcode 11.0
+    - M1チップ搭載のMacは現在対応準備中です。
 - macOS Mojave(10.14)以降
     - 環境のインストールに管理者権限が必要です。
-    - High Sierra(10.13)には今後対応させたいですが、実現可能性も含め未確定です。
+    - Big Surでの動作確認は行っていませんが、対応します。
 - Xcode(Command Line Tools)のインストール
 - Visual Studio Codeのインストール
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 10 または Ubuntu 18.04
+- Debian GNU/Linux 10 または Ubuntu 20.04（または18.04）
     - 環境のインストールにsudoers権限が必要です。
     - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、未検証です。
-    - Ubuntu 20.04へは近日中に対応します。
+    - Ubuntu 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
 - Visual Studio Codeのインストール
 
 ### Chrome OS/Chromium OS

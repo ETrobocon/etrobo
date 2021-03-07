@@ -155,10 +155,9 @@ if [ $makeResult -eq 0 ]; then
         fi
 
         # invoke make for ASP3/Athrill
-        rm -rf "$ETROBO_HRP3_WORKSPACE/$proj/simdist"   # ToDo: this line will be removed in next year
         rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
         mv -f "${incFile}.base" "${incFile}"
-        cp -r "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"
+        cp -rH "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
         mv -f "${incFile}.org" "$incFile"
 
         cd "$ETROBO_ATHRILL_WORKSPACE"

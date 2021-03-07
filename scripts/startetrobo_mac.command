@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.11a.210307"
+export BEERHALL_VER="5.12a.210307"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -393,7 +393,7 @@ if [ -n "$makeBeerHall" ]; then
     echo '    export BEERHALL_INVOKER="ready"' >> $beer
     echo '    cd "$HOME"' >> $beer
     echo '    if [ -n "$1" ]; then' >> $beer
-    echo '        bash -l -c "$@"' >> $beer
+    echo '        bash -c "$@"' >> $beer
     echo '    else' >> $beer
     echo '        bash -l' >> $beer
     echo '    fi' >> $beer
@@ -406,6 +406,8 @@ if [ -n "$makeBeerHall" ]; then
     cd "$BEERHALL"
     "$BEERHALL/usr/local/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
     chmod +x startetrobo
+else
+    export PATH="$BEERHALL/usr/local/bin:$PATH"
 fi
 
 cd "$BEERHALL"

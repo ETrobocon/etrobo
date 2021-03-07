@@ -32,8 +32,7 @@ if [ "$1" = "update" ]; then
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then
-        rm -f "$BEERHALL/../startetrobo_mac.command"
-        cp -f scripts/startetrobo_mac.command "$BEERHALL/../"
+        mv -f scripts/startetrobo_mac.command "$BEERHALL/../"
     fi
     scripts="$ETROBO_SCRIPTS"
     . "$scripts/etroboenv.sh" unset

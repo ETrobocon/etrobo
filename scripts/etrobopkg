@@ -297,21 +297,21 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
                 echo "Install TOPPERS/EV3RT:"
                 if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
+                    echo "debug: remove autobackup"
                     rm -rf "$ETROBO_ROOT/workspace_autobackup"
-                    cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
-                    rm workspace
+                    echo "debug: backup workspace"
+                    mv -f "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    echo "debug: backup done"
                     echo "********"
                     echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."
                     echo "********"
                 fi
 
-                #rm -rf ${target:0:-4}
-                rm -rf ev3rt-1.0-release
+                rm -rf "${target:0:-4}"
                 rm -rf hrp3
                 unzip "$file" > /dev/null
-                #cp ${target:0:-4}/hrp3.tar.xz ./
-                cp ev3rt-1.0-release/hrp3.tar.xz ./
+                cp ${target:0:-4}/hrp3.tar.xz ./
                 tar xvf hrp3.tar.xz > /dev/null 2>&1
                 rm hrp3.tar.xz
 
@@ -326,6 +326,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo 
                 echo "Install mkimage:"
                 cp -f "$file" "$BEERHALL/usr/local/bin"
+                chmod +x "$BEERHALL/usr/local/bin/$target"
                 ;;
             "gcc-athrill_mac" ) 
                 echo 

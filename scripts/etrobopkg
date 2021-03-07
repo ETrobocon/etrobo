@@ -305,10 +305,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "********"
                 fi
 
-                rm -rf "${target:0:-4}"
+                ev3rt=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
+                rm -rf $ev3rt
                 rm -rf hrp3
                 unzip "$file" > /dev/null
-                cp ${target:0:-4}/hrp3.tar.xz ./
+                cp $ev3rt/hrp3.tar.xz ./
                 tar xvf hrp3.tar.xz > /dev/null 2>&1
                 rm hrp3.tar.xz
 

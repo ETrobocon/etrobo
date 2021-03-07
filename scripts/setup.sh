@@ -87,15 +87,17 @@ fi
 
 device_config="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
 # prepare device_config_r.txt
-if [ -f "${device_config}.txt" ] && [ ! -f "${device_config}_r.txt" ]; then
-    echo
-    echo "Prepare ${device_config}_r.txt"
-    cat "${device_config}.txt" \
-    | sed -E "s/^DEVICE_CONFIG_UART_BASENAME(.*)$/DEVICE_CONFIG_UART_BASENAME\1_r/" \
-    | sed -E "s/^DEVICE_CONFIG_BT_BASENAME(.*)$/DEVICE_CONFIG_BT_BASENAME\1_r/" \
-    | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
-    | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
-    > "${device_config}_r.txt"
+if [ -f "${device_config}.txt" ]; then
+    if [ ! -f "${device_config}_r.txt" ]; then
+        echo
+        echo "Prepare ${device_config}_r.txt"
+        cat "${device_config}.txt" \
+        | sed -E "s/^DEVICE_CONFIG_UART_BASENAME(.*)$/DEVICE_CONFIG_UART_BASENAME\1_r/" \
+        | sed -E "s/^DEVICE_CONFIG_BT_BASENAME(.*)$/DEVICE_CONFIG_BT_BASENAME\1_r/" \
+        | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
+        | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
+        > "${device_config}_r.txt"
+    fi
 fi
 
 #

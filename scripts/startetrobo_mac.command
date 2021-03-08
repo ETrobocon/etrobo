@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.20a.210307"
+export BEERHALL_VER="5.21a.210308"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -15,7 +15,13 @@ if [ "$1" = "update" ]; then
     if [ -z "$BEERHALL" ]; then
         BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
     fi
-    makeBeerHall="rebuild"
+    if [ "$2" = "BeerHall" ]; then
+        echo "update BeerHall Cellar:"
+        makeBeerHall="update"
+    else
+        echo "update BeerHall invoker:"
+        makeBeerHall="rebuild"
+    fi
     rm -f "$BEERHALL/BeerHall"
     rm -f "$BEERHALL/startetrobo"
 fi
@@ -202,10 +208,16 @@ if [ -z "$BEERHALL" ]; then
     echo "install HomeBrew, please wait a *few hours*"
     cd "$BEERHALL/usr"
     curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C local
+    makeBeerHall="install"
+fi
+
+if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     export HOMEBREW_PREFIX="$BEERHALL/usr/local"
     export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"
     export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"
-    export PATH="$HOMEBREW_PREFIX/bin:$PATH"
+    if [ -z "`echo $PATH | grep $HOMEBREW_PREFIX/bin`" ]; then
+        export PATH="$HOMEBREW_PREFIX/bin:$PATH"
+    fi
     brew update
     brew upgrade
     brew install bash
@@ -324,7 +336,9 @@ if [ -z "$BEERHALL" ]; then
 #        fileName=`echo "$line" | sed -E 's/(.*)-7/\1/'`
 #        mv "$line" "$fileName"
 #    done
+fi
 
+if [ "$makeBeerHall" = "install" ]; then
     echo "make aliase to code"
     echo "\"/usr/local/bin/code\" \"\$@\"" > code
     chmod +x code

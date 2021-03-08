@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.03.06a"
+    export ETROBO_MANIFEST_VER="2021.03.08a"
     export ETROBO_PUBLIC_VER="2021_4.19-public"
     export ETROBO_COMPETITION_VER="2020_4.0"
 
@@ -95,8 +95,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("gcc-athrill_mac")
-        urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz")
-        vers+=("2020.06.29a")
+        urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1-mac/athrill-gcc-package-mac.tar.gz")
+        vers+=("2021.03.08a")
         sizes+=("32950726")
     else
         pkgs+=("gcc-athrill")
@@ -111,15 +111,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
-        size="5305545"
+        size="4330401"
     else
         clikintone="linux"
-        size="5346972"
+        size="4466006"
     fi
     if [ -n "$clikintone" ]; then
         pkgs+=("cli-kintone")
-        urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.11.1/${clikintone}-x64.zip")
-        vers+=("2020.06.29a")
+        urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.12.0/${clikintone}-x64.zip")
+        vers+=("2021.03.08a")
         sizes+=("$size")
     fi
 
@@ -175,6 +175,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         file="$ETROBO_CACHE/$target"
         fileManifest="${file}.manifest"
         distManifest="$ETROBO_ROOT/dist/${target}.manifest"
+        unset manifestVer
         unset manifestSize
         download=true
         request=true
@@ -196,6 +197,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "$target is already up to date: size=$fileSize"
                 unset download
                 if [ -f "$distManifest" ] && [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
+                    unset request
+                fi
+                if [ "$manifestSize" = "0" ]; then
                     unset request
                 fi
             fi
@@ -229,7 +233,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
                 echo
                 echo "Download $query_q from cybozu kintone app"
-                echo "Log in to $query_d.cybozu.com ... or hit ENTER key simply if you don't have such account"
+                echo "Log in to $query_d.cybozu.com ... or hit ENTER key simply to skip download if you don't have such account"
                 read -p "UserName: " username
                 read -p "Password: " -s password
                 echo
@@ -259,12 +263,23 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     rm -f "$file"
                     touch "$file"
                     size=0
-                    fileSize=0
                     unset manifestSize
                     unset request
                 fi
             fi
 
+            # compare downloaded file and manifest file size
+            if [ -z "$error" ]; then
+                fileSize=`wc -c "$file" | awk '{print $1}'`
+                if [ "$fileSize" != "$size" ]; then
+                    echo
+                    echo "ERROR: mismatch file size: file size=$fileSize / manifest size=$size"
+                    echo
+                    error="mismatch"
+                fi
+            fi
+
+            # die when a download error is occured
             if [ $error ]; then
                 echo 
                 echo "please try to re-run later."
@@ -335,31 +350,24 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "gcc-athrill" ) 
                 echo 
                 echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
-                rm -rf ${target:0:-7}
+                rm -rf athrill-gcc-package
                 tar xzvf "$file" > /dev/null
-                cd ${target:0:-7}
+                cd athrill-gcc-package
                 tar xzvf athrill-gcc.tar.gz > /dev/null
                 cd "$ETROBO_ROOT"
                 ;;
             "cli-kintone" ) 
                 echo
                 echo "Install kintone command line tool:"
+                platform=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
                 unzip "$file" > /dev/null
                 rm -f cli-kintone
-                if [ "$ETROBO_OS" = mac ]; then
-                    mv -f build/macos-x64/cli-kintone ./
-                else
-                    mv -f build/${target:0:-4}/cli-kintone ./
-                fi
+                mv -f build/$platform/cli-kintone ./
                 ;;
             "etrobosim" ) 
-                #rm -f "$ETROBO_ROOT/dist/$target"
-                rm -f "$ETROBO_ROOT/dist/$target.manifest"
-                if [ "$fileSize" != "0" ]; then
-                    echo
-                    echo "Distribute UnityETroboSim:"
-                    cp "$file" "$ETROBO_ROOT/dist/"
-                fi
+                echo
+                echo "Distribute UnityETroboSim:"
+                cp "$file" "$ETROBO_ROOT/dist/"
                 ;;
             * ) 
                 echo

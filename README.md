@@ -44,8 +44,7 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 - Linuxは引き続きDebian 10を用い、Ubuntuは18.04から20.04に移行しました。引き続き18.04もご利用いただけますが、広範な動作確認は今後行われません（が、動くはずで、サポートも行います）。
 - 今後WSL2への対応を行います。ただし、WSL2のサポートはWindows 10 version 2004 (May 2020 Update)以降とします。これ以前のバージョンのWindows 10を使い続ける必要のある方は（私もです）、引き続きWSL1のままでご使用ください。
 - Macの動作環境（BeerHall）の基本コマンドは、GNU coreutilに移行しました。
-- M1チップ上でのネィティブ動作はUnityコア次第というところまで来ていますが、4月1日から使えるかどうかは判りません。
-- 現在Big Surでは動作確認を行っていませんが、4月1日までに対応を行います。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認は行われなくなります（が、動くはずで、サポートも行います）。
+- Big SurおよびM1チップ(Apple Siolicon)上での動作に対応しました。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認は行われなくなります（が、動くはずで、サポートも行います）。
 - Chrome OS上での動作確認はChromeBook実機上のみとし、Chromium OSに関しては今後広範な動作確認が行われなくなります（が、動くはずで、サポートも行います）。
 
 ## 動作環境
@@ -65,15 +64,13 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 - Visual Studio Code(「Remote - WSL」拡張機能）のインストール
 
 ### Mac
-- x86-64アーキテクチャのCPU
+- x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
-        - MacBook Pro (Retina, Mid 2012)
-        - macOS Mojave 10.14.6
-        - Xcode 11.0
-    - M1チップ搭載のMacは現在対応準備中です。
+        - MacBook Pro (Retina, Mid 2012) / macOS Mojave 10.14.6 / Xcode 11.0
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Big Sur 11.2.3
 - macOS Mojave(10.14)以降
     - 環境のインストールに管理者権限が必要です。
-    - Big Surでの動作確認は行っていませんが、対応します。
+- Apple Silicon機の場合、Rossetaのインストール
 - Xcode(Command Line Tools)のインストール
 - Visual Studio Codeのインストール
 

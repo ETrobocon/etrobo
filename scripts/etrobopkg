@@ -45,8 +45,8 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.03.19a"
-    export ETROBO_PUBLIC_VER="2021_4.19-public"
+    export ETROBO_MANIFEST_VER="2021.03.20a"
+    export ETROBO_PUBLIC_VER="2021_4.34-public"
     export ETROBO_COMPETITION_VER="2020_4.0"
 
     #
@@ -128,6 +128,26 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         vers+=("2021.03.08a")
         sizes+=("$size")
     fi
+
+    #
+    # UnityETroboSim public version
+    #
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        target="linux"
+    else
+        target="$ETROBO_OS"
+    fi
+    if [ "$target" = "win" ]; then
+        size=30680779
+    elif [ "$target" = "mac" ]; then
+        size=36781051
+    elif [ "$target" = "linux" ]; then
+        size=42453253
+    fi    
+    pkgs+=("etrobosim")
+    urls+=("https://etrobocon.github.io/etroboEV3/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
+    vers+=("2021.03.20a")
+    sizes+=("$size")
 
     #
     # UnityETroboSim via Kintone

@@ -38,8 +38,8 @@ else
     export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim.*gz$ | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
     export ETROBO_SIM_DEV="UnityETroboSim"
     export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
-    export ETROBO_SIM_NAME="ETロボコンシミュレータ"
-    export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
+    export ETROBO_SIM_NAME="etrobosim"
+    export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/ETロボコンシミュレータ/Player.log"
     if [ "$ETROBO_OS" = "win" ]; then
         export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
     elif [ "$ETROBO_KERNEL" = "debian" ]; then

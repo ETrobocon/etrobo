@@ -96,11 +96,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("gcc-athrill_mac")
         if [ "$ETROBO_PLATFORM" = "arm64" ]; then
-            urls+=("https://github.com/ETrobocon/etroboEV3/blob/gh-pages/athrill-gcc-package-mac_arm64.tar.gz")
+            urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac_arm64.tar.gz")
             vers+=("2021.03.19a")
             sizes+=("35857495")
         else
-            urls+=("https://github.com/ETrobocon/etroboEV3/blob/gh-pages/athrill-gcc-package-mac_x86_64.tar.gz")
+            urls+=("http://etrobocon.github.io/etroboEV3//athrill-gcc-package-mac_x86_64.tar.gz")
             vers+=("2021.03.08a")
             sizes+=("32950726")
         fi

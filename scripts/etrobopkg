@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.03.08a"
+    export ETROBO_MANIFEST_VER="2021.03.19a"
     export ETROBO_PUBLIC_VER="2021_4.19-public"
     export ETROBO_COMPETITION_VER="2020_4.0"
 
@@ -95,9 +95,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("gcc-athrill_mac")
-        urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1-mac/athrill-gcc-package-mac.tar.gz")
-        vers+=("2021.03.08a")
-        sizes+=("32950726")
+        if [ "$ETROBO_PLATFORM" = "arm64" ]; then
+            urls+=("https://github.com/ETrobocon/etroboEV3/blob/gh-pages/athrill-gcc-package-mac_arm64.tar.gz")
+            vers+=("2021.03.19a")
+            sizes+=("35857495")
+        else
+            urls+=("https://github.com/ETrobocon/etroboEV3/blob/gh-pages/athrill-gcc-package-mac_x86_64.tar.gz")
+            vers+=("2021.03.08a")
+            sizes+=("32950726")
+        fi
     else
         pkgs+=("gcc-athrill")
         urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")

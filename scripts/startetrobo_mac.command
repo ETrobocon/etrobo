@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.21a.210308"
+export BEERHALL_VER="5.22a.210318"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -23,7 +23,6 @@ if [ "$1" = "update" ]; then
         makeBeerHall="rebuild"
     fi
     rm -f "$BEERHALL/BeerHall"
-    rm -f "$BEERHALL/startetrobo"
 fi
 
 if [ "$1" = "clean" ]; then
@@ -326,6 +325,19 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew link curl --force
     gem install shell
 
+    # install additional kegs for athrill-gcc-package-mac_arm64
+    if [ "`uname -m`" = "arm64" ]; then
+        packages="gmp mpfr libmpc isl cloog"
+        for package in $packages; do
+            if [ ! -e "/opt/homebrew/opt/$package/lib" ]; then
+                brew install $package
+                sudo mkdir -p /opt/homebrew/opt/$package
+                echo "make symbolic link from /opt/homebrew/opt/$package/lib to \$HOMEBREW_PREFIX/lib"
+                sudo ln -s "$HOMEBREW_PREFIX/lib" /opt/homebrew/opt/$package/lib
+            fi
+        done
+    fi
+
     gnupath="/Users/jt/BeerHall/usr/local/opt/make/libexec/gnubin"
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/coreutils/libexec/gnubin"
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/findutils/libexec/gnubin"
@@ -420,10 +432,12 @@ if [ -n "$makeBeerHall" ]; then
     chmod +x "$BEERHALL/BeerHall"
 
     # for startetrobo
-    echo "download startetrobo"
     cd "$BEERHALL"
-    "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
-    chmod +x startetrobo
+    if [ ! -f "$BEERHALL/startetrobo" ]; then
+        echo "download startetrobo"
+        "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
+        chmod +x startetrobo
+    fi
 else
     export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 fi

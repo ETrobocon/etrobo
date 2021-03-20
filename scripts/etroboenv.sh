@@ -25,6 +25,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_OS
     unset ETROBO_KERNEL
     unset ETROBO_KERNEL_POSTFIX
+    unset ETROBO_PLATFORM
     unset ETROBO_USERPROFILE
     unset ETROBO_MODE_CUI
     unset ETROBO_SIM_VER
@@ -46,6 +47,7 @@ else
         export ETROBO_ATHRILL_WORKSPACE="$ETROBO_ATHRILL_SDK/workspace"
         export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-1.0-release/sdcard"
 
+        export ETROBO_PLATFORM="`uname -m`"
         if [ `uname` == "Darwin" ]; then
             export ETROBO_OS="mac"
             export ETROBO_KERNEL="darwin"
@@ -72,13 +74,13 @@ else
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
             export ETROBO_USERPROFILE="$HOME"
-            export ETROBO_EXE_POSTFIX=".x86_64"
+            export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
         elif [ `uname` == "Linux" ]; then
             export ETROBO_OS="linux"
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
             export ETROBO_USERPROFILE="$HOME"
-            export ETROBO_EXE_POSTFIX=".x86_64"
+            export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
         fi
 
         export ETROBO_ATHRILL_TARGET="$ETROBO_ROOT/athrill-target-v850e2m/build_${ETROBO_KERNEL_POSTFIX}"

@@ -56,9 +56,12 @@ else
     echo unknown Host OS or not WSL on Windows 10.
     exit 1
 fi
-if [ `uname -m` != "x86_64" ]; then
-    echo this environment is available for x86_64.
-    exit 1
+platform="`uname -m`"
+if [ "$platform" != "x86_64" ]; then
+    if [ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]; then
+        echo this environment is available for x86_64 and Apple Silicon.
+        exit 1
+    fi
 fi
 if [ `uname` == "Linux" ]; then
     if [ "`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/" | tail -n 1`" != "debian" ]; then
@@ -69,7 +72,7 @@ if [ `uname` == "Linux" ]; then
         guest=`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E "s/^PRETTY_NAME=\"(.*)\"/\1/"`
     fi
 fi
-echo "detect platform: $host.x86_64($guest)"
+echo "detect platform: $host.$platform($guest)"
 
 # export ETROBO_ROOT if necessary
 if [ -z "$ETROBO_ROOT" ]; then

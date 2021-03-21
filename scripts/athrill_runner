@@ -74,10 +74,10 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
             echo "-2 $SECONDS" >> "$status"
         elif [ "`echo $line | grep \"^athrill_device_func_call=\"`" ]; then
             echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
-            echo "-1 $SECONDS" >> "$status"
-        elif [ "`echo $line | grep \"^System logging task is started.\"`" ]; then
-            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
-            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
+#            echo "-1 $SECONDS" >> "$status"
+#        elif [ "`echo $line | grep \"^Initialization is completed..\"`" ]; then
+#            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
+#            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
             echo "1 $SECONDS" >> "$status"
             # launch btcat
             if [ "$btcat" ]; then

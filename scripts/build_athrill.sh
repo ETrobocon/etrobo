@@ -107,14 +107,14 @@ if [ "$1" = "check" ]; then
 fi
 
 if [ -z "$CHECK" ]; then
-    if [ -d "$ETROBO_ATHRIL_WORKSPACE" ]; then
-        cd "$ETROBO_ATHRIL_WORKSPACE"
+    if [ -d "$ETROBO_ATHRILL_WORKSPACE" ]; then
+        cd "$ETROBO_ATHRILL_WORKSPACE"
         echo make ASP3 workspace clean
         make clean > /dev/null 2>&1
         rm -f asp
         cd "$ETROBO_ATHRILL_TARGET"
         echo make Athrill clean
-        make timer32=true clean > /dev/null 2>&1
+        make clean > /dev/null 2>&1
     fi
 fi
 
@@ -170,7 +170,7 @@ fi
 
 cd "$ETROBO_ATHRILL_TARGET"
 if [ -z "$CHECK" ]; then
-    make timer32=true
+    make etrobo_optimize=true
     rm -f "$ETROBO_ATHRILL_WORKSPACE/athrill2"
     cp ./athrill2 "$ETROBO_ATHRILL_WORKSPACE/"
 fi

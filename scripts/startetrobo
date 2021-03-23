@@ -219,9 +219,18 @@ if [ ! -d "$ETROBO_ROOT" ]; then
     echo
     echo "Install etrobo Environment: start"
     echo
-    echo "update and upgrade your platform"
-    echo 'Please enter your login password as sudoers if [sudo] ask you'
+    install="install"
+else
+    install="skip"
+    if [ "$1" = "update" ]; then
+        install="update"
+    fi
+fi
+
+if [ "$install" = "install" ] || [ "$install" = "update" ]; then
     if [ -z "$BeerHall" ];then
+        echo "update and upgrade your platform"
+        echo 'Please enter your login password as sudoers if [sudo] ask you'
         sudo apt -y update
         sudo apt -y upgrade
         sudo apt -y install build-essential
@@ -229,6 +238,7 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         sudo apt -y install ruby
         sudo apt -y install curl
         sudo apt -y install jq
+        sudo apt -y install bison
         sudo gem install shell
         #
         # EV3RT requirement from:
@@ -240,8 +250,16 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         echo
         echo "Install u-boot-tools and lib32stdc++6:"
         sudo apt install u-boot-tools lib32stdc++6 -y
+    elif [ "$install" = "update" ]; then
+        echo
+        echo "--- NOTICE ---"
+        echo '`startetrobo update` option is only for Debian/GNU Linux and its variants.'
+        echo 'if you want to update and upgrade your platform on Mac, run `startetrobo_mac.command update BeerHall`.'
+        echo
     fi
+fi
 
+if [ "$install" = "install" ]; then
     cd "`dirname $0`"
     echo
     echo 'Clone etrobo core package'

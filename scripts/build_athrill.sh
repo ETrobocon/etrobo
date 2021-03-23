@@ -28,7 +28,6 @@ SAMPLE_OFFICIAL_COMMIT="68cf8f2f897e3f9ed4d03e31a3067cdc98948cd5"
 # https://github.com/mruby-Forum/mruby-ev3rt/commits/master
 #
 MRUBY_OFFICIAL_COMMIT="e734fbd8a4189df5cdc7406fddaa5a8edf6e7bab"
-ETROBO_MRUBY_VER="2.0.1"   # please remember this version number is specified in etrobopkg
 
 #
 # the Athrill2 default repository

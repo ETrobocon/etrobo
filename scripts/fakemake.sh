@@ -151,8 +151,7 @@ cp -f "$incFile" "${incFile}.base"
 if [ -n "`cat \"$incFile\" | grep ETROBO_MRUBY`" ]; then
     echo "Build to mruby bytecode"
     cd "$proj"
-    rm -f main_task.h
-    "$ETROBO_MRUBY_ROOT/bin/mrbc"  -g -v -Bbcode -omain_task.h main_task.rb
+    ruby "generate_bytecode.rb"
     cd ..
     skiphrp3="mruby"
 fi

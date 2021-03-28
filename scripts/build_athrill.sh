@@ -186,6 +186,11 @@ if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     > build_config_ev3rt_sim_etrobo.rb
     cd $ETROBO_MRUBY_ROOT
     MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
+    if [ "$?" != "0" ]; then
+        rm -rf "$ETROBO_MRUBY_EV3RT"
+        rm -rf "$ETROBO_MRUBY_ROOT"
+        echo 'fatal error: mruby build: try `./startetrobo update`'
+    fi
 fi
 
 #

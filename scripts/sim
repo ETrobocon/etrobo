@@ -417,8 +417,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
                     # auto start sequence
                     if [ -n "$loop" ]; then
-                        # request PREPARE and wait READY
-                        echo "[ launcher: Go to the start, Ready? ]" | tee $console
+                        # request PREPARE and wait CALIBRATING
+                        echo "[ launcher: waiting for calibration ]" | tee $console
                         json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
                         sleep 1     # @ToDo: its magic number
                         counter=0
@@ -437,6 +437,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                             json=`curl -s -X GET $ETROBO_SIM_COMM`
                         done
                         # auto start
+                        echo "[ launcher: Go to the start, Ready? ]" | tee $console
                         echo -n "[ launcher: 3..." | tee $console
                         sleep 1
                         echo -n "2..." | tee $console

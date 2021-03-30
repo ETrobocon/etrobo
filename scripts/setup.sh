@@ -137,11 +137,19 @@ if [ ! -d "$targetDist/$targetSrc" ]; then
 fi
 
 if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
-    installProcess="${installProcess}sample "
+    installProcess="${installProcess}sample_c4 "
     echo
     echo "Install workspace/sample_c4:"
     git checkout .
     cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
+fi
+
+if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_mruby" ]; then
+    installProcess="${installProcess}sample_mruby "
+    echo
+    echo "Install workspace/sample_mruby:"
+    git checkout .
+    cp -rf "$ETROBO_ROOT/dist/sample_mruby" "$ETROBO_HRP3_WORKSPACE/"
 fi
 
 if [ -n "$update" ]; then

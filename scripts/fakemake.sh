@@ -2,7 +2,7 @@
 #
 # fakemake, integrated build and launch system among HRP3/EV3 and ASP3/Athrill
 #   fakemake.sh 
-# Author: jtFuruhata, mhikichi1769
+# Author: jtFuruhata, mhikichi1769, yurie
 # Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
@@ -79,6 +79,9 @@ if [ "$1" = "sample" ]; then
     if [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up
+    elif [ "$2" = "mruby" ]; then
+        cd "$ETROBO_ROOT"
+        make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_mruby" sim up
     else
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_c4" sim up
@@ -151,9 +154,7 @@ cp -f "$incFile" "${incFile}.base"
 if [ -n "`cat \"$incFile\" | grep ETROBO_MRUBY`" ]; then
     echo "Build to mruby bytecode"
     cd "$proj"
-#    ruby "generate_bytecode.rb"
-    rm -f main_task.h
-    "$ETROBO_MRUBY_ROOT/bin/mrbc"  -g -v -Bbcode -omain_task.h main_task.rb    cd ..
+    ruby "generate_bytecode.rb"
     skiphrp3="mruby"
 fi
 

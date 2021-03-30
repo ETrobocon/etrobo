@@ -27,7 +27,7 @@ SAMPLE_OFFICIAL_COMMIT="68cf8f2f897e3f9ed4d03e31a3067cdc98948cd5"
 # See commits histories:
 # https://github.com/mruby-Forum/mruby-ev3rt/commits/master
 #
-MRUBY_OFFICIAL_COMMIT="e734fbd8a4189df5cdc7406fddaa5a8edf6e7bab"
+MRUBY_OFFICIAL_COMMIT="a9a1380d5b5bae8ee61b3325e8ad768e40590688"
 
 #
 # the Athrill2 default repository
@@ -117,7 +117,7 @@ if [ "$1" = "show" ]; then
     echo "   mruby-ev3rt: $MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH"
     if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
     && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
-    && [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${TARGET_OFFICIAL_COMMIT:0:7}/master" ] \
+    && [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${MRUBY_OFFICIAL_COMMIT:0:7}/master" ] \
     && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ]; then
         echo "the ETrobo official certified commit"
         exit 0

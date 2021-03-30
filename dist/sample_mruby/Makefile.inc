@@ -1,0 +1,6 @@
+# for mruby
+APPL_LIBS += $(ETROBO_MRUBY_LIB) -lm
+INCLUDES += -I$(ETROBO_MRUBY_ROOT)/include/
+
+APPL_COBJS += 
+INCLUDES += -I$(ETROBO_HRP3_WORKSPACE)/etroboc_common

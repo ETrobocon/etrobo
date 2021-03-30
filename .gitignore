@@ -8,6 +8,7 @@
 !/dist/etrobosim2021_4.19-public_win.tar.gz
 !/dist/settings.json.default
 !/dist/sample_c4/
+!/dist/sample_mruby/
 !/dist/etroboc_common/
 !/make
 !/update

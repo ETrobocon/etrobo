@@ -1,13 +1,7 @@
 class TracerTask
 
-  # 変更不要なパラメーター
   LEFT_COURCE = 1
   RIGHT_COURCE = -1
-      
-  # 調整が必要なパラメーター
-  LIGHT_WHITE = 23        # 白色の光センサ値
-  LIGHT_LINE = 0         # ラインの光センサ値
-  EDGE = LEFT_COURCE
 
   def log(msg)
     @logger.write(msg)
@@ -16,48 +10,47 @@ class TracerTask
   def initialize
     @touch_sensor = EV3RT::TouchSensor.new(EV3RT::PORT_1)
     @color_sensor = EV3RT::ColorSensor.new(EV3RT::PORT_2)
-    @sonar_sensor = EV3RT::SonarSensor.new(EV3RT::PORT_3)
-      
     @left_motor = EV3RT::Motor.new(EV3RT::PORT_C, EV3RT::LARGE_MOTOR)
     @right_motor = EV3RT::Motor.new(EV3RT::PORT_B, EV3RT::LARGE_MOTOR)
-    @steering = EV3RT::Steering.new(@left_motor, @right_motor)
-
     @logger = EV3RT::Serial.new(EV3RT::SIO_PORT_UART)
-    log("tracer task new\r\n")
+    log("tracer task new")
   end
 
   def execute
 
     #走行モータエンコーダリセット
-    @steering.reset_motors
+    @left_motor.reset
+    @right_motor.reset
+    edge = LEFT_COURCE
     EV3RT::Task.sleep
 
     while true
-  #TODO
-  #    if back_button.pressed?
-  #        EV3RT::Task.wakeup(EV3RT::MAIN_TASK)
-  #        break
-  #    end
-
-      # TODO:障害物を検知したら停止
-      forward = 30 # 前進命令(実際の走行では状況によって変えるのでここにある)
+      forward = 25
+      turn = 8
+      threshold = 40
 #      color = @color_sensor.brightness
       color = @color_sensor.rgb_part(EV3RT::ColorSensor::R)
-      if color >= (LIGHT_WHITE + LIGHT_LINE) /2
-        turn = -80 * EDGE	# 右旋回命令　(右コースは逆)
+      if color >= threshold
+        left_power = forward - turn * edge
+        right_power = forward + turn * edge
       else
-          turn = 80 * EDGE	# 左旋回命令　(左コースは逆)
+        left_power = forward + turn * edge
+        right_power = forward - turn * edge
       end
     
       # 左右モータでロボットのステアリング操作を行う
-      @steering.steer(forward, turn)
+      @left_motor.power = left_power
+      @right_motor.power = right_power
 
       # カラーセンサーで取得した値をターミナルに出力
       # 操作に悪影響しないように、ステアリング操作が終了してからログを出すようにした
-      log("color:#{color.to_s}")
+      # 実機と違い、ログを出すと走行に影響を及ぼす可能性が高い為コメントアウトしている
+#      log("color:#{color.to_s}, left:#{left_power.to_s}, right:#{right_power.to_s}")
+#      log("c:#{color.to_s}, l:#{left_power.to_s}")
+#      log("c:#{color.to_s}")
 
+      # 周期ハンドラからwakeupされるのを待つ
       EV3RT::Task.sleep
-
     end
   end
 end

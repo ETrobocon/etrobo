@@ -4,7 +4,6 @@
  **
  ** 概要 : 二輪差動型ライントレースロボットのTOPPERS/HRP3用mrubyサンプルプログラム
  **
- ** 注記 : sample_c4 (sample_c3にBluetooth通信リモートスタート機能を追加)
  ******************************************************************************
  **/
 
@@ -30,18 +29,10 @@
     #define _debug(x)
 #endif
 
-/* LCDフォントサイズ */
-#define CALIB_FONT (EV3_FONT_SMALL)
-#define CALIB_FONT_WIDTH (6/*TODO: magic number*/)
-#define CALIB_FONT_HEIGHT (8/*TODO: magic number*/)
-
 /* メインタスク */
 void main_task(intptr_t unused)
 {
-    /* LCD画面表示 */
-    ev3_lcd_fill_rect(0, 0, EV3_LCD_WIDTH, EV3_LCD_HEIGHT, EV3_LCD_WHITE);
-
-    syslog(LOG_NOTICE, "HackEV sample_c4");
+    syslog(LOG_NOTICE, "HackEV sample_mruby");
 
 	static mrb_state *mrb = NULL;
 	mrb_value ret;
@@ -115,16 +106,4 @@ void tracer_task(intptr_t unused)
     mrb_close(mrb);
 
     ext_tsk();
-}
-
-//*****************************************************************************
-// 関数名 : bt_task
-// 引数 : unused
-// 返り値 : なし
-// 概要 : Bluetooth通信によるリモートスタート。 Tera Termなどのターミナルソフトから、
-//       ASCIIコードで1を送信すると、リモートスタートする。
-//*****************************************************************************
-void bt_task(intptr_t unused)
-{
-    //TODO
 }

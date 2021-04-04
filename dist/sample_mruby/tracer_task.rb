@@ -21,15 +21,16 @@ class TracerTask
     #走行モータエンコーダリセット
     @left_motor.reset
     @right_motor.reset
-    edge = LEFT_COURCE
+    edge = LEFT_COURCE  # 左右どちらのコースを走行するかの指定
     EV3RT::Task.sleep
 
     while true
-      forward = 25
-      turn = 8
-      threshold = 40
-#      color = @color_sensor.brightness
-      color = @color_sensor.rgb_part(EV3RT::ColorSensor::R)
+      # 物体の「前進量」と「回転量」の関係で各モーターの出力量が決まる
+      forward = 25    # 前進量(-100~100で指定)
+      turn = 8        # 回転量(-100~100で指定)
+      threshold = 40  # ライン上かどうか判定する閾値
+#      color = @color_sensor.brightness # （参考）こちらを使う方法もあります
+      color = @color_sensor.rgb_part(EV3RT::ColorSensor::R) # 赤色成分で黒線を判断している
       if color >= threshold
         left_power = forward - turn * edge
         right_power = forward + turn * edge
@@ -45,9 +46,9 @@ class TracerTask
       # カラーセンサーで取得した値をターミナルに出力
       # 操作に悪影響しないように、ステアリング操作が終了してからログを出すようにした
       # 実機と違い、ログを出すと走行に影響を及ぼす可能性が高い為コメントアウトしている
-#      log("color:#{color.to_s}, left:#{left_power.to_s}, right:#{right_power.to_s}")
-#      log("c:#{color.to_s}, l:#{left_power.to_s}")
-#      log("c:#{color.to_s}")
+      # log("color:#{color.to_s}, left:#{left_power.to_s}, right:#{right_power.to_s}")
+      # log("c:#{color.to_s}, l:#{left_power.to_s}")
+      # log("c:#{color.to_s}")
 
       # 周期ハンドラからwakeupされるのを待つ
       EV3RT::Task.sleep

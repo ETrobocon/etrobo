@@ -39,7 +39,10 @@ if [ "$1" = "update" ]; then
     . "$scripts/etroboenv.sh" silent
 
     if [ "$option" = "sim" ]; then
-        rm -f "$ETROBO_CACHE/"etrobosim*
+        ls "$ETROBO_CACHE"/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do
+            rm -f "$line"
+            rm -f "$line.manifest"
+        done
         if [ "$option2" = "public" ]; then
             sim_public="sim_public"
             ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do

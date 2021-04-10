@@ -35,7 +35,7 @@ if [ "$1" = "unset" ]; then
     . "$ETROBO_SCRIPTS/asp" unset
 else
     # export default envvars
-    export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim.*gz$ | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
+    export ETROBO_SIM_VER=`ls -t1 $ETROBO_ROOT/dist | grep ^etrobosim.*gz$ | sed -E "s/^etrobosim(.*)_$ETROBO_OS\.tar\.gz/\1/" | head -n 1`
     export ETROBO_SIM_DEV="UnityETroboSim"
     export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
     export ETROBO_SIM_NAME="etrobosim"

@@ -156,13 +156,14 @@ if [ -n "`cat \"$incFile\" | grep ETROBO_MRUBY`" ]; then
     cd "$proj"
     ruby "generate_bytecode.rb"
     skiphrp3="mruby"
+    cd ..
 fi
 
 # invoke make for HRP3/EV3
 echo invoke: make $arg_app_prefix $args
+echo >> "$incFile"
+echo "COPTS += -DMAKE_EV3" >> "$incFile"
 if [ -z "$skiphrp3" ]; then
-    echo >> "$incFile"
-    echo "COPTS += -DMAKE_EV3" >> "$incFile"
     make $arg_app_prefix $args
     makeResult=$?
     cp -f "${incFile}.org" "$incFile"
@@ -178,6 +179,7 @@ if [ -z "$skiphrp3" ]; then
         exit 1
     fi
 else
+    cd "$ETROBO_HRP3_WORKSPACE"
     echo "app=$proj" > currentapp
 fi
 

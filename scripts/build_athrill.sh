@@ -189,7 +189,10 @@ if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     if [ "$?" != "0" ]; then
         rm -rf "$ETROBO_MRUBY_EV3RT"
         rm -rf "$ETROBO_MRUBY_ROOT"
-        echo 'fatal error: mruby build: try `./startetrobo update`'
+        echo
+        echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
+        echo
+        exit 1
     fi
 fi
 

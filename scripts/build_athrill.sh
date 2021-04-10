@@ -67,7 +67,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     if [ "$CURRENT_BRANCH" = "master" ]; then
         CURRENT_COMMIT="HEAD"
     else
-        CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+        CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
         CURRENT_BRANCH="master"
     fi
     if [ -d "$ETROBO_MRUBY_EV3RT" ]; then
@@ -77,7 +77,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
         if [ "$MRUBY_BRANCH" = "master" ]; then
             MRUBY_COMMIT="HEAD"
         else
-            MRUBY_COMMIT=`echo "$MRUBY_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+            MRUBY_COMMIT=`echo "$MRUBY_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
             MRUBY_BRANCH="master"
         fi
     else
@@ -91,7 +91,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     if [ "$TARGET_BRANCH" = "master" ]; then
         TARGET_COMMIT="HEAD"
     else
-        TARGET_COMMIT=`echo "$TARGET_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+        TARGET_COMMIT=`echo "$TARGET_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
         TARGET_BRANCH="master"
     fi
     cd "$ETROBO_ROOT/athrill"
@@ -100,7 +100,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     if [ "$ATH2_BRANCH" = "master" ]; then
         ATH2_COMMIT="HEAD"
     else
-        ATH2_COMMIT=`echo "$ATH2_BRANCH" | sed -E 's/^\(HEAD detached at (.*)\)$/\1/'`
+        ATH2_COMMIT=`echo "$ATH2_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
         ATH2_BRANCH="master"
     fi
 else

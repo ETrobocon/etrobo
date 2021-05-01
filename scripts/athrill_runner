@@ -67,46 +67,45 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
         read -t 1 line
         if [ "$?" == "0" ]; then
             echo "$line"
-        fi
-
-        if [ "`echo $line | grep \"^ELF STRING TABLE SECTION LOADED:\"`" ]; then
-            echo "[ $app_select runner: V850E2M VCPU is powered on ]" | tee $console
-            echo "-2 $SECONDS" >> "$status"
-        elif [ "`echo $line | grep \"^athrill_device_func_call=\"`" ]; then
-            echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
-#            echo "-1 $SECONDS" >> "$status"
-#        elif [ "`echo $line | grep \"^Initialization is completed..\"`" ]; then
-#            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
-#            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
-            echo "1 $SECONDS" >> "$status"
-            # launch btcat
-            if [ "$btcat" ]; then
-                btcat $app_select app=$projName app.bt &
-                btcat_pid=$!
-                echo "bt $btcat_pid" >> "$runner"
-                echo "[ $app_select runner: launch btcat #$btcat_pid]" | tee $console
+            if [[ $line = ELF\ STRING\ TABLE\ SECTION\ LOADED* ]]; then
+                echo "[ $app_select runner: V850E2M VCPU is powered on ]" | tee $console
+                echo "-2 $SECONDS" >> "$status"
+            elif [[ $line = athrill_device_func_call* ]]; then
+                echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
+    #            echo "-1 $SECONDS" >> "$status"
+    #        elif [[ $line = Initialization\ is\ completed* ]]; then
+    #            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
+    #            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
+                echo "1 $SECONDS" >> "$status"
+                # launch btcat
+                if [ "$btcat" ]; then
+                    btcat $app_select app=$projName app.bt &
+                    btcat_pid=$!
+                    echo "bt $btcat_pid" >> "$runner"
+                    echo "[ $app_select runner: launch btcat #$btcat_pid]" | tee $console
+                fi
+            elif [[ $line = DEVICE_CONFIG_BT_BASENAME* ]]; then
+                echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
+                echo "2 $SECONDS" >> "$status"
             fi
-        elif [ "`echo $line | grep \"^DEVICE_CONFIG_BT_BASENAME\"`" ]; then
-            echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
-            echo "2 $SECONDS" >> "$status"
-        fi
-        
 
-        # terminate this thread
-        if [ "`echo $line | grep \"^ERROR can not open$\"`" ]; then
-            unset loop
-        fi
-        if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
-            echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
-            echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
-            echo "0 $SECONDS" >> "$status"
-            unset loop
-        fi
-        if [ ! -f "$runner" ]; then
-            echo "[ $app_select runner: exit: force shutdown requested ]" | tee $console
-            echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
-            echo "0 $SECONDS" >> "$status"
-            unset loop
+            # terminate this thread
+            if [[ $line = ERROR\ can\ not\ open ]]; then
+                unset loop
+            fi
+        else
+            if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
+                echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
+                echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
+                echo "0 $SECONDS" >> "$status"
+                unset loop
+            fi
+            if [ ! -f "$runner" ]; then
+                echo "[ $app_select runner: exit: force shutdown requested ]" | tee $console
+                echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
+                echo "0 $SECONDS" >> "$status"
+                unset loop
+            fi
         fi
         # terminate btcat if necessory
         if [ -z "$loop" ] && [ "$btcat_pid" ] && [ -n "`ps -fp $btcat_pid | sed '1d'`" ]; then

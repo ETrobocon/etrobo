@@ -10,9 +10,9 @@ extern "C" {
 
 /**
  * etrboc_ext.h
- * ETロボコン2020 シミュレータ用拡張API
+ * ETロボコン2021 シミュレータ用拡張API
  *
- * copyright: ETロボコン2020実行委員会
+ * copyright: ETロボコン2021実行委員会
  */
 
 
@@ -61,7 +61,7 @@ enum ETROBOC_COURSE_INFO_ID {
 };
 
 /**
- * ETRoboc_getCourceInfo() - コース情報の取得
+ * ETRoboc_getCourseInfo() - コース情報の取得
  * 値が取得できるタイミングは競技規約を参照のこと
  * @version 1.0
  * @author ETロボコン実行委員会
@@ -80,10 +80,15 @@ enum ETROBOC_COURSE_INFO_ID {
  *  P  Q  R  S
  * </pre>
  * <br/>
- * <p>ブロックサークルの場合:　'1'〜'8'の文字コード</p>
+ * <p>端点サークルの場合: '0'の文字コード</p>
+ * <pre>
+ *  0
+ * </pre>
+ * <br/>
+ * <p>ブロックサークルの場合:　'1'〜'9'の文字コード</p>
  * <pre>
  *  1  2  3
- *  4     5
+ *  4  9  5
  *  6  7  8
  * </pre>
  *
@@ -92,7 +97,7 @@ enum ETROBOC_COURSE_INFO_ID {
  * 　　　　　また、数字情報に関してはまだ取得できない場合は0が返ります。アドバンストクラス以外のコースでも0が返ります
  */
 
-inline static int ETRoboc_getCourceInfo(enum ETROBOC_COURSE_INFO_ID info)
+inline static int ETRoboc_getCourseInfo(enum ETROBOC_COURSE_INFO_ID info)
 {
 #ifdef ETROBOC_SIM
     uint32_t *p = 0;
@@ -124,7 +129,8 @@ inline static int ETRoboc_getCourceInfo(enum ETROBOC_COURSE_INFO_ID info)
 
 #endif
 }
-
+/* 前年度との互換性を確保するために、修正前の関数名を定義しておく */ 
+#define ETRoboc_getCourceInfo(info) ETRoboc_getCourseInfo(info)
 
 #ifdef __cplusplus
 }

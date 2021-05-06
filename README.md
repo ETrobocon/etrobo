@@ -3,10 +3,10 @@
 
 see INSTALL that is written by english language
 
-注：ここでは、`startetrobo`によってインストールされるファイル群を「**etroboパッケージ**」、`startetrobo`によって起動する開発環境を「**etrobo環境**」と呼びます。
+注：ここでは、パッケージ管理コマンド`startetrobo`によってインストールされるファイル群を「**etroboパッケージ**」、`startetrobo`によって起動する開発環境を「**etrobo環境**」と呼びます。
 
 etrobo環境は、以下のソフトウェアおよび成果物の一部を利用し構成され、etroboパッケージはこれらを自動的に取得しインストールします。
-- [ETロボコンシミュレータ](https://etrobo.jp/)
+- ETロボコンシミュレータ（[ETロボコン実行委員会](https://etrobo.jp/)）
 - [TOPPERS/EV3RT](https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT)
 - [TOPPERS/箱庭](https://toppers.github.io/hakoniwa/)
 - [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
@@ -30,22 +30,20 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
  同梱されている評価版シミュレータのご利用は、以下の用途に限らせていただきます。
 
- * ETロボコンへの参加のため
- * ETロボコンへの参加を検討するため
- * ETロボコンの広報
- * ETロボコンに参加、協力していることを広報するため
+ * ETロボコンへの参加、または参加を検討するため
+ * ETロボコンの広報、または大会への参加、協力していることを広報するため
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2021 ETロボコン実行委員会, All rights reserved.
 
 ## 2021年度に向けた対応方針
 
-- Linuxは引き続きDebian 10を用い、Ubuntuは18.04から20.04に移行しました。引き続き18.04もご利用いただけますが、広範な動作確認は今後行われません（が、動くはずで、サポートも行います）。
-- 今後WSL2への対応を行います。ただし、WSL2のサポートはWindows 10 version 2004 (May 2020 Update)以降とします。これ以前のバージョンのWindows 10を使い続ける必要のある方は（私もです）、引き続きWSL1のままでご使用ください。
+- Linuxは引き続きDebian 10を用い、Ubuntuは18.04から20.04に移行しました（18.04も広範な動作確認なしでの継続サポート予定）。
+- WSL2への対応を実施する予定です（現在はWSL1のみ対応）。ただし、WSL2のサポートはWindows 10 version 2004 (May 2020 Update)以降とします。これ以前のバージョンのWindows 10を使い続ける必要のある方は（私もです）、引き続きWSL1のままでご使用ください。
 - Macの動作環境（BeerHall）の基本コマンドは、GNU coreutilに移行しました。
-- Big SurおよびM1チップ(Apple Siolicon)上での動作に対応しました。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認は行われなくなります（が、動くはずで、サポートも行います）。
-- Chrome OS上での動作確認はChromeBook実機上のみとし、Chromium OSに関しては今後広範な動作確認が行われなくなります（が、動くはずで、サポートも行います）。
+- Big SurおよびM1チップ(Apple Siolicon)上での動作に対応しました。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認なしでの継続サポート予定）。
+- Chrome OS上での動作確認はChromeBook実機上のみとます（Chromium OSも広範な動作確認なしでの継続サポート予定）。
 
 ## 動作環境
 
@@ -53,15 +51,13 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 - x86-64アーキテクチャのCPU
 - Windows 10 version 1709 (Fall Creators Update)以降
-    - これより前のWindows 10や、Windows 7などでは動作しません。
-- Windows Services for Linux (WSL1)のインストール
+- WSL1 (Windows Services for Linux) のインストール
     - インストールにWindowsの管理者権限が必要です。
-    - Virtual Machine Platform (WSL2)には近日中に対応します。
+    - WSL2 (Virtual Machine Platform) への対応予定もあります（Windowsバージョンに制限あり）。
 - WSL向けUbuntu 20.04（または18.04）のインストール
     - 環境の利用にはsudoers権限が必要です。
-    - 16.04でも動作する可能性はありますが、未検証です。
-    - 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
-- Visual Studio Code(「Remote - WSL」拡張機能）のインストール
+    - 18.04では広範な動作確認なしでの継続サポート予定です。16.04での動作は未検証です。
+- Visual Studio Code(および「Remote - WSL」拡張機能）のインストール
 
 ### Mac
 - x86-64アーキテクチャのCPU、またはApple Silicon
@@ -76,10 +72,9 @@ Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 10 または Ubuntu 20.04（または18.04）
+- Debian GNU/Linux 10 または Ubuntu 20.04
     - 環境のインストールにsudoers権限が必要です。
-    - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、未検証です。
-    - Ubuntu 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
+    - Ubuntu 18.04で広範な動作確認なしでの継続サポート予定です。Debian 9/Ubuntu 16.04での動作は未検証です。
 - Visual Studio Codeのインストール
 
 ### Chrome OS/Chromium OS
@@ -102,12 +97,12 @@ EV3実機向けの開発環境としては充分です。
 
 ## 動作確認＆主なコマンドの説明
 
-etrobo環境が起動しましたら、ターミナルを開いて（Windows:`Ctrl`+`@`・Mac/Linux:`Ctrl`+`Shift`+`@`）、とりあえず `make sample` と叩いてください。未来が見えます。
+etrobo環境が起動したら、ターミナルを開いて（Windows:`Ctrl`+`@`・Mac/Linux:`Ctrl`+`Shift`+`@`）、とりあえず `make sample` と叩いてください。ETロボコンシミュレータ上でのライントレースのサンプルプログラムが起動します。
 
-etrobo環境は様々なコマンドを提供していますが、これらは原則としてetrobo環境の初期ディレクトリ（`~/etrobo`）上で発給してください。
-もしも迷子になった場合は、`cd "$ETROBO_ROOT"`でどこからでも戻ることができます。
+etrobo環境は様々なコマンドを提供していますが、これらは原則としてetrobo環境の初期ディレクトリ（`~/etrobo`）をカレントディレクトリとして実行（発給）してください。
+もしも現在のディレクトリが不明となった場合は、`cd "$ETROBO_ROOT"`（または、`cd ~/etrobo`）として、指定ディレクトリに戻ることができます。
 
-HackEVの実機をお持ちの方は、USBポートにさして電源を入れ、`make app=helloev3 up`と入力してみてください。これだけで`app=`の値をファイル名としたモジュールのビルドと転送ができます。この時、Windowsではマウントにsudoers権限が必要であるため、たまにパスワードを聞かれます。その時はログインパスワードを入力してください。
+HackEV (EV3) の実機をお持ちの方は、USBポートに挿して電源を入れ、`make app=helloev3 up`と入力してみてください。これだけで`app=`の値をファイル名としたモジュールのビルドと転送ができます。この時、Windowsではマウントにsudoers権限が必要であるため、たまにパスワードを聞かれます。その時はログインパスワードを入力してください。
 
 一度`app=`を指定してビルドすると、2回目以降はこれを省略し、`make up`だけでビルドと転送が可能です。
 
@@ -120,7 +115,7 @@ HackEVの実機をお持ちの方は、USBポートにさして電源を入れ�
 
 Athrill/ASP3（シミュレータ環境）向けビルドは、同じく`~/etrobo`から動かず`make app=sample_c4 sim up`とすると、起動までしてくれます。これも2回目以降は`make sim up`だけで構いません。
 
-Athrill/ASP3向けも、あえてEV3RT/HRP3向けのビルドも行っています。そもそも自分のソースに問題があるのか、シミュレーション環境が対応していないのか切り分けるためです。EV3RT/HRP3向けのビルドが失敗した場合、Athrill/ASP3向けビルドと実行は行いません。
+シミュレータ環境用であるAthrill/ASP3向けのビルドでも、あえて実機用となるEV3RT/HRP3向けのビルドも行っています。これは、そもそも自分のソースに問題があるのか、シミュレーション環境が対応していないのか切り分けるためです。EV3RT/HRP3向けのビルドが失敗した場合、Athrill/ASP3向けビルドと実行は行いません。
 
 シミュレータとアプリを別々に起動する場合、`sim`でシミュレータのみ起動、`make sim start`でビルド後にアプリの起動のみを行います。
 

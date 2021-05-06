@@ -198,7 +198,7 @@ if [ -n "$build_asp3" ]; then
 
     cd "$ETROBO_ATHRILL_WORKSPACE"
     echo >> "$incFile"
-    echo "COPTS += -DMAKE_SIM" >> "$incFile"
+    echo "COPTS += -DSYSLOG_IMPLEMENT_AS_PRINTF -DMAKE_SIM" >> "$incFile"
     make img="$proj"
     if [ $? -eq 0 ]; then
         mv -f "${incFile}.org" "$incFile"

@@ -37,15 +37,7 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020 ETロボコン実行委員会, All rights reserved.
-
-## 2021年度に向けた対応方針
-
-- Linuxは引き続きDebian 10を用い、Ubuntuは18.04から20.04に移行しました。引き続き18.04もご利用いただけますが、広範な動作確認は今後行われません（が、動くはずで、サポートも行います）。
-- 今後WSL2への対応を行います。ただし、WSL2のサポートはWindows 10 version 2004 (May 2020 Update)以降とします。これ以前のバージョンのWindows 10を使い続ける必要のある方は（私もです）、引き続きWSL1のままでご使用ください。
-- Macの動作環境（BeerHall）の基本コマンドは、GNU coreutilに移行しました。
-- Big SurおよびM1チップ(Apple Siolicon)上での動作に対応しました。なお、Mojave上で動作確認について、4月1日以降はintel/CatalinaとM1/Big Surでの確認体制となり、Mojaveでの広範な動作確認は行われなくなります（が、動くはずで、サポートも行います）。
-- Chrome OS上での動作確認はChromeBook実機上のみとし、Chromium OSに関しては今後広範な動作確認が行われなくなります（が、動くはずで、サポートも行います）。
+Copyright(C) 2020-2021 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 

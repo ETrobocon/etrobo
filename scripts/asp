@@ -17,10 +17,10 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo
     echo "  MODE options: (default: 'launch')"
     echo "    launch ... run as launcher that launch athrill app on COURSE"
-    echo "    status ... show app status (see `asp status --help`)"
-    echo "    check  ... get PID of a `asp` which launched on COURSE"
+    echo '    status ... show app status (see `asp status --help`)'
+    echo '    check  ... get PID of a `asp` which launched on COURSE'
     echo "               if COURSE is 'not-specified', both PIDs are returned separated by ':'"
-    echo "    stop   ... stop a `asp` that is launcher on COURSE"
+    echo '    stop   ... stop a `asp` that is launcher on COURSE'
     echo "               if COURSE is 'not-specified', both launchers are stopped"
     echo
     echo "  COURSE options: (default: 'left' but also be indicated 'not-specified' internally)"

@@ -64,11 +64,14 @@ if [ "$1" = "clean" ]; then
         rm $bashrc
     fi
 
-    targetFile=~/.bash_profile
+    if [ -n "$HOME_ORG" ]; then
+        HOME="$HOME_ORG"
+    fi
+    targetFile="$HOME/.bash_profile"
     touch $targetFile
     unset removeFlag
     bashrc=$(mktemp)
-    cat $targetFile | 
+    cat "$targetFile" | 
     while read line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
@@ -82,18 +85,18 @@ if [ "$1" = "clean" ]; then
             fi
         fi
     done
-    sudo rm -f $targetFile
+    sudo rm -f "$targetFile"
     if [ -s $bashrc ]; then
-        sudo mv -f $bashrc $targetFile
+        sudo mv -f $bashrc "$targetFile"
     else
         rm $bashrc
     fi
 
-    targetFile=~/.zprofile
-    touch $targetFile
+    targetFile="$HOME/.zprofile"
+    touch "$targetFile"
     unset removeFlag
     bashrc=$(mktemp)
-    cat $targetFile | 
+    cat "$targetFile" | 
     while read line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
@@ -107,9 +110,9 @@ if [ "$1" = "clean" ]; then
             fi
         fi
     done
-    sudo rm -f $targetFile
+    sudo rm -f "$targetFile"
     if [ -s $bashrc ]; then
-        sudo mv -f $bashrc $targetFile
+        sudo mv -f $bashrc "$targetFile"
     else
         rm $bashrc
     fi
@@ -210,13 +213,14 @@ if [ -z "$BEERHALL" ]; then
     makeBeerHall="install"
 fi
 
+export HOMEBREW_PREFIX="$BEERHALL/usr/local"
+export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"
+export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"
+if [ -z "`echo $PATH | grep $HOMEBREW_PREFIX/bin`" ]; then
+    export PATH="$HOMEBREW_PREFIX/bin:$PATH"
+fi
+
 if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
-    export HOMEBREW_PREFIX="$BEERHALL/usr/local"
-    export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"
-    export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"
-    if [ -z "`echo $PATH | grep $HOMEBREW_PREFIX/bin`" ]; then
-        export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-    fi
     brew update
     brew upgrade
     brew install bash
@@ -350,14 +354,19 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
 #    done
 fi
 
-if [ "$makeBeerHall" = "install" ]; then
+# check and install modifiers
+if [ ! -f "$HOMEBREW_PREFIX/bin/code" ]; then
     echo "make aliase to code"
-    echo "\"/usr/local/bin/code\" \"\$@\"" > code
-    chmod +x code
+    echo "\"/usr/local/bin/code\" \"\$@\"" > "$HOMEBREW_PREFIX/bin/code"
+    chmod +x "$HOMEBREW_PREFIX/bin/code"
+fi
 
+if [ ! -L "$BEERHALL/etc" ]; then
     echo "make symbolic link from \$BEERHALL/etc to \$HOMEBREW_PREFIX/etc"
     ln -s "$HOMEBREW_PREFIX/etc" "$BEERHALL/etc"
+fi
 
+if [ ! "`ls /usr/local/lib/libfl*`" ]; then
     echo "make symbolic link from /usr/local/lib to flex/lib"
     ls $HOMEBREW_PREFIX/opt/flex/lib |
     while read line; do
@@ -371,9 +380,9 @@ if [ "$makeBeerHall" = "install" ]; then
         sudo mkdir -p /usr/local/lib
         sudo cp -f "$HOMEBREW_PREFIX/opt/flex/lib/$line" "/usr/local/lib/"
     done
-    makeBeerHall="build"
 fi
 
+# make the `BeerHall` script 
 if [ -n "$makeBeerHall" ]; then
     echo "make BeerHall"
     beer=$(mktemp)

@@ -238,14 +238,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     # `sim launch [projName]` lanches both the UnityETroboSim and a Athrill app
     # `sim only launch [projName]` only lanches a Athrill app
+    unset sim_opt
     if [ "$1" = "wait" ]; then
         shift
     fi
     if [ "$1" = "only" ]; then
         sim_opt="only"
         shift
-    else
-        unset sim_opt
     fi
 
     unset projName
@@ -255,7 +254,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
     fi
     unset target
+    unset ctl_command
+    unset ctl_params
     if [ "$1" = "launch" ]; then
+        sim_opt="launch"
         target="${app_prefix}${projName}.asp"
         if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
             target="${projName}.asp"
@@ -263,6 +265,27 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     elif [ -z "$sim_opt" ]; then
         sim_opt="skipASP"
         target="__dummy__"
+        if [ "$1" = "ctl" ]; then
+            unset load_prefs
+            shift
+            ctl_command="$1"
+            if [ -z "$ctl_command" ]; then
+                ctl_command="get"
+            elif [ "$ctl_command" == "--help" ]; then
+                echo "usage: sim ctl [COMMAND] [PARAMS...]"
+                echo "  COMMAND  (default:get)"
+                echo "    get ... get JSON status from etrobosim"
+                echo "    set ... set preferences into etrobosim by JSON in PARAMS"
+                echo "    pos ... move HackEV to 'X Y Z ROT' position in PARAMS"
+                echo "    initpos ... move HackEV to default position that is defined in settings.json"
+                echo "    prepare ... make etrobosim into PREPARE mode"
+                echo "    go ... make etrobosim into GO mode"
+                echo "    end ... make etrobosim into END mode"
+                exit 0
+            fi
+            shift
+            ctl_params=$@
+        fi
     fi
 
     # launch a athrill app at background
@@ -357,6 +380,48 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 else
                     echo "[ launcher: WARNING: illegal settings.json ]" | tee $console
                 fi
+            fi
+
+            # sim controller
+            if [ "$ctl_command" == "get" ]; then
+                curl -s -X GET $ETROBO_SIM_COMM
+                echo
+            elif [ "$ctl_command" == "set" ]; then
+                curl -s -X POST -d "$ctl_params" $ETROBO_SIM_COMM
+                echo
+            elif [ "$ctl_command" == "pos" ] || [ "$ctl_command" == "initpos" ]; then
+                initpos="initL"
+                if [ "$sim_select" == "right" ]; then
+                    initpos="initR"
+                fi
+                if [ "$ctl_command" == "pos" ]; then
+                    params=($ctl_params)
+                else
+                    x=0
+                    y=0
+                    z=0
+                    rot=0
+                    json="`cat settings.json`"
+                    if [ -n "$json" ]; then
+                        x=`echo $json | jq -r .${initpos}X`
+                        y=`echo $json | jq -r .${initpos}Y`
+                        z=`echo $json | jq -r .${initpos}Z`
+                        rot=`echo $json | jq -r .${initpos}ROT`
+                    fi
+                    params=($x $y $z $rot)
+                fi
+                json="{\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
+                curl -s -X POST -d "$json" $ETROBO_SIM_COMM
+                echo
+            elif [ "$ctl_command" == "prepare" ]; then
+                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE
+                echo
+            elif [ "$ctl_command" == "go" ]; then
+                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO
+                echo
+            elif [ "$ctl_command" == "end" ]; then
+                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END
+                echo
             fi
 
             # exit if no launch

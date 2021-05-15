@@ -415,7 +415,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     params=($x $y $z $rot)
                 fi
                 json="{\"LHackEV\":$l,\"RHackEV\":$r,\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
-                echo $json
                 curl -s -X POST -d "$json" $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "prepare" ]; then

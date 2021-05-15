@@ -391,8 +391,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
             elif [ "$ctl_command" == "pos" ] || [ "$ctl_command" == "initpos" ]; then
                 initpos="initL"
+                l=1
+                r=0
                 if [ "$sim_select" == "right" ]; then
                     initpos="initR"
+                    l=0
+                    r=1
                 fi
                 if [ "$ctl_command" == "pos" ]; then
                     params=($ctl_params)
@@ -410,7 +414,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     fi
                     params=($x $y $z $rot)
                 fi
-                json="{\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
+                json="{\"LHackEV\":$l,\"RHackEV\":$r,\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
+                echo $json
                 curl -s -X POST -d "$json" $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "prepare" ]; then

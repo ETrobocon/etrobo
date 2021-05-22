@@ -327,7 +327,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew link ruby@2.7 --force
     brew link flex --force
     brew link curl --force
-    gem install shell
+    gem install shell -E
 
     # install additional kegs for athrill-gcc-package-mac_arm64
     if [ "`uname -m`" = "arm64" ]; then

@@ -239,7 +239,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install curl
         sudo apt -y install jq
         sudo apt -y install bison
-        sudo gem install shell
+        sudo gem install shell -E
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh

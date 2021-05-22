@@ -257,7 +257,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     unset ctl_command
     unset ctl_params
     if [ "$1" = "launch" ]; then
-        sim_opt="launch"
+        if [ -z "$sim_opt" ]; then
+            sim_opt="launch"
+        fi
         target="${app_prefix}${projName}.asp"
         if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
             target="${projName}.asp"

@@ -46,7 +46,7 @@ unset btcat_pid
 runner_pid=$$
 trap "unset loop" SIGTERM SIGINT EXIT
 
-${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
+stdbuf -o 0 ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
 | tee $console_athrill \
 | while [ -n "$loop" ]; do
     if [ -z "$athrill_pid" ]; then
@@ -72,11 +72,10 @@ ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
                 echo "-2 $SECONDS" >> "$status"
             elif [[ $line = athrill_device_func_call* ]]; then
                 echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
-                echo "[ $app_select runner: Athrill2 boot time: $SECONDS secs. ]" | tee $console
-    #            echo "-1 $SECONDS" >> "$status"
-    #        elif [[ $line = Initialization\ is\ completed* ]]; then
-    #            echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
-    #            echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
+                echo "-1 $SECONDS" >> "$status"
+            elif [[ $line = Initialization\ is\ completed* ]]; then
+                echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
+                echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
                 echo "1 $SECONDS" >> "$status"
                 # launch btcat
                 if [ "$btcat" ]; then

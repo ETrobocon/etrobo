@@ -463,9 +463,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     sleep 0.1
                     status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
                 done
-#                if [ -n "$loop" ]; then
-#                    echo "[ launcher: EV3RT is booted up, got it ]" | tee $console
-#                fi
+                if [ -n "$loop" ]; then
+                    echo "[ launcher: EV3RT is booted up, got it ]" | tee $console
+                fi
 
                 counter=0
                 response=`curl -s -X GET $ETROBO_SIM_COMM`

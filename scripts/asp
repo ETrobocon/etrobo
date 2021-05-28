@@ -331,11 +331,11 @@ else
                 if [ -f "$ETROBO_SIM_DIST/${app_select}.runner" ]; then
                     if [ -n "$runner_pid" ] && [ -n "`ps -fp $runner_pid | sed '1d'`" ]; then
                         kill `cat "$ETROBO_SIM_DIST/${app_select}.runner" | head -n 1`
+                        if [ "$?" != "0" ]; then
+                            echo "[ asp launcher: unable to stop runner normaly. now force terminating all runners... ]"
+                        fi
                     fi
                 fi
-    #            if [ -n "$fs_cloned" ]; then
-    #                rm -rf "$fs_select"
-    #            fi
                 wait $runner_pid
                 echo "[ asp launcher #$launcher_pid: terminated. ]"
             else

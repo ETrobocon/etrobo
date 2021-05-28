@@ -45,9 +45,9 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.04.10a"
+    export ETROBO_MANIFEST_VER="2021.05.28a"
     export ETROBO_PUBLIC_VER="2021_4.47-public"
-    export ETROBO_COMPETITION_VER="2021_5.0.3"
+    export ETROBO_COMPETITION_VER="2021_5.1.0"
 
     #
     # GNU Arm Embedded Toolchain
@@ -166,15 +166,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=34840764
+        size=34644783
     elif [ "$target" = "mac" ]; then
-        size=40634919
+        size=40417766
     elif [ "$target" = "linux" ]; then
-        size=46811807
+        size=46521146
     fi    
     pkgs+=("etrobosim")
     urls+=("kintone://etrobocon/28/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-    vers+=("2021.04.10a")
+    vers+=("2021.05.28a")
     sizes+=("$size")
 
     #
@@ -188,6 +188,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ ! -d "$ETROBO_CACHE" ]; then
         rm -f "$ETROBO_CACHE"
         mkdir "$ETROBO_CACHE"
+        if [ "$?" != "0" ]; then
+            echo "*** FATAL ERROR ***"
+            echo "'$ETROBO_USERPROFILE' doesn't exists. please check your user directory location."
+            exit 1
+        fi
     fi
 
     #

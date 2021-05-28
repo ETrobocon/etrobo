@@ -333,6 +333,7 @@ else
                         kill `cat "$ETROBO_SIM_DIST/${app_select}.runner" | head -n 1`
                         if [ "$?" != "0" ]; then
                             echo "[ asp launcher: unable to stop runner normaly. now force terminating all runners... ]"
+                            "$ETROBO_SCRIPTS/asp" deep stop
                         fi
                     fi
                 fi

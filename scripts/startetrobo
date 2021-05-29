@@ -89,7 +89,7 @@ if [ "$1" = "--help" ]; then
     echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
     echo
     echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
-    echo '  . startetrobo shell ... export etrobo environment vars into this instance'
+    echo '  . startetrobo set   ... export etrobo environment vars into this instance'
     echo
     echo '  startetrobo checkout [<branch_name>]'
     echo '                      ... (for developer) checkout <branch_name>'
@@ -97,6 +97,10 @@ if [ "$1" = "--help" ]; then
     echo
     echo '  startetrobo clean   ... remove etrobo environment from here'
     echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
+    echo
+    echo '  startetrobo update  ... update etrobo environment core package (for win/linux)'
+    echo '                          for Mac users: run bellow command instead of this option.'
+    echo '                          `./startetrobo_mac.command update Beerhall`'
     echo
     exit 0
 fi

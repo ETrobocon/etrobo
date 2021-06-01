@@ -68,7 +68,8 @@ else
                 comspec="/mnt/c/Windows/System32/cmd.exe"
                 export ETROBO_MODE_CUI="true"
             fi
-            export ETROBO_USERPROFILE="$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+            mntc="/mnt/$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -E 's/.*/\L&/' | sed -E 's/^(.{1}).*$/\1/')"
+            export ETROBO_USERPROFILE="$mntc$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):(.*)$/\2/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
             if [ -z "$ETROBO_USERPROFILE" ]; then
                 export ETROBO_USERPROFILE="/mnt/c/Users/`whoami`"
             fi

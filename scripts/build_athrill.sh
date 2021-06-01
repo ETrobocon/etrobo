@@ -45,12 +45,14 @@ if [ "$1" = "--help" ]; then
     echo "Usage:"
     echo "  build_athrill.sh show  ... show current author/branch/commit"
     echo
-    echo "  build_athrill.sh [check] [official|pull|dev [<author>][/<branch>]]"
+    echo "  build_athrill.sh [check|init] [official|pull|dev [<author>][/<branch>]]"
     echo
     echo "build the Athrill2 from specified sources into \$ETROBO_ATHRILL_WORKSPACE"
     echo
     echo "options:"
+    echo "  show     ... show curent athrill status"
     echo "  check    ... do checkout or change author/branch(commit) only"
+    echo "  init     ... initialize (means delete all of your athrill apps!) this workspace"
     echo "  official ... checkout from the ETrobo official certified commits"
     echo "  pull     ... pull from the TOPPERS/Hakoniwa repositories ('toppers/master'))"
     echo "  dev      ... pull from dev-forks repositories (default: 'ytoi/master')"
@@ -59,7 +61,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 #
-# change repositories
+# change repositories and check installation
 if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     cd "$ETROBO_ATHRILL_EV3RT"
     CURRENT_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
@@ -85,7 +87,12 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
         MRUBY_COMMIT="INSTALLED"
         MRUBY_BRANCH="YET"
     fi
-    cd "$ETROBO_ATHRILL_TARGET"
+else
+    CHECK="skip clean"
+    unset CURRENT_AUTHOR
+fi
+if [ -d "$(cd "$ETROBO_ATHRILL_TARGET/.."; pwd)" ]; then
+    cd "$ETROBO_ATHRILL_TARGET/.."
     TARGET_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
     TARGET_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
     if [ "$TARGET_BRANCH" = "master" ]; then
@@ -94,6 +101,11 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
         TARGET_COMMIT=`echo "$TARGET_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
         TARGET_BRANCH="master"
     fi
+else
+    CHECK="skip clean"
+    unset CURRENT_AUTHOR
+fi
+if [ -d "$ETROBO_ROOT/athrill" ]; then
     cd "$ETROBO_ROOT/athrill"
     ATH2_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
     ATH2_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
@@ -104,6 +116,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
         ATH2_BRANCH="master"
     fi
 else
+    CHECK="skip clean"
     unset CURRENT_AUTHOR
 fi
 
@@ -131,6 +144,10 @@ fi
 # set no build option
 if [ "$1" = "check" ]; then
     CHECK="no build"
+    shift
+elif [ "$1" = "init" ]; then
+    CHECK="skip clean"
+    unset CURRENT_AUTHOR
     shift
 fi
 
@@ -161,8 +178,9 @@ fi
 #
 # clone athrill repositories
 if [ "$GIT_AUTHOR" != "$CURRENT_AUTHOR" ]; then
+    echo "make Athrill repositories clean"
     rm -rf "$ETROBO_ROOT/athrill"
-    rm -rf "$ETROBO_ATHRILL_TARGET"
+    rm -rf "$(cd "$ETROBO_ATHRILL_TARGET/.."; pwd)"
     rm -rf "$ETROBO_ATHRILL_EV3RT"
     git clone https://github.com/${GIT_AUTHOR}/athrill.git
     git clone https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git
@@ -245,7 +263,7 @@ fi
 #
 # build athrill
 cd "$ETROBO_ATHRILL_TARGET"
-if [ -z "$CHECK" ]; then
+if [ "$CHECK" != "no build" ]; then
     make etrobo_optimize=true
     rm -f "$ETROBO_ATHRILL_WORKSPACE/athrill2"
     cp ./athrill2 "$ETROBO_ATHRILL_WORKSPACE/"

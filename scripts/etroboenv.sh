@@ -69,8 +69,9 @@ else
                 export ETROBO_MODE_CUI="true"
             fi
             mntc="/mnt/$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -E 's/.*/\L&/' | sed -E 's/^(.{1}).*$/\1/')"
-            export ETROBO_USERPROFILE="$mntc$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):(.*)$/\2/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
-            if [ ! -d "$ETROBO_USERPROFILE" ]; then
+            uppath="$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):(.*)$/\2/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+            export ETROBO_USERPROFILE="$mntc$uppath"
+            if [ -z "$uppath" ]; then
                 export ETROBO_USERPROFILE="/mnt/c/Users/`whoami`"
             fi
             #export ETROBO_LAUNCH_SIM='cmd.exe /c "%USERPROFILE%\\etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}\\${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'

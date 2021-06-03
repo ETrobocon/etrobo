@@ -91,7 +91,13 @@ else
     CHECK="skip clean"
     unset CURRENT_AUTHOR
 fi
-if [ -d "$(cd "$ETROBO_ATHRILL_TARGET/.."; pwd)" ]; then
+
+unset ETROBO_ATHRILL_TARGET_ROOT
+if [ -d "$ETROBO_ATHRILL_TARGET" ]; then
+    ETROBO_ATHRILL_TARGET_ROOT="$(cd "$ETROBO_ATHRILL_TARGET/.."; pwd)"
+fi
+
+if [ -d "$ETROBO_ATHRILL_TARGET_ROOT" ]; then
     cd "$ETROBO_ATHRILL_TARGET/.."
     TARGET_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
     TARGET_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
@@ -180,7 +186,7 @@ fi
 if [ "$GIT_AUTHOR" != "$CURRENT_AUTHOR" ]; then
     echo "make Athrill repositories clean"
     rm -rf "$ETROBO_ROOT/athrill"
-    rm -rf "$(cd "$ETROBO_ATHRILL_TARGET/.."; pwd)"
+    rm -rf "$ETROBO_ATHRILL_TARGET_ROOT"
     rm -rf "$ETROBO_ATHRILL_EV3RT"
     git clone https://github.com/${GIT_AUTHOR}/athrill.git
     git clone https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git

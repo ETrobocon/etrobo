@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 echo "update etrobo package:"
 git pull --ff-only
-. "$ETROBO_SCRIPTS/setup.sh" update "$@"
+if [ "$?" == "0" ]; then
+    . "$ETROBO_SCRIPTS/setup.sh" update "$@"
+fi

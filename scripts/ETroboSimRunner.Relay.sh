@@ -2,7 +2,7 @@
 # ETroboSimRunner.Relay task scheduler
 #   ETroboSimRunner.Relay.sh
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -57,11 +57,13 @@ if [ "$?" == "0" ]; then
             # request put via ETroboSimRunner.Relay
             if [ -f put ]; then
                 cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
+#                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1
                 rm put
             fi
             # request get via ETroboSimRunner.Relay
             if [ -f get ]; then
                 cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
+#                cmd.exe /C "cd /D ${simRunner}&get.cmd" > /dev/null 2>&1
                 rm get
             fi
             sleep 1

@@ -50,6 +50,13 @@ if [ "$1" == "vm" ]; then
 fi
 
 if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
+    # recognize matchmaker option
+    unset matchmaker
+    if [ "$1" == "matchmaker" ]; then
+        matchmaker="$1"
+        shift
+    fi
+
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -57,8 +64,25 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     if [ -n "$3" ]; then
         relayFolder="$3"
     fi
+    if [ -n "$vm" ]; then
+        raceDrive="`echo \"$raceFolder\" | sed -E 's/^(\/mnt\/.*)\/.*$/\1/'`"
+        relayDrive="`echo \"$relayFolder\" | sed -E 's/^(\/mnt\/.*)\/.*$/\1/'`"
+        #
+        # ToDo:
+        #   mount drives in vm
+        #
+    fi
     rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
+    rm -f left
+    rm -f right
+    rm -f ERROR
+    rm -f ZIP
+    rm -f END
+    rm -f waiting
+
+    asp stop
+    asp deep stop
 
     # launch taskscheduler for ETroboSimRunner.Relay
     if [ -n "$vm" ]; then
@@ -71,6 +95,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     #
     # to stop server safely, `touch stop` on race folder
     #
+    unset course
     main_loop="loop"
     while [ -n "$main_loop" ]; do
         echo
@@ -85,18 +110,35 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 unset main_loop
             fi
             # wait requests
-            ls="`ls \"$relayFolder/Requests\" 2>&1`"
-            ls "$relayFolder/Requests" > /dev/null 2>&1 
-            if [ "$?" == "0" ] && [ -n "$ls"  ]; then
-                unset wait_loop
+            if [ -n "$matchmaker" ]; then
+                if [ -f "$raceFolder/left" ]; then
+                    course="left"
+                elif [ -f "$raceFolder/right" ]; then
+                    course="right"
+                fi
+            else
+                course="any"
+            fi
+
+            if [ -n "$course" ]; then
+                ls="`ls \"$relayFolder/Requests\" | grep -v ^cancel_ 2>&1`"
+                ls "$relayFolder/Requests" | grep -v ^cancel_ > /dev/null 2>&1 
+                if [ "$?" == "0" ] && [ -n "$ls"  ]; then
+                    unset wait_loop
+                fi
             fi
         done
         if [ -n "$main_loop" ]; then
             #
             # invoke race
             #
-            race $sim_ver $mode "$raceFolder"
-            race_error="$?"
+            if [ "$mode" == "final" ]; then
+                race $sim_ver $mode $matchmaker $course "$raceFolder"
+                race_error="$?"
+            else
+                race $sim_ver $mode "$raceFolder"
+                race_error="$?"
+            fi
 
             # get zip filename from manifest
             manifest="`ls \"$raceFolder\" | grep .manifest$`"
@@ -122,7 +164,7 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                     echo "[ raceserv: ERROR: $mes ]"
                     echo "$mes" > ERROR.txt
                     zip $zipname ERROR.txt > /dev/null
-                    cp -f $zipname "$raceFolder/Results/"
+                    cp -f $zipname "$relayFolder/Results/"
                     rm $zipname
                     rm ERROR.txt
                 fi
@@ -138,5 +180,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final [matchmaker] /path/to/raceFolder [/path/to/relayFolder]" 
 fi

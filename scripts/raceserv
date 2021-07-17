@@ -3,12 +3,13 @@
 # raceserv, ET robocon race server
 #   raceserv 
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-# fp0 ... 2020/09/13 13:00～2020/09/13 16:00
-# fp1 ... 2020/09/16 12:00～2020/09/22 20:00
-# fp2 ... 2020/10/17 12:00～2020/10/25 20:00
+# fp0 ... 2021/07/17 13:00～2021/07/17 16:00
+# fp1 ... 2021/07/26 12:00～2021/08/01 20:00
+# fp2 ... 2021/08/29 12:00～2021/09/08 20:00
+# fp3 ... 2021/10/30 12:00～2021/11/05 20:00
 #
 
 #
@@ -48,7 +49,7 @@ if [ "$1" == "vm" ]; then
     shift
 fi
 
-if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "final" ];then
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -133,5 +134,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|final /path/to/raceFolder"
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final /path/to/raceFolder"
 fi

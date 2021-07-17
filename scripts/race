@@ -3,7 +3,7 @@
 # race, ET robocon race sequencer, file archiver (and uploader)
 #   race 
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
@@ -31,6 +31,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    upload ... (Reserved Feature) create a .zip file and upload"
     echo "    fp1    ... (Reserved Feature) run as Free Practice 1 daemon"
     echo "    fp2    ... (Reserved Feature) run as Free Practice 2 daemon"
+    echo "    fp3    ... (Reserved Feature) run as Free Practice 3 daemon"
     echo "    final  ... (Reserved Feature) run as Championship Final daemon"
     echo
     echo "  CLASS Options:  (default: 'auto')"
@@ -104,7 +105,7 @@ fi
 #
 mode="get"
 if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "final" ]; then
+|| [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
     mode="$1"
     shift
 fi
@@ -420,7 +421,7 @@ fi
 # determine preferences for competition
 #
 if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
-    if [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
+    if [ "$mode" == "fp2" ] || [ "$1" = "fp3" ] || [ "$mode" == "final" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
         LSpotLight=$d_LSpotLight

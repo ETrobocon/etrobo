@@ -451,7 +451,7 @@ if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$m
     frameRateMode="0"
     frameRate="60"
     motorSound="0"
-    captureRate="2"
+    captureRate="3"
     captureDir="$captDir"
     forceShutdown="$forceShutdown"
     Poles="0"
@@ -598,7 +598,7 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 30 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffmpeg -y -r 20 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED

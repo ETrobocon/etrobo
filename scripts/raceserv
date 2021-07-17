@@ -53,12 +53,16 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     # prepare race folder
     mode="$1"
     raceFolder="$2"
+    relayFolder="$raceFolder"
+    if [ -n "$3" ]; then
+        relayFolder="$3"
+    fi
     rm -f "$raceFolder/"*.manifest
     cd "$raceFolder"
 
     # launch taskscheduler for ETroboSimRunner.Relay
     if [ -n "$vm" ]; then
-        ETroboSimRunner.Relay.sh serv "$raceFolder" &
+        ETroboSimRunner.Relay.sh serv "$raceFolder" "$relayFolder" &
         trap "touch stop_relay" EXIT
     fi
 
@@ -81,8 +85,8 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 unset main_loop
             fi
             # wait requests
-            ls="`ls \"$raceFolder/Requests\" 2>&1`"
-            ls "$raceFolder/Requests" > /dev/null 2>&1 
+            ls="`ls \"$relayFolder/Requests\" 2>&1`"
+            ls "$relayFolder/Requests" > /dev/null 2>&1 
             if [ "$?" == "0" ] && [ -n "$ls"  ]; then
                 unset wait_loop
             fi
@@ -128,11 +132,11 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
 
             # request post and get via ETroboSimRunner.Relay
             if [ -n "$vm" ]; then
-                ETroboSimRunner.Relay.sh "$raceFolder"
+                ETroboSimRunner.Relay.sh "$raceFolder" "$relayFolder"
             fi
         fi
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final /path/to/raceFolder"
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final /path/to/raceFolder [/path/to/relayFolder]" 
 fi

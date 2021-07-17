@@ -11,7 +11,7 @@ GET_INTERVAL=10  # sec.
 PUT_INTERVAL=300 # sec.
 
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "usage: ETroboSimRunner.Relay.sh [serv|both|get|put] <raceFolder>"
+    echo "usage: ETroboSimRunner.Relay.sh [serv|both|get|put] /path/to/raceFolder /path/to/relayFolder"
     exit 0
 fi
 
@@ -22,6 +22,7 @@ if [ "$1" == "serv" ] || [ "$1" == "both" ] || [ "$1" == "get" ] || [ "$1" == "p
 fi
 
 raceFolder="$1"
+relayFolder="$2"
 cd "$raceFolder" >/dev/null 2>&1
 if [ "$?" == "0" ]; then
     # 
@@ -29,7 +30,7 @@ if [ "$?" == "0" ]; then
     #
     if [ "$mode" == "serv" ]; then
         # prepare simRunner
-        simRunner=`cd "$raceFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
+        simRunner=`cd "$relayFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
         if [ -n "$simRunner" ]; then
             simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
         else

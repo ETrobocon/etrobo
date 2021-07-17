@@ -546,7 +546,7 @@ else
 
     cd "$ETROBO_SIM_DIST/__race"
     if [ -n "$matchmaker" ]; then
-        sim $sim_ver $course stdout btcat matchmaker launch __race > console.log
+        sim $sim_ver restrict $course stdout btcat matchmaker launch __race > console.log
         if [ "$?" != "0" ]; then
             echo "race sequencer: launcher error"
             touch "$raceFolder/ERROR"
@@ -576,7 +576,7 @@ else
             done
         fi
     else
-        sim $sim_ver $course stdout btcat launch __race > console.log &
+        sim $sim_ver restrict $course stdout btcat launch __race > console.log &
         sim_pid=$!
         loop="loop"
         while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ] && [ -n "$loop" ]; do

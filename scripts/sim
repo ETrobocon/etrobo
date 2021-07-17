@@ -360,7 +360,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 code=`echo "$response" | tail -n 1`
                 while [ "$code" != "200" ] && [ -n "$loop" ]; do
                     counter=$(( $counter + 1 ))
-                    if [ $counter -ge 30 ]; then
+                    if [ $counter -ge 300 ] && [ -n "$restriction" ]; then
                         echo "[ launcher: unable to connect with UIcomm. ]" | tee $console
                         unset loop
                         unset comm_ready

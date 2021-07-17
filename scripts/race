@@ -29,6 +29,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    pop    ... get a .zip file from the race folder and *DELETE* it"
     echo "    zip    ... create a .zip file for 'Requests' into the race folder"
     echo "    upload ... (Reserved Feature) create a .zip file and upload"
+    echo "    fp0    ... (Reserved Feature) run as Free Practice 0 daemon"
     echo "    fp1    ... (Reserved Feature) run as Free Practice 1 daemon"
     echo "    fp2    ... (Reserved Feature) run as Free Practice 2 daemon"
     echo "    fp3    ... (Reserved Feature) run as Free Practice 3 daemon"
@@ -105,7 +106,7 @@ fi
 #
 mode="get"
 if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
+|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
     mode="$1"
     shift
 fi
@@ -420,7 +421,7 @@ fi
 #
 # determine preferences for competition
 #
-if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
+if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     if [ "$mode" == "fp2" ] || [ "$1" = "fp3" ] || [ "$mode" == "final" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
@@ -440,10 +441,8 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         initRNumberBlock=$d_initRNumberBlock
         initLSlalom=$d_initLSlalom
         initRSlalom=$d_initRSlalom
-        captureRate="1"
         forceShutdown="0"
     else
-        captureRate="4"
         forceShutdown="1"
     fi
     athrillHost="127.0.0.1"
@@ -452,7 +451,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     frameRateMode="0"
     frameRate="60"
     motorSound="0"
-    captureRate="$captureRate"
+    captureRate="2"
     captureDir="$captDir"
     forceShutdown="$forceShutdown"
     Poles="0"
@@ -599,7 +598,7 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 15 -i "$captDir_bashPath/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffmpeg -r 30 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED

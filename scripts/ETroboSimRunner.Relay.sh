@@ -55,12 +55,12 @@ if [ "$?" == "0" ]; then
 
             # request put via ETroboSimRunner.Relay
             if [ -f put ]; then
-                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1
+                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
                 rm put
             fi
             # request get via ETroboSimRunner.Relay
             if [ -f get ]; then
-                cmd.exe /C "cd /D ${simRunner}&get.cmd" > /dev/null 2>&1
+                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
                 rm get
             fi
             sleep 1

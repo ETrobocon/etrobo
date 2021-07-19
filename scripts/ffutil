@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#
+# Movie utilities that run with ffmpeg 
+#   ffutil
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+#
+# Notice:
+#   "tpad filter" doesn't work on Ubuntu 18.04 because the version of ffmpeg official package is 3.4.8.
+#   When executing a command that uses "tpad filter", this (version of) script uses ffmpeg for Windows
+#   which installed on `$ETROBO_USERPROFILE/etrobosim/ffmpeg` preferentially.
+#   But, er, there seems to be no stable builder of ffmpeg for Windows,
+#   therefore, as of November 2020, I guess you should download
+#   from gyan.dev's essentials build.
+#   https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z
+#   For this reason, etrobo environment does not install a ffmpeg automatically.
+#   Also you may build the latest ffmpeg tools for Ubuntu from source code.
+#
+#   Mac Users, you should run `brew install ffmpeg` from BeerHall.
+#
+# Further Information: See https://ffmpeg.org/
+#
+
+if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
+    echo "usage: ffutil <command> <inputFile>"
+    exit 0
+fi
+
+if [ "$1" == "unset" ]; then
+    unset ETROBO_FFMPEG
+    unset ETROBO_FFPROBE
+    unset ETROBO_FFMPEG_OS
+    unset ETROBO_FFPROBE_OS
+    unset ETROBO_FFMPEG_VER
+    unset ETROBO_FFPROBE_VER
+
+# determine which ffmpeg will be used and set envvers
+elif [ -z "$ETROBO_FFMPEG_VER" ]; then
+    export ETROBO_FFMPEG="`which ffmpeg`"
+    export ETROBO_FFPROBE="`which ffprobe`"
+    export ETROBO_FFMPEG_OS="linux"
+    export ETROBO_FFPROBE_OS="linux"
+    if [ "$ETROBO_OS" == "win" ]; then
+        ffmpeg_win_path="$ETROBO_USERPROFILE/etrobosim/ffmpeg/bin"
+        checker="$ffmpeg_win_path/ffmpeg.exe"
+        if [ -f "$checker" ]; then
+            export ETROBO_FFMPEG="$checker"
+            export ETROBO_FFMPEG_OS="win"
+        fi
+        checker="$ffmpeg_win_path/ffprobe.exe"
+        if [ -f "$checker" ]; then
+            export ETROBO_FFPROBE="$checker"
+            export ETROBO_FFPROBE_OS="win"
+        fi
+    elif [ "$ETROBO_OS" == "mac" ]; then
+        export ETROBO_FFMPEG_OS="mac"
+        export ETROBO_FFPROBE_OS="mac"
+    fi
+    $ETROBO_FFMPEG -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_FFMPEG_VER=`$ETROBO_FFMPEG -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+    else
+        unset ETROBO_FFMPEG
+        unset ETROBO_FFMPEG_OS
+        unset ETROBO_FFMPEG_VER
+    fi
+    $ETROBO_FFPROBE -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_FFPROBE_VER=`$ETROBO_FFPROBE -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+    else
+        unset ETROBO_FFPROBE
+        unset ETROBO_FFPROBE_OS
+        unset ETROBO_FFPROBE_VER
+    fi
+fi
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    if [ -n "$ETROBO_FFMPEG_VER" ]; then
+        command="$1"
+        inputFile_ffmpeg="$2"
+        inputFile_ffprobe="$2"
+        if [ "$ETROBO_FFMPEG_OS" == "win" ]; then
+            inputFile_ffmpeg="`echo \"$inputFile_ffmpeg\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+        fi
+        if [ "$ETROBO_FFPROBE_OS" == "win" ]; then
+            inputFile_ffprobe="`echo \"$inputFile_ffprobe\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+        fi
+        shift 2
+        # get stream information by ffprobe
+        if [ -n "$ETROBO_FFPROBE_VER" ]; then
+            streams="`$ETROBO_FFPROBE -show_streams -print_format json -loglevel quiet \"$inputFile_ffprobe\" | jq -M -c .streams[0]`"
+            echo $streams
+        fi
+
+    else
+        echo "error: ffmpeg not found"
+        exit 1
+    fi
+    E:\ffmpeg-4.4-essentials_build\bin\ffmpeg.exe -y -r 20 -hwaccel cuda -hwaccel_output_format cuda -i "f:\race\capture\l_%%08d.png" -c:v h264_nvenc -b:v 2M "c:\Users\etroboworker\Desktop\test.mp4"
+fi

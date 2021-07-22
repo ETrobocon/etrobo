@@ -135,6 +135,7 @@ elif [ "$1" == "install" ]; then
         sudo apt -y install imagemagick
         echo "done."
     fi
+    exit 0
 
 # determine which ffmpeg will be used and set envvers
 elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then

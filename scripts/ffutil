@@ -1,50 +1,158 @@
 #!/usr/bin/env bash
 #
-# Movie utilities that run with ffmpeg 
+# Multi-platform movie utilities that run with ffmpeg and ImageMagick
 #   ffutil
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
+
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
 
 #
 # Notice:
 #   "tpad filter" doesn't work on Ubuntu 18.04 because the version of ffmpeg official package is 3.4.8.
-#   When executing a command that uses "tpad filter", this (version of) script uses ffmpeg for Windows
-#   which installed on `$ETROBO_USERPROFILE/etrobosim/ffmpeg` preferentially.
-#   But, er, there seems to be no stable builder of ffmpeg for Windows,
-#   therefore, as of November 2020, I guess you should download
-#   from gyan.dev's essentials build.
-#   https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z
-#   For this reason, etrobo environment does not install a ffmpeg automatically.
-#   Also you may build the latest ffmpeg tools for Ubuntu from source code.
-#
-#   Mac Users, you should run `brew install ffmpeg` from BeerHall.
 #
 # Further Information: See https://ffmpeg.org/
 #
 
+# ffmpeg for windows constants
+ffmpeg_win_root="$ETROBO_USERPROFILE/etrobosim"
+ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+# show usage
 if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
-    echo "usage: ffutil <command> <inputFile>"
+    echo "usage: ffutil <command> [<params> ...]"
+    echo "  /path/to/file ... all file path must be the UNIX style."
+    echo "  captureRate   ... 1=60fps 2=30fps 3=20fps 4=15fps"
+    echo "  loglevel      ... quiet(-8), fatal(8), error(16), info(32) etc..."
+    echo
+    echo "ffutil install"
+    echo "      install ffmpeg and ImageMagick"
+    echo "ffutil streaminfo </path/to/file> [<loglevel>]"
+    echo "      show video stream information"
+    echo "ffutil encode <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      encode image files to a movie file"
     exit 0
 fi
 
+#
+# path transform function from the Unix style to the Windows style
+#
+# getWinPath </mnt/drive/path/to/winDir> win [escape] [restrict]
+#   escape   ... all \ will be converted to escaped \\
+#   restrict ... return null when a path doesn't start with /mnt/   
+function getWinPath () {
+    result="$1"
+    unset win
+    unset escape
+    unset restrict
+    if [ "$2" == "win" ]; then
+        win="$2"
+        shift
+    fi
+    if [ "$2" == "escape" ]; then
+        escape="$2"
+        shift
+    fi
+    if [ "$2" == "restrict" ]; then
+        restrict="$2"
+        shift
+    fi
+
+    if [ -n "$win" ]; then
+        if [ -n "$restrict" ] && [ -z "`echo "$result" | grep '^/mnt/'`" ]; then
+            unset result
+        else
+            result="`echo \"$result\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/'`"
+        fi
+
+        if [ -n "$escape" ]; then
+            result="`echo \"$result\" | sed -E 's/\//\\\\\\\\/g'`"
+        else
+            result="`echo \"$result\" | sed -E 's/\//\\\\/g'`"
+        fi
+    fi
+
+    echo "$result"
+}
+
+# unset option
 if [ "$1" == "unset" ]; then
+    unset ETROBO_FFUTIL_READY
     unset ETROBO_FFMPEG
     unset ETROBO_FFPROBE
+    unset ETROBO_IM
     unset ETROBO_FFMPEG_OS
     unset ETROBO_FFPROBE_OS
+    unset ETROBO_IM_OS
     unset ETROBO_FFMPEG_VER
     unset ETROBO_FFPROBE_VER
+    unset ETROBO_IM_VER
+    unset ETROBO_ENC_NAME
+    unset ETROBO_ENC_CODEC
+    unset ETROBO_ENC_HW
+    unset ETROBO_ENC_HW_OPT
+    unset ETROBO_ENC_HWFORMAT
+    unset ETROBO_ENC_HWFORMAT_OPT
+    unset getWinPath
+
+# install ffmpeg and ImageMagick
+elif [ "$1" == "install" ]; then
+    shift
+    if [ "$ETROBO_OS" == "win" ]; then
+        echo "download ffmpeg from $ffmpeg_win_url"
+        cd "$ffmpeg_win_root"
+        rm -f ffmpeg.zip
+        rm -rf ffmpeg
+        curl -L "$ffmpeg_win_url" -o ffmpeg.zip
+        echo "install ffmpeg into $ffmpeg_win_root"
+        ffmpeg_folder=`unzip -Z ffmpeg.zip | head -n 3 | tail -n 1 | sed -E 's/^.*\ (.*)\/$/\1/'`
+        unzip ffmpeg.zip > /dev/null
+        mv -f "$ffmpeg_folder" ffmpeg
+        rm -f ffmpeg.zip
+        echo "update debian packages"
+        sudo apt -y update
+        sudo apt -y upgrade
+        echo "install ImageMagick"
+        sudo apt -y install imagemagick
+        echo "done."
+    elif [ "$ETROBO_OS" == "mac" ]; then
+        echo "install ffmpeg"
+        brew install ffmpeg
+        echo "install ImageMagick"
+        brew install imagemagick
+        echo "done."
+    else
+        echo "update debian packages"
+        sudo apt -y update
+        sudo apt -y upgrade
+        echo "install ffmpeg"
+        sudo apt -y install ffmpeg
+        echo "install ImageMagick"
+        sudo apt -y install imagemagick
+        echo "done."
+    fi
 
 # determine which ffmpeg will be used and set envvers
-elif [ -z "$ETROBO_FFMPEG_VER" ]; then
+elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
+    echo "--------"
+    echo " ffutil - Multi-platform movie utilities with hardware acceleration"
+    echo "--------"
+    echo "initialize: start"
+
+    # detect executable binary
+    export ETROBO_FFUTIL_READY="detecting"
     export ETROBO_FFMPEG="`which ffmpeg`"
     export ETROBO_FFPROBE="`which ffprobe`"
+    export ETROBO_IM="`which convert`"
     export ETROBO_FFMPEG_OS="linux"
     export ETROBO_FFPROBE_OS="linux"
+    export ETROBO_IM_OS="linux"
     if [ "$ETROBO_OS" == "win" ]; then
-        ffmpeg_win_path="$ETROBO_USERPROFILE/etrobosim/ffmpeg/bin"
+        ffmpeg_win_path="$ffmpeg_win_root/ffmpeg/bin"
         checker="$ffmpeg_win_path/ffmpeg.exe"
         if [ -f "$checker" ]; then
             export ETROBO_FFMPEG="$checker"
@@ -58,11 +166,15 @@ elif [ -z "$ETROBO_FFMPEG_VER" ]; then
     elif [ "$ETROBO_OS" == "mac" ]; then
         export ETROBO_FFMPEG_OS="mac"
         export ETROBO_FFPROBE_OS="mac"
+        export ETROBO_IM_OS="mac"
     fi
     $ETROBO_FFMPEG -version > /dev/null 2>&1
     if [ "$?" == "0" ]; then
         export ETROBO_FFMPEG_VER=`$ETROBO_FFMPEG -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ffmpeg $ETROBO_FFMPEG_VER for $ETROBO_FFMPEG_OS on $ETROBO_FFMPEG"
     else
+        echo "error: ffmpeg not found."
+        unset ETROBO_FFUTIL_READY
         unset ETROBO_FFMPEG
         unset ETROBO_FFMPEG_OS
         unset ETROBO_FFMPEG_VER
@@ -70,33 +182,146 @@ elif [ -z "$ETROBO_FFMPEG_VER" ]; then
     $ETROBO_FFPROBE -version > /dev/null 2>&1
     if [ "$?" == "0" ]; then
         export ETROBO_FFPROBE_VER=`$ETROBO_FFPROBE -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ffprobe $ETROBO_FFPROBE_VER for $ETROBO_FFPROBE_OS on $ETROBO_FFPROBE"
     else
+        echo "error: ffprobe not found."
+        unset ETROBO_FFUTIL_READY
         unset ETROBO_FFPROBE
         unset ETROBO_FFPROBE_OS
         unset ETROBO_FFPROBE_VER
     fi
-fi
-if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
-    if [ -n "$ETROBO_FFMPEG_VER" ]; then
-        command="$1"
-        inputFile_ffmpeg="$2"
-        inputFile_ffprobe="$2"
+    $ETROBO_IM -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_IM_VER=`$ETROBO_IM -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ImageMagick $ETROBO_IM_VER for $ETROBO_IM_OS on $ETROBO_IM"
+    else
+        echo "error: ImageMagick not found."
+        unset ETROBO_FFUTIL_READY
+        unset ETROBO_IM
+        unset ETROBO_IM_OS
+        unset ETROBO_IM_VER
+    fi
+
+    #
+    # detect H.264 hardware encoder
+    #
+    # detection order on windows and linux
+    #   nVIDIA CUDA/NVENC -> AMD VCE/AMF -> Intel QSV -> libx264
+    # on mac, always try to use hwaccel via Video Toolbox
+    #
+    if [ -n "$ETROBO_FFUTIL_READY" ]; then
+        export ETROBO_FFUTIL_READY="ready"
+        
         if [ "$ETROBO_FFMPEG_OS" == "win" ]; then
-            inputFile_ffmpeg="`echo \"$inputFile_ffmpeg\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
+            temp="$ffmpeg_win_root"
+        else
+            temp="$ETROBO_ROOT/dist"
         fi
-        if [ "$ETROBO_FFPROBE_OS" == "win" ]; then
-            inputFile_ffprobe="`echo \"$inputFile_ffprobe\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
-        fi
-        shift 2
-        # get stream information by ffprobe
-        if [ -n "$ETROBO_FFPROBE_VER" ]; then
-            streams="`$ETROBO_FFPROBE -show_streams -print_format json -loglevel quiet \"$inputFile_ffprobe\" | jq -M -c .streams[0]`"
+
+        png_bash="$temp/test.png"
+        mp4_bash="$temp/test.mp4"
+        png="`getWinPath \"$png_bash\" $ETROBO_FFMPEG_OS`"
+        mp4="`getWinPath \"$mp4_bash\" $ETROBO_FFMPEG_OS`"
+        $ETROBO_IM -size 1280x800 xc:white "$png_bash"
+        evaluater='"$ETROBO_FFMPEG" -y -r 30 -loop 1 $enc_hw_opt $enc_hw $enc_hwformat_opt $enc_hwformat -i "$png" -t 1 -pix_fmt yuv420p -c:v $enc_codec -b:v 2M "$mp4"'
+
+        # encoder settings
+        encs='
+        [
+            {"name": "nVIDIA CUDA/NVENC",  "codec": "h264_nvenc",        "hw": "cuda", "hwformat": "cuda"},
+            {"name": "AMD VCE/AMF",        "codec": "h264_amf",          "hw": "auto", "hwformat": ""    },
+            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": ""    },
+            {"name": "Apple Video Toolbox","codec": "h264_videotoolbox", "hw": "auto", "hwformat": ""    },
+            {"name": "libx264 soft encode","codec": "libx264",           "hw": ""   ,  "hwformat": ""    }
+        ]'
+
+        echo "checking: ffmpeg encoders availability"
+        unset detecting
+        len=`echo $encs | jq length`
+        for i in $( seq 0 $(($len - 1)) ); do
+            if [ -z $detecting ]; then
+                enc_name=`echo $encs | jq -r .[$i].name`
+                enc_codec=`echo $encs | jq -r .[$i].codec`
+                enc_hw=`echo $encs | jq -r .[$i].hw`
+                enc_hwformat=`echo $encs | jq -r .[$i].hwformat`
+                if [ -z "$enc_hw" ]; then
+                    unset enc_hw_opt
+                    unset enc_hw
+                else
+                    enc_hw_opt="-hwaccel"
+                fi
+                if [ -z "$enc_hwformat" ]; then
+                    unset enc_hwformat_opt
+                    unset enc_hwformat
+                else
+                    enc_hwformat_opt="-hwaccel_output_format"
+                fi
+
+                result=`$(eval echo "$evaluater") >/dev/null 2>&1; echo $?`
+                if [ "$result" == "0" ]; then
+                    echo "    $enc_name: available"
+                    detecting="detected"
+                else
+                    echo "    $enc_name: unavailable"
+                    if [ -z "$enc_hw" ]; then
+                        unset ETROBO_FFUTIL_READY
+                        echo "fatal error: no available encoder"
+                        exit 1
+                    fi
+                fi
+            fi
+        done
+
+        rm -f "$png"
+        rm -f "$mp4"
+        export ETROBO_ENC_NAME="$enc_name"
+        export ETROBO_ENC_CODEC="$enc_codec"
+        export ETROBO_ENC_HW="$enc_hw"
+        export ETROBO_ENC_HW_OPT="$enc_hw_opt"
+        export ETROBO_ENC_HWFORMAT="$enc_hwformat"
+        export ETROBO_ENC_HWFORMAT_OPT="$enc_hwformat_opt"
+        echo "initialize: done. ready for use ffutil with $ETROBO_ENC_NAME"
+    fi
+fi
+
+# do commands
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    if [ -n "$ETROBO_FFUTIL_READY" ]; then
+        command="$1"
+        shift
+
+        # get video stream information by ffprobe
+        # streaminfo </path/to/file> [<loglevel>]
+        if [ "$command" == "streaminfo" ]; then
+            path="`getWinPath \"$1\" $ETROBO_FFPROBE_OS`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$2" ]; then
+                loglevel="$2"
+            fi
+            streams="`$ETROBO_FFPROBE -show_streams -print_format json $loglevel_opt $loglevel \"$path\" | jq -M -c .streams[0]`"
             echo $streams
         fi
 
+        # encode from image files to a movie file
+        # encode <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "encode" ]; then
+            captureRate=(0 60 30 20 15)
+            frameRate=${captureRate[$1]}
+            if [ -z "$frameRate" ]; then
+                frameRate=30
+            fi
+            source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
+            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+            "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M "$destination"
+        fi
     else
-        echo "error: ffmpeg not found"
+        echo 'error: unable to use ffutil. run `ffutil install` first.'
         exit 1
     fi
-    E:\ffmpeg-4.4-essentials_build\bin\ffmpeg.exe -y -r 20 -hwaccel cuda -hwaccel_output_format cuda -i "f:\race\capture\l_%%08d.png" -c:v h264_nvenc -b:v 2M "c:\Users\etroboworker\Desktop\test.mp4"
 fi

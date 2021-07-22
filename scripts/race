@@ -6,6 +6,11 @@
 # Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
+
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
+
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "Usage: race [MODE] [matchmaker] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
     echo
@@ -471,7 +476,7 @@ if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$m
     frameRateMode="0"
     frameRate="60"
     motorSound="0"
-    captureRate="3"
+    captureRate="2"
     captureDir="$captDir"
     forceShutdown="$forceShutdown"
     Poles="0"
@@ -646,6 +651,10 @@ else
     csvBLOCK_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $17}'`"
     csvBLOCK_BINGO="`echo "$record" | awk -F ',' '{print $18}'`"
     csvENTRY_BONUS="`echo "$record" | awk -F ',' '{print $19}'`"
+    csvBLOCK_YUKOIDOP="`echo "$record" | awk -F ',' '{print $20}'`"
+    csvBLOCK_YUKOIDOC="`echo "$record" | awk -F ',' '{print $21}'`"
+    csvBLOCK_BINGOP="`echo "$record" | awk -F ',' '{print $22}'`"
+    csvMeasurementMode="`echo "$record" | awk -F ',' '{print $23}'`"
 
     json="`cat result.json`"
     json="`echo \"$json\" | jq \".${course}Measurement.TIME|=\\\"$csvTIME\\\"\"`"
@@ -664,6 +673,9 @@ else
     json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_NUMBER_CIRCLE|=\\\"$csvBLOCK_NUMBER_CIRCLE\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGO|=\\\"$csvBLOCK_BINGO\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.ENTRY_BONUS|=\\\"$csvENTRY_BONUS\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOP|=\\\"$csvBLOCK_YUKOIDOP\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOC|=\\\"$csvBLOCK_YUKOIDOC\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGOP|=\\\"$csvBLOCK_BINGOP\\\"\"`"
 
     echo $json | jq -M . > result.json
 
@@ -702,7 +714,7 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -y -r 20 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffutil encode $captureRate "$captDir_bashPath/${coursePrefix}_%08d.png" "$result/$dest.mp4" fatal
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED

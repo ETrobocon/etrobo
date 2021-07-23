@@ -166,7 +166,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             pid="`sim check sim`"
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then
-                    taskkill.exe /pid $pid >NUL 2>&1
+                    taskkill.exe /pid $pid >/dev/null 2>&1
                 else
                     kill $pid
                 fi
@@ -389,6 +389,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     eval "$invoker" > settings.json
                     rm -f "$ETROBO_SIM_DIST/$projName/settings.json"
                     cp -f settings.json "$ETROBO_SIM_DIST/$projName/settings.json"
+                    rm -f settings.json
                 else
                     eval "$invoker"
                 fi
@@ -398,8 +399,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             # load prefernces from settings.json
-            if [ -n "$load_prefs" ] && [ -f settings.json ] && [ "$comm_ready" == "ready" ]; then
-                req="`cat settings.json | jq -M -c .`"
+            if [ -n "$load_prefs" ] && [ -f "$ETROBO_SIM_DIST/$projName/settings.json" ] && [ "$comm_ready" == "ready" ]; then
+                req="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\" | jq -M -c .`"
                 if [ -n "$req" ]; then
                     curl -s -X POST -d $req $ETROBO_SIM_COMM > /dev/null
                     sleep 1     # @ToDo: its magic number
@@ -431,7 +432,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     y=0
                     z=0
                     rot=0
-                    json="`cat settings.json`"
+                    json="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\"`"
                     if [ -n "$json" ]; then
                         x=`echo $json | jq -r .${initpos}X`
                         y=`echo $json | jq -r .${initpos}Y`

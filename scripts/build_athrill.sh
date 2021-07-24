@@ -27,7 +27,7 @@ SAMPLE_OFFICIAL_COMMIT="26983b25742c01b65dfba9b23325fce7cb22da50"
 # See commits histories:
 # https://github.com/mruby-Forum/mruby-ev3rt/commits/master
 #
-MRUBY_OFFICIAL_COMMIT="a9a1380d5b5bae8ee61b3325e8ad768e40590688"
+MRUBY_OFFICIAL_COMMIT="4e7f8c2185d6224cfe24f70f250ae0ae34821a01"
 
 #
 # the Athrill2 default repository
@@ -129,15 +129,38 @@ fi
 #
 # show status
 if [ "$1" = "show" ]; then
+    show_athrill="athrill"
+    show_mruby="mruby"
+    official_athrill="official"
+    official_mruby="official"
+    if [ "$2" = "mruby" ]; then
+        unset show_athrill
+    elif [ "$2" = "athrill" ]; then
+        unset show_mruby
+    fi
     echo "Current status of this Athrill-related repositories:"
-    echo "       athrill: $ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH"
-    echo "athrill-target: $TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH"
-    echo " ev3rt-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
-    echo "   mruby-ev3rt: $MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH"
-    if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
-    && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
-    && [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${MRUBY_OFFICIAL_COMMIT:0:7}/master" ] \
-    && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ]; then
+    if [ -n "$show_athrill" ]; then
+        echo "       athrill: $ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH"
+        echo "athrill-target: $TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH"
+        echo " ev3rt-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
+        if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
+        && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
+        && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ]; then
+            official_athrill="official"
+        else
+            unset official_athrill
+        fi
+    fi
+    if [ -n "$show_mruby" ]; then
+        echo "   mruby-ev3rt: $MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH"
+        if [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${MRUBY_OFFICIAL_COMMIT:0:7}/master" ]; then
+            official_mruby="official"
+        else
+            unset official_mruby
+        fi
+    fi
+
+    if [ -n "$official_mruby" ] && [ -n "$official_athrill" ]; then
         echo "the ETrobo official certified commit"
         exit 0
     else
@@ -199,16 +222,20 @@ cd "$ETROBO_ATHRILL_WORKSPACE"
 if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     echo "Download mruby-ev3rt"
     git clone https://github.com/mruby-Forum/mruby-ev3rt.git
-
-    echo "Build mruby-ev3rt"
+    rm -rf "$ETROBO_MRUBY_ROOT"
     cp "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
     tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
+fi
+
+if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
+    echo "Build mruby-ev3rt"
     cd "$ETROBO_MRUBY_EV3RT"
     cat build_config_ev3rt_sim.rb \
     | sed -E "s/^EV3RT_PATH\ =\ \"(.*)\"$/EV3RT_PATH = \"\$ETROBO_ATHRILL_EV3RT\"/" \
     | sed -E "s/^GNU_TOOL_PREFX\ =\ \"(.*)\"$/GNU_TOOL_PREFX = \"\$ETROBO_ATHRILL_GCC\/bin\/v850-elf-\"/" \
     > build_config_ev3rt_sim_etrobo.rb
     cd $ETROBO_MRUBY_ROOT
+    rm -rf build
     MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
     if [ "$?" != "0" ]; then
         rm -rf "$ETROBO_MRUBY_EV3RT"

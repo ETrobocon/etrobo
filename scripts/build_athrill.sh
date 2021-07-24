@@ -243,7 +243,6 @@ if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
         echo
         echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
         echo
-        exit 1
     fi
 fi
 

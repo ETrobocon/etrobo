@@ -3,10 +3,15 @@
 # sim, centralized simulator launcher/controller
 #   sim 
 # Author: jtFuruhata, mhikichi1969
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # for developer: Athrill2 launcher has been moved to `asp/athrill_runner`
+
+if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
+    echo "Usage: sim [import|export|prefs] [restrict] [l|left|r|right] [ver <version>] [show|check|status|stop] [manual] [noset|unprefs] [stdout] [btcat] [only|matchmaker] [launch|ctl [--help]]"
+    exit 0
+fi
 
 #
 # `sim prefs` returns prefernces
@@ -20,6 +25,13 @@ if [ "$1" = "prefs" ] || [ "$1" = "export" ] || [ "$1" = "import" ]; then
     if [ -z "`sim check sim`" ]; then
         prefs_stop="stop"
     fi
+fi
+
+# `sim restrict` limits running time
+unset restriction
+if [ "$1" == "restrict" ]; then
+    restriction="$1"
+    shift
 fi
 
 # unset default envvars
@@ -81,7 +93,7 @@ else
     export ETROBO_SIM_COMM="http://$ip:54000/"
 
     #
-    # `ver [version]` option selects version of UnityETroboSim
+    # `ver <version>` option selects version of UnityETroboSim
     #
     if [ "$1" = "ver" ]; then
         export ETROBO_SIM_VER="$2"
@@ -154,7 +166,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             pid="`sim check sim`"
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then
-                    taskkill.exe /pid $pid >NUL 2>&1
+                    taskkill.exe /pid $pid >/dev/null 2>&1
                 else
                     kill $pid
                 fi
@@ -243,7 +255,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         shift
     fi
     if [ "$1" = "only" ]; then
-        sim_opt="only"
+        sim_opt="$1"
+        shift
+    elif [ "$1" = "matchmaker" ]; then
+        sim_opt="$1"
+        unset load_prefs
+        unset auto_start
         shift
     fi
 
@@ -336,17 +353,24 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             # wait for starting up UIcomm
+            counter=0
             if [ "$comm_ready" == "init" ]; then
                 response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                 json=`echo "$response" | sed '$d'`
                 code=`echo "$response" | tail -n 1`
                 while [ "$code" != "200" ] && [ -n "$loop" ]; do
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 300 ] && [ -n "$restriction" ]; then
+                        echo "[ launcher: unable to connect with UIcomm. ]" | tee $console
+                        unset loop
+                        unset comm_ready
+                    fi
                     sleep 0.1
                     response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                     json=`echo "$response" | sed '$d'`
                     code=`echo "$response" | tail -n 1`
                 done
-                if [ "$code" == "200" ]; then
+                if [ -n "$loop" ]; then
                     comm_ready="ready"
                     if [ "$sim_opt" != "skipASP" ]; then
                         echo "[ launcher: connected to UIcomm ]" | tee $console
@@ -365,6 +389,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     eval "$invoker" > settings.json
                     rm -f "$ETROBO_SIM_DIST/$projName/settings.json"
                     cp -f settings.json "$ETROBO_SIM_DIST/$projName/settings.json"
+                    rm -f settings.json
                 else
                     eval "$invoker"
                 fi
@@ -374,8 +399,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             # load prefernces from settings.json
-            if [ -n "$load_prefs" ] && [ -f settings.json ] && [ "$comm_ready" == "ready" ]; then
-                req="`cat settings.json | jq -M -c .`"
+            if [ -n "$load_prefs" ] && [ -f "$ETROBO_SIM_DIST/$projName/settings.json" ] && [ "$comm_ready" == "ready" ]; then
+                req="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\" | jq -M -c .`"
                 if [ -n "$req" ]; then
                     curl -s -X POST -d $req $ETROBO_SIM_COMM > /dev/null
                     sleep 1     # @ToDo: its magic number
@@ -407,7 +432,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     y=0
                     z=0
                     rot=0
-                    json="`cat settings.json`"
+                    json="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\"`"
                     if [ -n "$json" ]; then
                         x=`echo $json | jq -r .${initpos}X`
                         y=`echo $json | jq -r .${initpos}Y`
@@ -442,8 +467,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ "$comm_ready" == "ready" ]; then
                 rm -f result.json
                 # put HackEV onto specified course and wait connected
-                curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
-                sleep 1     # @ToDo: its magic number
+                if [ "$sim_opt" != "matchmaker" ]; then
+                    curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+                    sleep 1     # @ToDo: its magic number
+                fi
 
                 # wait for EV3RT is ready
                 counter=0
@@ -501,7 +528,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
                             sleep 0.1
                             counter=$(( $counter + 1 ))
-                            if [ $counter -ge 900 ]; then
+                            if [ $counter -ge 900 ] && [ "$sim_opt" == "matchmaker" ]; then
                                 echo "[ launcher: autostart sequence timeout after PREPARE ]" | tee $console
                                 unset loop
                             fi
@@ -514,18 +541,25 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         done
                         # auto start
                         echo "[ launcher: Go to the start, Ready? ]" | tee $console
-                        echo -n "[ launcher: 3..." | tee $console
-                        sleep 1
-                        echo -n "2..." | tee $console
-                        sleep 1
-                        echo -n "1..." | tee $console
-                        sleep 1
                         if [ -n "$auto_start" ]; then
+                            echo -n "[ launcher: 3..." | tee $console
+                            sleep 1
+                            echo -n "2..." | tee $console
+                            sleep 1
+                            echo -n "1..." | tee $console
+                            sleep 1
                             json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
                             echo " ]" | tee $console
                             echo "[ launcher: Go!!!!!!!! ]" | tee $console
+                        elif [ "$sim_opt" == "matchmaker" ]; then
+                            echo "[ launcher: $sim_select: slave of matchmaker mode ]" | tee $console
+                            if [ -n "$loop" ]; then
+                                exit 0
+                            else
+                                exit 1
+                            fi
                         else
-                            echo "[ launcher: $sim_select: manual start ]" | tee $console
+                            echo "[ launcher: $sim_select: manual start mode ]" | tee $console
                         fi
                     fi
                 fi
@@ -580,10 +614,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             else
                 unset loop
             fi
-#            if [ $((`date "+%s"` - start_time)) -gt 600 ] && [ -n "$auto_start" ]; then
-#                echo "[ launcher: past 10 minute from `date --date=@$start_time`. ]"
-#                unset loop
-#            fi
+            if [ -n "$restriction" ]; then
+                if [ $((`date "+%s"` - start_time)) -gt 300 ] && [ -n "$auto_start" ]; then
+                    echo "[ launcher: past 5 minute from `date --date=@$start_time`. ]"
+                    unset loop
+                fi
+            fi
         done
 
         # terminate launcher

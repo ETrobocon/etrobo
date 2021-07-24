@@ -3,11 +3,11 @@
 # race, ET robocon race sequencer, file archiver (and uploader)
 #   race 
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "Usage: race [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
+    echo "Usage: race [MODE] [matchmaker] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
     echo
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
@@ -29,9 +29,13 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    pop    ... get a .zip file from the race folder and *DELETE* it"
     echo "    zip    ... create a .zip file for 'Requests' into the race folder"
     echo "    upload ... (Reserved Feature) create a .zip file and upload"
-    echo "    fp1    ... (Reserved Feature) run as Free Practice 1 daemon"
-    echo "    fp2    ... (Reserved Feature) run as Free Practice 2 daemon"
-    echo "    final  ... (Reserved Feature) run as Championship Final daemon"
+    echo "    fp0    ... run as Free Practice 0 daemon"
+    echo "    fp1    ... run as Free Practice 1 daemon"
+    echo "    fp2    ... run as Free Practice 2 daemon"
+    echo "    fp3    ... run as Free Practice 3 daemon"
+    echo "    final  ... run as Championship/Final daemon"
+    echo
+    echo "  matchmaker Option: run with matchmaker on realtime"
     echo
     echo "  CLASS Options:  (default: 'auto')"
     echo "    auto   ... choose in depending on filename prefix"
@@ -104,8 +108,14 @@ fi
 #
 mode="get"
 if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "final" ]; then
+|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
     mode="$1"
+    shift
+fi
+
+unset matchmaker
+if [ "$1" = "matchmaker" ]; then
+    matchmaker="$1"
     shift
 fi
 
@@ -221,57 +231,61 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     fi
 
     # prepare l_app
-    echo -n "file archiver: Athrill app for Left course: "
-    l_app="${projName}.asp"
-    if [ -f "$proj/l_$l_app" ]; then
-        l_app="l_$l_app"
-    elif [ -n "`ls "$proj" | grep ^l_.*\.asp$`" ]; then
-        l_app="`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`"
-    elif [ -f "$proj/$l_app" ]; then
-        l_app="$l_app"
-    elif [ -n "`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$`" ]; then
-        l_app="`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$ | head -n 1`"
-    else
-        unset l_app
-    fi
-    if [ -n "$l_app" ];then
-        cp -f "$proj/$l_app" "$raceTemp/l___race.asp"
-        if [ "$?" == "0" ]; then
-            echo "'$l_app' is copied as l___race.asp."
+    if [ "$course" == "auto" ] || [ "$course" == "left" ]; then
+        echo -n "file archiver: Athrill app for Left course: "
+        l_app="${projName}.asp"
+        if [ -f "$proj/l_$l_app" ]; then
+            l_app="l_$l_app"
+        elif [ -n "`ls "$proj" | grep ^l_.*\.asp$`" ]; then
+            l_app="`ls "$proj" | grep ^l_.*\.asp$ | head -n 1`"
+        elif [ -f "$proj/$l_app" ]; then
+            l_app="$l_app"
+        elif [ -n "`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$`" ]; then
+            l_app="`ls "$proj" | grep -v ^l_ | grep -v ^r_ | grep ^.*\.asp$ | head -n 1`"
         else
-            echo "ERROR while coping."
-            exit $ERR_ARC_COPY_FAILED
+            unset l_app
         fi
-    else
-        echo "not found."
-        exit $ERR_ARC_FILE_NOT_FOUND
+        if [ -n "$l_app" ];then
+            cp -f "$proj/$l_app" "$raceTemp/l___race.asp"
+            if [ "$?" == "0" ]; then
+                echo "'$l_app' is copied as l___race.asp."
+            else
+                echo "ERROR while coping."
+                exit $ERR_ARC_COPY_FAILED
+            fi
+        else
+            echo "not found."
+            exit $ERR_ARC_FILE_NOT_FOUND
+        fi
     fi
 
     # prepare r_app
-    echo -n "file archiver: Athrill app for Right course: "
-    r_app="${projName}.asp"
-    if [ -f "$proj/r_$r_app" ]; then
-        r_app="r_$r_app"
-    elif [ -n "`ls "$proj" | grep ^r_.*\.asp$`" ]; then
-        r_app="`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`"
-    elif [ -f "$proj/$r_app" ]; then
-        r_app="$r_app"
-    elif [ -n "`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$`" ]; then
-        r_app="`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`"
-    else
-        unset r_app
-    fi
-    if [ -n "$r_app" ];then
-        cp -f "$proj/$r_app" "$raceTemp/r___race.asp"
-        if [ "$?" == "0" ]; then
-            echo "'$r_app' is copied as r___race.asp."
+    if [ "$course" == "auto" ] || [ "$course" == "right" ]; then
+        echo -n "file archiver: Athrill app for Right course: "
+        r_app="${projName}.asp"
+        if [ -f "$proj/r_$r_app" ]; then
+            r_app="r_$r_app"
+        elif [ -n "`ls "$proj" | grep ^r_.*\.asp$`" ]; then
+            r_app="`ls "$proj" | grep ^r_.*\.asp$ | head -n 1`"
+        elif [ -f "$proj/$r_app" ]; then
+            r_app="$r_app"
+        elif [ -n "`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$`" ]; then
+            r_app="`ls "$proj" | grep -v l_ | grep -v r_ | grep ^.*\.asp$ | head -n 1`"
         else
-            echo "ERROR while coping."
-            exit $ERR_ARC_COPY_FAILED
+            unset r_app
         fi
-    else
-        echo "not found."
-        exit $ERR_ARC_FILE_NOT_FOUND
+        if [ -n "$r_app" ];then
+            cp -f "$proj/$r_app" "$raceTemp/r___race.asp"
+            if [ "$?" == "0" ]; then
+                echo "'$r_app' is copied as r___race.asp."
+            else
+                echo "ERROR while coping."
+                exit $ERR_ARC_COPY_FAILED
+            fi
+        else
+            echo "not found."
+            exit $ERR_ARC_FILE_NOT_FOUND
+        fi
     fi
     target="upload.zip"
 else
@@ -282,6 +296,12 @@ else
     if [ -n "$target" ]; then
         echo "race sequencer: get $target"
         touch "$raceFolder/${target}.manifest"
+        if [ -n "$matchmaker" ]; then
+            rm -f "$raceFolder/ERROR"
+            rm -f "$raceFolder/ZIP"
+            rm -f "$raceFolder/END"
+            rm -f "$raceFolder/WAITING"
+        fi
         cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
         unzip -o $target > /dev/null
         unzip_error="$?"
@@ -312,7 +332,9 @@ else
         fi
         if [ "`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`" != "$sum" ]; then
             echo "race sequencer: ERROR: mismatch md5sum"
-            exit $ERR_SEQ_MD5SUM_MISMATCH
+            if [ "$mode" != "final" ]; then
+                exit $ERR_SEQ_MD5SUM_MISMATCH
+            fi
         fi
     else
         echo "race sequencer: Requests empty."
@@ -419,8 +441,8 @@ fi
 #
 # determine preferences for competition
 #
-if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
-    if [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
+if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fp3" ] || [ "$mode" == "final" ]; then
+    if [ "$mode" == "fp2" ] || [ "$1" = "fp3" ] || [ "$mode" == "final" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
         LSpotLight=$d_LSpotLight
@@ -439,10 +461,8 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
         initRNumberBlock=$d_initRNumberBlock
         initLSlalom=$d_initLSlalom
         initRSlalom=$d_initRSlalom
-        captureRate="1"
         forceShutdown="0"
     else
-        captureRate="4"
         forceShutdown="1"
     fi
     athrillHost="127.0.0.1"
@@ -451,7 +471,7 @@ if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "final" ]; then
     frameRateMode="0"
     frameRate="60"
     motorSound="0"
-    captureRate="$captureRate"
+    captureRate="3"
     captureDir="$captDir"
     forceShutdown="$forceShutdown"
     Poles="0"
@@ -516,30 +536,71 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     echo "comming soon: upload mode"
 else
     # launch sim
+    terminator_path="$raceFolder"
+    canceller_path="$raceFolder/Requests"
+    rm -f "$terminator_path/retire"
+    rm -f "$canceller_path"/cancel_*
+    unset terminator
+    unset canceller
     echo "race sequencer: launch race on $course course"
+
     cd "$ETROBO_SIM_DIST/__race"
-    sim $sim_ver $course stdout btcat launch __race > console.log &
-    sim_pid=$!
-    loop="loop"
-    while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ] && [ -n "$loop" ]; do
-        # accept retire or cancel request
-        terminator="$raceFolder/retire"
-        canceller="$raceFolder/Requests/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
-        if [ -f "$terminator" ] || [ -f "$canceller" ]; then
-            unset loop
+    if [ -n "$matchmaker" ]; then
+        sim $sim_ver restrict $course stdout btcat matchmaker launch __race > console.log
+        if [ "$?" != "0" ]; then
+            echo "race sequencer: launcher error"
+            touch "$raceFolder/ERROR"
+            exit 1
+        else
+            rm -f "$raceFolder/left"
+            rm -f "$raceFolder/right"
+            rm -f "$raceFolder/Requests/"*.zip
+            loop="loop"
+            while [ -n "$loop" ] && [ -n "`sim check sim`" ]; do
+                sleep 0.1
+                json=`curl -s -X GET $ETROBO_SIM_COMM`
+                if [ -n "$json" ]; then
+                    if [ "`echo $json | jq -r .measurement.mode`" == "END" ]; then
+                        echo "[ launcher: end of this race ]" | tee $console
+                        echo "$json" | jq . > result.json
+                        touch "$raceFolder/END"
+                        unset loop
+                    fi
+                fi
+                # accept retire or cancel request
+                terminator="$terminator_path/retire"
+                canceller="$canceller_path/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
+                if [ -f "$terminator" ] || [ -f "$canceller" ]; then
+                    unset loop
+                fi
+            done
         fi
-        sleep 0.1
-    done
-#    sim_error="$?"
-#    if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
-#        echo "race sequencer: athrill app ERROR!!"
-#        exit $ERR_SEQ_SIM_LAUNCH_FAILED
-#    fi
+    else
+        sim $sim_ver restrict $course stdout btcat launch __race > console.log &
+        sim_pid=$!
+        loop="loop"
+        while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ] && [ -n "$loop" ]; do
+            # accept retire or cancel request
+            terminator="$terminator_path/retire"
+            canceller="$canceller_path/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
+            if [ -f "$terminator" ] || [ -f "$canceller" ]; then
+                unset loop
+            fi
+            sleep 0.1
+        done
+    #    sim_error="$?"
+    #    if [ "$sim_error" != "0" ] && [ "$sim_error" != "143" ];then
+    #        echo "race sequencer: athrill app ERROR!!"
+    #        exit $ERR_SEQ_SIM_LAUNCH_FAILED
+    #    fi
+    fi
 
     # force termination
     if [ -n "`asp check`" ]; then
         asp stop
-        sim stop sim
+        if [ -z "$matchmaker" ]; then
+            sim stop sim
+        fi
         wait $sim_pid
     fi
 
@@ -547,12 +608,12 @@ else
     if [ -f "$canceller" ]; then
         echo "race sequencer: 'cancel' requested"
         echo "NOTICE: This race was cancelled from web form." >> console.log
+        rm -f "$canceller"
     elif [ -f "$terminator" ]; then
         echo "race sequencer: 'retire' requested"
         echo "NOTICE: This race was judgemented \"retire\" by a race marshall." >> console.log
+        rm -f "$terminator"
     fi
-    rm -f "$canceller"
-    rm -f "$terminator"
 
     # prepare result folder
     echo "race sequencer: prepare result folder"
@@ -563,6 +624,49 @@ else
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
     fi
+
+    # update result.json
+    record="`cat "$result/$dest.csv" | tail -n 1 | sed -E 's/\r//g'`"
+    csvTime="`echo "$record" | awk -F ',' '{print $1}'`"
+    csvCounter="`echo "$record" | awk -F ',' '{print $2}'`"
+    csvFilename="`echo "$record" | awk -F ',' '{print $3}'`"
+    csvTIME="`echo "$record" | awk -F ',' '{print $4}'`"
+    csvMEASUREMENT_TIME="`echo "$record" | awk -F ',' '{print $5}'`"
+    csvRUN_TIME="`echo "$record" | awk -F ',' '{print $6}'`"
+    csvGATE1="`echo "$record" | awk -F ',' '{print $7}'`"
+    csvGATE2="`echo "$record" | awk -F ',' '{print $8}'`"
+    csvGOAL="`echo "$record" | awk -F ',' '{print $9}'`"
+    csvGARAGE_STOP="`echo "$record" | awk -F ',' '{print $10}'`"
+    csvGARAGE_TIME="`echo "$record" | awk -F ',' '{print $11}'`"
+    csvSLALOM="`echo "$record" | awk -F ',' '{print $12}'`"
+    csvPETBOTTLE="`echo "$record" | awk -F ',' '{print $13}'`"
+    csvBLOCK_IN_GARAGE="`echo "$record" | awk -F ',' '{print $14}'`"
+    csvBLOCK_YUKOIDO="`echo "$record" | awk -F ',' '{print $15}'`"
+    csvCARD_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $16}'`"
+    csvBLOCK_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $17}'`"
+    csvBLOCK_BINGO="`echo "$record" | awk -F ',' '{print $18}'`"
+    csvENTRY_BONUS="`echo "$record" | awk -F ',' '{print $19}'`"
+
+    json="`cat result.json`"
+    json="`echo \"$json\" | jq \".${course}Measurement.TIME|=\\\"$csvTIME\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.MEASUREMENT_TIME|=\\\"$csvMEASUREMENT_TIME\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.RUN_TIME|=\\\"$csvRUN_TIME\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.GATE1|=\\\"$csvGATE1\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.GATE2|=\\\"$csvGATE2\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.GOAL|=\\\"$csvGOAL\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.GARAGE_STOP|=\\\"$csvGARAGE_STOP\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.GARAGE_TIME|=\\\"$csvGARAGE_TIME\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.SLALOM|=\\\"$csvSLALOM\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.PETBOTTLE|=\\\"$csvPETBOTTLE\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_IN_GARAGE|=\\\"$csvBLOCK_IN_GARAGE\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDO|=\\\"$csvBLOCK_YUKOIDO\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.CARD_NUMBER_CIRCLE|=\\\"$csvCARD_NUMBER_CIRCLE\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_NUMBER_CIRCLE|=\\\"$csvBLOCK_NUMBER_CIRCLE\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGO|=\\\"$csvBLOCK_BINGO\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.ENTRY_BONUS|=\\\"$csvENTRY_BONUS\\\"\"`"
+
+    echo $json | jq -M . > result.json
+
     src="console.log"
     if [ -f "$src" ]; then
         cp "$src" "$result/"
@@ -598,10 +702,30 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -r 15 -i "$captDir_bashPath/${coursePrefix}_%08d.png"  -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffmpeg -y -r 20 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED
+        if [ -n "$matchmaker" ]; then
+            touch "$raceFolder/ERROR"
+        fi
+    fi
+
+    # add files from matchmaker
+    if [ -n "$matchmaker" ]; then
+        echo "race sequencer: waiting for files from matchmaker"
+        touch "$raceFolder/WAITING"
+        filename="`ls -F $raceFolder/Results | grep 'リザルト' | grep -v / | grep -v .zip | while read line; do echo $line | sed -E 's/(.*)\*$/\1/'; done | head -n 1`"
+        while [ -z "$filename" ]; do
+            sleep 0.1
+            filename="`ls -F $raceFolder/Results | grep 'リザルト' | grep -v / | grep -v .zip | while read line; do echo $line | sed -E 's/(.*)\*$/\1/'; done | head -n 1`"
+        done
+        filename="`ls -F $raceFolder/Results | grep -v / | grep -v .zip | while read line; do echo $line | sed -E 's/(.*)\*$/\1/'; done | head -n 1`"
+        while [ -n "$filename" ]; do
+            cp "$raceFolder/results/$filename" "$result/"
+            rm -f "$raceFolder/results/$filename"
+            filename="`ls -F $raceFolder/Results | grep -v / | grep -v .zip | while read line; do echo $line | sed -E 's/(.*)\*$/\1/'; done | head -n 1`"
+        done
     fi
 
     # zip result files
@@ -614,7 +738,21 @@ else
     fi
     rm -rf $dest
     rm -rf "$ETROBO_SIM_DIST/__race"
-    
+    canceller="$canceller_path/`echo $target | sed -E \"s/^(.*).zip$/cancel_\1.txt/\"`"
+    if [ -f "$canceller" ]; then
+        rm -f "$canceller"
+    fi
+
+    if [ -n "$matchmaker" ]; then
+        echo "race sequencer: waiting for response from matchmaker"
+        touch ZIP
+        while [ -f ZIP ]; do
+            sleep 0.1
+        done
+        rm -f "$raceFolder/ERROR"
+        rm -f "$raceFolder/END"
+        rm -f "$raceFolder/WAITING"
+    fi
     echo "race sequencer: race (requestID=$requestID) is finished successfully."
 fi
 exit $exit_code

@@ -219,18 +219,11 @@ if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
 fi
 
 # repair mode
+unset repair
 if [ "$1" = "repair" ]; then
     shift
-    if [ "$ETROBO_ENV" = "available" ]; then
-        if [ "$1" = "mruby" ]; then
-            rm -f "$ETROBO_CACHE/$ETROBO_MRUBY_VER.*"
-            rm -f "dist/$ETROBO_MRUBY_VER.*"
-            rm -rf "$ETROBO_MRUBY_EV3RT"
-            rm -rf "$ETROBO_MRUBY_ROOT/"
-        fi
-    else
-        echo "unable to repair."
-    fi
+    repair="$1"
+    shift
 fi
 
 # platform update and git clone etrobo
@@ -300,7 +293,11 @@ if [ -d "$ETROBO_ROOT" ]; then
 fi
 
 # install Athrill2 & UnityETroboSim
-"$ETROBO_ROOT/scripts/setup.sh"
+if [ -n "$repair" ]; then
+    "$ETROBO_ROOT/scripts/setup.sh repair $repair"
+else
+    "$ETROBO_ROOT/scripts/setup.sh"
+fi
 
 # invoke etrobo environment
 cd "$ETROBO_ROOT"

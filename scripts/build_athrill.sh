@@ -223,7 +223,7 @@ if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     echo "Download mruby-ev3rt"
     git clone https://github.com/mruby-Forum/mruby-ev3rt.git
     rm -rf "$ETROBO_MRUBY_ROOT"
-    cp "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
+    cp -f "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
     tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
 fi
 

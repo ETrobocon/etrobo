@@ -34,8 +34,9 @@ if [ "$1" = "update" ]; then
         option="$option2"
         if [ "$option" = "mruby" ]; then
             echo "delete mruby installation"
-            rm -f "$ETROBO_CACHE/$ETROBO_MRUBY_VER.*"
-            rm -f "dist/$ETROBO_MRUBY_VER.*"
+            rm -f "$ETROBO_CACHE/$ETROBO_MRUBY_VER."*
+            rm -f "dist/$ETROBO_MRUBY_VER."*
+            rm -f "$ETROBO_MRUBY_ROOT/../$ETROBO_MRUBY_VER."*
             rm -rf "$ETROBO_MRUBY_EV3RT"
             rm -rf "$ETROBO_MRUBY_ROOT/"
         fi

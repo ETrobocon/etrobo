@@ -7,10 +7,16 @@
 # See LICENSE
 #
 # fp0 ... 2021/07/17 13:00～2021/07/17 16:00
-# fp1 ... 2021/07/26 12:00～2021/08/01 20:00
-# fp2 ... 2021/08/29 12:00～2021/09/08 20:00
-# fp3 ... 2021/10/30 12:00～2021/11/05 20:00
+# fp1 ... 2021/07/26 09:30～2021/08/01 20:00
+# fp2 ... 2021/08/29 09:30～2021/09/08 20:00
+# fp3 ... 2021/10/30 09:30～2021/11/05 20:00
 #
+
+# ToDo:
+#   You should make symbolick link to relayFolder/Requests and relayFolder/Results from raceFolder.
+#       sudo mount -t drvfs <WindowsDriveLetter>: "$mountPath"
+#       ln -s /path/to/relayFolder/Requests /path/to/raceFolder/Requests
+#       ln -s /path/to/relayFolder/Results /path/to/raceFolder/Results
 
 #
 # define error codes
@@ -49,14 +55,14 @@ if [ "$1" == "vm" ]; then
     shift
 fi
 
-if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
-    # recognize matchmaker option
-    unset matchmaker
-    if [ "$1" == "matchmaker" ]; then
-        matchmaker="$1"
-        shift
-    fi
+# recognize matchmaker option
+unset matchmaker
+if [ "$1" == "matchmaker" ]; then
+    matchmaker="$1"
+    shift
+fi
 
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -180,5 +186,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final [matchmaker] /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker] fp1|fp2|fp3|final /path/to/raceFolder [/path/to/relayFolder]" 
 fi

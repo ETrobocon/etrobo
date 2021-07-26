@@ -12,7 +12,7 @@
 # (please remember you also should run `ffutil install` first)
 
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "Usage: race [MODE] [matchmaker] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
+    echo "Usage: race [matchmaker] [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
     echo
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
@@ -111,16 +111,17 @@ fi
 #
 # get options
 #
-mode="get"
-if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
-    mode="$1"
-    shift
-fi
 
 unset matchmaker
 if [ "$1" = "matchmaker" ]; then
     matchmaker="$1"
+    shift
+fi
+
+mode="get"
+if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
+|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
+    mode="$1"
     shift
 fi
 
@@ -318,10 +319,10 @@ else
             exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$ETROBO_SIM_DIST/$target"
-        if [ ! -d __race ]; then
+        if [ ! -d "$raceFolder/__race" ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit $ERR_SEQ_RACE_NOT_FOUND
-        elif [ ! -f "__race/l___race.asp" ] || [ ! -f "__race/r___race.asp" ]; then
+        elif [ ! -f "$raceFolder/__race/l___race.asp" ] || [ ! -f "$raceFolder/__race/r___race.asp" ]; then
             echo "race sequencer: $target isn't contain '*___race.asp' file."
             exit $ERR_SEQ_ASP_NOT_FOUND
         fi

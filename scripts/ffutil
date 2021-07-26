@@ -319,7 +319,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -n "$4" ]; then
                 loglevel="$4"
             fi
-            "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M "$destination"
+            "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel "$destination"
         fi
     else
         echo 'error: unable to use ffutil. run `ffutil install` first.'

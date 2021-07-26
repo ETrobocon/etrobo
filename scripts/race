@@ -319,10 +319,10 @@ else
             exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$ETROBO_SIM_DIST/$target"
-        if [ ! -d "$raceFolder/__race" ]; then
+        if [ ! -d "__race" ]; then
             echo "race sequencer: $target isn't contain '__race' folder."
             exit $ERR_SEQ_RACE_NOT_FOUND
-        elif [ ! -f "$raceFolder/__race/l___race.asp" ] || [ ! -f "$raceFolder/__race/r___race.asp" ]; then
+        elif [ ! -f "__race/l___race.asp" ] && [ ! -f "__race/r___race.asp" ]; then
             echo "race sequencer: $target isn't contain '*___race.asp' file."
             exit $ERR_SEQ_ASP_NOT_FOUND
         fi

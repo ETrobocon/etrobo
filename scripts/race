@@ -212,9 +212,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
 
     # prepare ev3rtfs
     echo -n "file archiver: __ev3rtfs "
+    l_files=0;
     if [ -d "$proj/__ev3rtfs" ]; then
         cp -r "$proj/__ev3rtfs" "$raceTemp/"
         if [ "$?" == "0" ]; then
+            l_files=`ls -1 "$proj/__ev3rtfs" | wc -l`
             echo "is copied."
         else
             echo "ERROR while coping."
@@ -223,10 +225,12 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     else
         echo "doesn't exists."
     fi
+    r_files=0;
     echo -n "file archiver: __ev3rtfs_r "
     if [ -d "$proj/__ev3rtfs_r" ]; then
         cp -r "$proj/__ev3rtfs_r" "$raceTemp/"
         if [ "$?" == "0" ]; then
+            r_files=`ls -1 "$proj/__ev3rtfs_r" | wc -l`
             echo "is copied."
         else
             echo "ERROR while coping."
@@ -234,6 +238,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         fi
     else
         echo "doesn't exists."
+    fi
+
+    files=$(($l_files + $r_files))
+    if [ $files -gt 256 ]; then
+        echo "too many files: $l_files"
     fi
 
     # prepare l_app
@@ -325,6 +334,17 @@ else
         elif [ ! -f "__race/l___race.asp" ] && [ ! -f "__race/r___race.asp" ]; then
             echo "race sequencer: $target isn't contain '*___race.asp' file."
             exit $ERR_SEQ_ASP_NOT_FOUND
+        fi
+        files=0
+        if [ -d __race/__ev3rtfs ]; then
+            files=`ls -1 "__race/__ev3rtfs" | wc -l`
+        fi
+        if [ -d __race/__ev3rtfs_r ]; then
+            files=$(($files + `ls -1 "__race/__ev3rtfs_r" | wc -l`))
+        fi
+        if [ $files > 256 ]; then
+            echo "race sequencer: too many files in __ev3rtfs"
+            exit $ERR_SEQ_UNZIP_FAILED
         fi
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"

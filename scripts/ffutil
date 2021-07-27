@@ -31,6 +31,8 @@ if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
     echo
     echo "ffutil install"
     echo "      install ffmpeg and ImageMagick"
+    echo "ffutil show"
+    echo "      show applications version and encoder"
     echo "ffutil streaminfo </path/to/file> [<loglevel>]"
     echo "      show video stream information"
     echo "ffutil encode <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
@@ -290,6 +292,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ -n "$ETROBO_FFUTIL_READY" ]; then
         command="$1"
         shift
+
+        # show applications version and encoder
+        # show
+        if [ "$command" == "show" ]; then
+            echo "     ffmpeg $ETROBO_FFMPEG_VER for $ETROBO_FFMPEG_OS / encoder: $ETROBO_ENC_NAME"
+            echo "    ffprobe $ETROBO_FFPROBE_VER for $ETROBO_FFPROBE_OS"
+            echo "ImageMagick $ETROBO_IM_VER for $ETROBO_IM_OS"
+        fi
 
         # get video stream information by ffprobe
         # streaminfo </path/to/file> [<loglevel>]

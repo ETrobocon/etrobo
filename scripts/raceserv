@@ -17,6 +17,10 @@
 #       sudo mount -t drvfs <WindowsDriveLetter>: "$mountPath"
 #       ln -s /path/to/relayFolder/Requests /path/to/raceFolder/Requests
 #       ln -s /path/to/relayFolder/Results /path/to/raceFolder/Results
+#
+#   To export CSV files, you also should make Csvs folder and symbolick link to there.
+#       mkdir /path/to/relayFolder/Csvs
+#       ln -s /path/to/relayFolder/Results /path/to/raceFolder/Results
 
 #
 # define error codes

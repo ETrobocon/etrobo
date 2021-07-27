@@ -649,6 +649,9 @@ else
     src="$captDir_bashPath/$coursePrefix.csv"
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
+        if [ -d "$raceFolder/Csvs" ]; then
+            cp "$src" "$raceFolder/Csvs/$dest.csv"
+        fi
     fi
 
     # update result.json

@@ -680,7 +680,11 @@ else
     csvBLOCK_BINGOP="`echo "$record" | awk -F ',' '{print $22}'`"
     csvMeasurementMode="`echo "$record" | awk -F ',' '{print $23}'`"
 
-    json="`cat result.json`"
+    if [ -f result.json ]; then
+        json="`cat result.json`"
+    else
+        json="{}"
+    fi
     json="`echo \"$json\" | jq \".${course}Measurement.TIME|=\\\"$csvTIME\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.MEASUREMENT_TIME|=\\\"$csvMEASUREMENT_TIME\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.RUN_TIME|=\\\"$csvRUN_TIME\\\"\"`"

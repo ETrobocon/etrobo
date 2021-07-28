@@ -320,6 +320,9 @@ else
         fi
 
         cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
+        if [ "$mode" != "get" ]; then
+            rm -f "$raceFolder/Requests/$target"
+        fi
 
         # check race zip file
         echo " and now checking this file"
@@ -338,17 +341,11 @@ else
         # unzip race zip into simdist
         unzip -qqo $target
         unzip_error="$?"
-        if [ "$mode" != "get" ]; then
-            rm -f "$raceFolder/Requests/$target"
-        fi
         if [ "$unzip_error" != "0" ]; then
             echo "race sequencer: UNZIP ERROR"
             exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$ETROBO_SIM_DIST/$target"
-        if [ "$mode" != "get" ]; then
-            rm -f "$raceFolder/Requests/$target"
-        fi
 
         # calc md5sum
         unset sum

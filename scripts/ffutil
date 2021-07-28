@@ -37,6 +37,12 @@ if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
     echo "      show video stream information"
     echo "ffutil encode <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
     echo "      encode image files to a movie file"
+    echo "ffutil stretch <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      stretch <streatchFrames> frames by last frame"
+    echo "ffutil demultiplex </path/to/source> [<loglevel>]"
+    echo "      1 in 4 out demultiplex source movie to </path/to/source>_0/1/2/3"
+    echo "ffutil multiprex </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      4 in 1 out multiplex source movies into dest"
     exit 0
 fi
 
@@ -331,6 +337,54 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
             "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel "$destination"
         fi
+
+        # stretch <streatchFrames> frames by last frame
+        # ffutil stretch <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "streatch" ]; then
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+        fi
+
+        # 1 in 4 out demultiplex source movie to </path/to/source>_0/1/2/3
+        # ffutil demultiplex <captureRate> </path/to/source> [<loglevel>]
+        if [ "$command" == "demultiplex" ]; then
+            unset png
+            if [ -n "`echo \"$2\" | grep -E '^.*\.png$'`" ]; then
+                png="png"
+                dest="`echo \"$2\" | sed -E 's/^(.*\/).*\.png/\1demux.mp4/'`"
+                dest="`getWinPath \"$dest\" $ETROBO_FFPROBE_OS`"
+            else
+                dest="`getWinPath \"$2\" $ETROBO_FFPROBE_OS`"
+            fi
+            captureRate=(0 60 30 20 15)
+            frameRate=${captureRate[$1]}
+            if [ -z "$frameRate" ]; then
+                frameRate=30
+            fi
+            source="`getWinPath \"$2\" $ETROBO_FFPROBE_OS`"
+            if [ -n "$3" ]; then
+                loglevel="$3"
+            fi
+            if [ -f "$2" ] || [ -n "$png" ]; then
+                "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel -vf crop=640:400:0:0 "`echo \"$dest\" | sed -E 's/^(.*)\.mp4/\1_0\.mp4/'`"
+                "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel -vf crop=640:400:640:0 "`echo \"$dest\" | sed -E 's/^(.*)\.mp4/\1_1\.mp4/'`"
+                "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel -vf crop=640:400:0:400 "`echo \"$dest\" | sed -E 's/^(.*)\.mp4/\1_2\.mp4/'`"
+                "$ETROBO_FFMPEG" -y -r $frameRate $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT -i "$source" -c:v $ETROBO_ENC_CODEC -b:v 2M $loglevel_opt $loglevel -vf crop=640:400:640:400 "`echo \"$dest\" | sed -E 's/^(.*)\.mp4/\1_3\.mp4/'`"
+            else
+                echo "ERROR: $2: file not found"
+                exit 1
+            fi
+        fi
+
+        # 4 in 1 out multiplex source movies into dest
+        # ffutil multiprex </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "multiplex" ]; then
+            if [ -n "$3" ]; then
+                loglevel="$3"
+            fi
+        fi
+
     else
         echo 'error: unable to use ffutil. run `ffutil install` first.'
         exit 1

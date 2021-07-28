@@ -95,6 +95,7 @@ ERR_SEQ_REQUESTS_EMPTY=206
 ERR_SEQ_SIM_LAUNCH_FAILED=207
 ERR_SEQ_FFMPEG_FAILED=208
 ERR_SEQ_ZIP_FAILED=209
+ERR_SEQ_TOO_MANY_FILES=210
 
 exit_code=$ERR_OK
 
@@ -242,7 +243,7 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
 
     files=$(($l_files + $r_files))
     if [ $files -gt 256 ]; then
-        echo "too many files: $l_files"
+        echo "WARNING: there are too many ($files) files in __ev3rtfs/_r."
     fi
 
     # prepare l_app
@@ -309,7 +310,7 @@ else
     #
     target=`ls -tr "$raceFolder/Requests" | grep \.zip$ | head -n 1`
     if [ -n "$target" ]; then
-        echo "race sequencer: get $target"
+        echo -n "race sequencer: get $target"
         touch "$raceFolder/${target}.manifest"
         if [ -n "$matchmaker" ]; then
             rm -f "$raceFolder/ERROR"
@@ -317,8 +318,25 @@ else
             rm -f "$raceFolder/END"
             rm -f "$raceFolder/WAITING"
         fi
+
         cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
-        unzip -o $target > /dev/null
+
+        # check race zip file
+        echo " and now checking this file"
+        checker="`unzip -l $target | awk '{print $4}'`"
+        if [ `echo "$checker" | grep -cE '^__race/$'` -eq 0 ]; then
+            echo "race sequencer: $target isn't contain '__race' folder."
+            exit $ERR_SEQ_RACE_NOT_FOUND
+        elif [ `echo "$checker" | grep -cE '^__race/[lr]___race.asp$'` -eq 0 ]; then
+            echo "race sequencer: $target isn't contain '*___race.asp' file."
+            exit $ERR_SEQ_ASP_NOT_FOUND
+        elif [ `echo "$checker" | grep -cE '^__race/__ev3rtfs(_r)?/.{1,}'` -gt 256 ]; then
+            echo "race sequencer: too many files in __ev3rtfs/_r"
+            exit $ERR_SEQ_TOO_MANY_FILES
+        fi
+
+        # unzip race zip into simdist
+        unzip -qqo $target
         unzip_error="$?"
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
@@ -328,24 +346,6 @@ else
             exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$ETROBO_SIM_DIST/$target"
-        if [ ! -d "__race" ]; then
-            echo "race sequencer: $target isn't contain '__race' folder."
-            exit $ERR_SEQ_RACE_NOT_FOUND
-        elif [ ! -f "__race/l___race.asp" ] && [ ! -f "__race/r___race.asp" ]; then
-            echo "race sequencer: $target isn't contain '*___race.asp' file."
-            exit $ERR_SEQ_ASP_NOT_FOUND
-        fi
-        files=0
-        if [ -d __race/__ev3rtfs ]; then
-            files=`ls -1 "__race/__ev3rtfs" | wc -l`
-        fi
-        if [ -d __race/__ev3rtfs_r ]; then
-            files=$(($files + `ls -1 "__race/__ev3rtfs_r" | wc -l`))
-        fi
-        if [ $files -gt 256 ]; then
-            echo "race sequencer: too many files in __ev3rtfs"
-            exit $ERR_SEQ_UNZIP_FAILED
-        fi
         if [ "$mode" != "get" ]; then
             rm -f "$raceFolder/Requests/$target"
         fi
@@ -649,8 +649,8 @@ else
     src="$captDir_bashPath/$coursePrefix.csv"
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
-        if [ -d "$raceFolder/Csvs" ]; then
-            cp "$src" "$raceFolder/Csvs/$requestID.csv"
+        if [ -d "$raceFolder/common/csv" ]; then
+            cp "$src" "$raceFolder/common/csv/$requestID.csv"
         fi
     fi
 
@@ -749,6 +749,8 @@ else
         if [ -n "$matchmaker" ]; then
             touch "$raceFolder/ERROR"
         fi
+    elif [ -d "$raceFolder/common/raceserv" ]; then
+        cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$requestID.mp4"
     fi
 
     # add files from matchmaker

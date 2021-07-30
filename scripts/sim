@@ -528,8 +528,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
                             sleep 0.1
                             counter=$(( $counter + 1 ))
-                            if [ $counter -ge 900 ] && [ "$sim_opt" == "matchmaker" ]; then
-                                echo "[ launcher: autostart sequence timeout after PREPARE ]" | tee $console
+                            if [ $counter -ge 900 ] && ( [ -n "$restriction" ] || [ "$sim_opt" == "matchmaker" ] ); then
+                                echo "[ launcher: calibration time out. You aren't able to start. ]" | tee $console
                                 unset loop
                             fi
                             if [ -z "`sim check sim`" ]; then

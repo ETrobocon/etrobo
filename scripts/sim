@@ -481,12 +481,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         unset loop
                         kill -s SIGINT $$
                     fi
-#                    counter=$(( $counter + 1 ))
-#                    if [ $counter -ge 150 ]; then
-#                        echo "[ launcher: EV3RT boot sequence time out]"
-#                        unset loop
-#                        kill -s SIGINT $$
-#                    fi
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 600 ] && [ -n "$restriction" ]; then
+                        echo "[ launcher: EV3RT boot sequence time out]"
+                        unset loop
+                        kill -s SIGINT $$
+                    fi
                     sleep 0.1
                     status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
                 done

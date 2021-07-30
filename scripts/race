@@ -319,9 +319,15 @@ else
             rm -f "$raceFolder/WAITING"
         fi
 
-        cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
+        cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST" > /dev/null 2>&1
+        if [ "$?" != "0" ]; then
+            echo ""
+            echo "race sequencer: internal server error, can't access to this file."
+            echo "race sequencer: if you don't receive this result file, please re-run it."
+            exit $ERR_SEQ_UNZIP_FAILED
+        fi
         if [ "$mode" != "get" ]; then
-            rm -f "$raceFolder/Requests/$target"
+            rm -f "$raceFolder/Requests/$target" > /dev/null 2>&1
         fi
 
         # check race zip file

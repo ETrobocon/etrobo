@@ -32,6 +32,8 @@ if [ "$?" == "0" ]; then
         # prepare simRunner
         simRunner=`cd "$relayFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
         if [ -n "$simRunner" ]; then
+            echo -n "ETroboSimRunner.Relay.exe /p" > "$simRunner/put.cmd"
+            echo -n "ETroboSimRunner.Relay.exe /g" > "$simRunner/get.cmd"
             simRunner="`echo \"$simRunner\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/' | sed -E 's/\//\\\\\\\\/g'`"
         else
             echo "ETroboSimRunner.Relay not found."
@@ -56,14 +58,12 @@ if [ "$?" == "0" ]; then
 
             # request put via ETroboSimRunner.Relay
             if [ -f put ]; then
-                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
-#                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1
+                cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1
                 rm put
             fi
             # request get via ETroboSimRunner.Relay
             if [ -f get ]; then
-                cmd.exe /C "cd /D ${simRunner}&ETroboSimRunner.Relay.exe" > /dev/null 2>&1
-#                cmd.exe /C "cd /D ${simRunner}&get.cmd" > /dev/null 2>&1
+                cmd.exe /C "cd /D ${simRunner}&get.cmd" > /dev/null 2>&1
                 rm get
             fi
             sleep 1

@@ -1,0 +1,278 @@
+{
+    "global": {
+        "//": [
+            "MatchMaker multiplexing settings using from ffutil",
+            "  mmmux.json",
+            "Author: jtFuruhata",
+            "Copyright (c) 2021 ETロボコン実行委員会, Released under the MIT license",
+            "See LICENSE"
+        ],
+        "version":                  "2021.fp2.0",
+        "matchMakerScreenWidth":    "1008",
+        "matchMakerScreenHeight":   "750",
+        "matchMakerFrameRate":      "60",
+        "etrobosim": {
+            "width":    "640",
+            "height":   "400",
+            "x":        "0",
+            "y":        "0",
+            "toX":      "72",
+            "toY":      "90",
+            "scale":    "0.775"
+        },
+        "banner": {
+            "width":    "1008",
+            "height":   "82",
+            "x":        "0",
+            "y":        "0",
+            "toX":      "",
+            "toY":      "",
+            "scale":    ""
+        },
+        "time": {
+            "width":    "135",
+            "height":   "39",
+            "x":        "428",
+            "y":        "120",
+            "toX":      "428",
+            "toY":      "38",
+            "scale":    "1.0"
+        }
+    },
+    "left": {
+        "common": {
+            "teamInfo": {
+                "width":    "504",
+                "height":   "90",
+                "x":        "0",
+                "y":        "82",
+                "toX":      "0",
+                "toY":      "0",
+                "scale":    "1.0"
+            },
+            "teamID": {
+                "width":    "185",
+                "height":   "70",
+                "x":        "155",
+                "y":        "649",
+                "toX":      "504",
+                "toY":      "0",  
+                "scale":    "0.5"
+            },
+            "goalTime": {
+                "width":    "140",
+                "height":   "41",
+                "x":        "302",
+                "y":        "368",
+                "toX":      "322",
+                "toY":      "92",  
+                "scale":    "0.5"
+            },
+            "goalTimeArea": {
+                "width":    "164",
+                "height":   "65",
+                "x":        "290",
+                "y":        "353",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            },
+            "goalStatus": {
+                "width":    "140",
+                "height":   "41",
+                "x":        "302",
+                "y":        "440",
+                "toX":      "322",
+                "toY":      "115",  
+                "scale":    "0.5"
+            },
+            "goalStatusArea": {
+                "width":    "164",
+                "height":   "65",
+                "x":        "290",
+                "y":        "425",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            }
+        },
+        "entry": {
+        },
+        "primary": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "296",
+                "y":        "314",
+                "toX":      "10",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "126",
+                "y":        "314",
+                "toX":      "70",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "slalom": {
+                "width":    "168",
+                "height":   "33",
+                "x":        "16",
+                "y":        "352",
+                "toX":      "89",
+                "toY":      "280",  
+                "scale":    "1.0"
+            },
+            "petbottle": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "16",
+                "y":        "391",
+                "toX":      "89",
+                "toY":      "314",  
+                "scale":    "1.0"
+            },
+            "blockin": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "660",
+                "y":        "551",
+                "toX":      "85",
+                "toY":      "180",  
+                "scale":    "1.0"
+            },
+            "garagein": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "187",
+                "y":        "551",
+                "toX":      "85",
+                "toY":      "214",  
+                "scale":    "1.0"
+            }
+        },
+        "advanced": {
+        }
+    },
+    "right": {
+        "common": {
+            "teamInfo": {
+                "width":    "504",
+                "height":   "90",
+                "x":        "504",
+                "y":        "82",
+                "toX":      "0",
+                "toY":      "0",
+                "scale":    "1.0"
+            },
+            "teamID": {
+                "width":    "185",
+                "height":   "70",
+                "x":        "673",
+                "y":        "649",
+                "toX":      "504",
+                "toY":      "0",  
+                "scale":    "0.5"
+            },
+            "goalTime": {
+                "width":    "140",
+                "height":   "41",
+                "x":        "566",
+                "y":        "368",
+                "toX":      "248",
+                "toY":      "92",  
+                "scale":    "0.5"
+            },
+            "goalTimeArea": {
+                "width":    "164",
+                "height":   "65",
+                "x":        "554",
+                "y":        "353",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            },
+            "goalStatus": {
+                "width":    "140",
+                "height":   "41",
+                "x":        "566",
+                "y":        "440",
+                "toX":      "248",
+                "toY":      "115",  
+                "scale":    "0.5"
+            },
+            "goalStatusArea": {
+                "width":    "164",
+                "height":   "65",
+                "x":        "554",
+                "y":        "425",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            }
+        },
+        "entry": {
+        },
+        "primary": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "562",
+                "y":        "314",
+                "toX":      "480",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "732",
+                "y":        "314",
+                "toX":      "420",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "slalom": {
+                "width":    "168",
+                "height":   "33",
+                "x":        "812",
+                "y":        "352",
+                "toX":      "383",
+                "toY":      "280",  
+                "scale":    "1.0"
+            },
+            "petbottle": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "812",
+                "y":        "391",
+                "toX":      "383",
+                "toY":      "314",  
+                "scale":    "1.0"
+            },
+            "blockin": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "660",
+                "y":        "551",
+                "toX":      "405",
+                "toY":      "180",  
+                "scale":    "1.0"
+            },
+            "garagein": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "830",
+                "y":        "551",
+                "toX":      "405",
+                "toY":      "214",  
+                "scale":    "1.0"
+            }
+        },
+        "advanced": {
+        }
+    }
+}

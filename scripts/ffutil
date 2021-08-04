@@ -466,7 +466,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 "$destination"
         fi
         # MatchMaker multiplexer
-        # mmmux entry|primary|advanced left|right [getfilter] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
+        # mmmux entry|primary|advanced left|right [getfilter|setfilter <filter>] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
         if [ "$command" == "mmmux" ]; then
             class="entry"
             if [ "$1" == "entry" ] || [ "$1" == "primary" ] || [ "$1" == "advanced" ]; then
@@ -485,6 +485,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             else
                 echo "Prepare filter-complex for $class class, $course course."
             fi
+            unset setfilter
+            if [ "$1" == "setfilter" ]; then
+                setfilter="$2"
+                shift 2
+            fi
             bitrate="2M"
             if [ "$1" == "bitrate" ]; then
                 bitrate="$2"
@@ -496,7 +501,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -z "$frameRate" ]; then
                 frameRate=30
             fi
-            sourcePath="$(getWinPath $(echo $2 | sed -E 's/^(.*)\/.*$/\1/') $ETROBO_FFMPEG_OS)"            
+            sourcePath="`echo $2 | sed -E 's/^(.*)\/.*$/\1/'`"
+            if [ ! -f "$sourcePath/filter.png" ]; then
+                cp -f "$ETROBO_ROOT/dist/filter.png" "$sourcePath/"
+            fi
+            sourcePath="$(getWinPath $sourcePath $ETROBO_FFMPEG_OS)"            
             source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
             srcPrefix="`echo \"$source\" | sed -E 's/^(.*)\..*$/\1/'`"
             srcPostfix="`echo \"$source\" | sed -E 's/^.*\.(.*)$/\1/'`"
@@ -520,102 +529,106 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             # generate filter complex
             #
 
-            # split MatchMaker source
-            fc="[0:v]setpts=PTS/$(calc $(json global.matchMakerFrameRate)/$frameRate),fps=$frameRate[src];"
-            for info in ${informations[@]}; do
-                if [ -n "$(json common.$info.scale)" ]; then
-                    fc="${fc}[src]split[src][${info}Src];"
-                fi
-            done
-            fc="${fc}[src]split[src][timeSrc];"
-            fc="${fc}[src]split[src][filterSrc];"
-
-            # get time and mask it for teamInfo
-            width=$(json global.time.width)
-            height=$(json global.time.height)
-            x=$(json global.time.x)
-            y=$(json global.time.y)
-            scale=$(json global.time.scale)
-            if [ "$scale" == "1.0" ]; then
-                unset scale
+            if [ -n "$setfilter" ]; then
+                fc="$setfilter"
             else
-                scale=",scale=$(calc $width*$scale):-1"
-            fi
-            fc="${fc}[timeSrc]crop=$width:$height:$x:$y$scale[time];"
-            fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[timeMask];"
-            fc="${fc}[teamInfoSrc][timeMask]overlay=shortest=1:x=$x:y=$y[teamInfoSrc];"
-
-            # get informations
-            for info in ${informations[@]}; do
-                if [ -n "$(json common.$info.scale)" ]; then
-                    width=$(json common.$info.width)
-                    height=$(json common.$info.height)
-                    x=$(json common.$info.x)
-                    y=$(json common.$info.y)
-                    scale=$(json common.$info.scale)
-                    if [ "$scale" == "1.0" ]; then
-                        unset scale
-                    else
-                        scale=",scale=$(calc $width*$scale):-1"
+                # split MatchMaker source
+                fc="[0:v]setpts=PTS/$(calc $(json global.matchMakerFrameRate)/$frameRate),fps=$frameRate[src];"
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        fc="${fc}[src]split[src][${info}Src];"
                     fi
-                    fc="${fc}[${info}Src]crop=$width:$height:$x:$y$scale[$info];"
-                fi
-            done
+                done
+                fc="${fc}[src]split[src][timeSrc];"
+                fc="${fc}[src]split[src][filterSrc];"
 
-            # make and split difference stream
-            fc="${fc}[1:v]fps=$frameRate[body];"
-            fc="${fc}[2:v]fps=$frameRate[filter];"
-            fc="${fc}color=c=black:s=$(json global.matchMakerScreenWidth)x$(json global.matchMakerScreenHeight):r=$frameRate,split[bk1][bk2];"
-            fc="${fc}[filterSrc][filter]blend=all_mode=grainextract,lutyuv=val-128[mask];"
-            fc="${fc}[mask]lutrgb=g=0:b=0,lutyuv='255*gt(val,35)':u=128:v=128[mask];"
-            fc="${fc}[mask][bk1][bk2][src]threshold,lutyuv=y='val*gt(val,25)'[diffStream];"
-            for ((i=0; i<${#markers[@]}-1; i++)); do
-                if [ $i -lt $((${#markers[@]}-2)) ]; then
-                    fc="${fc}[diffStream]split[diffStream][${markers[$i]}Diff];"
-                else
-                    fc="${fc}[diffStream]split[${markers[$i]}Diff][${markers[$(($i+1))]}Diff];"
-                fi
-            done
-
-            # get markers and make body
-            for mark in ${markers[@]}; do
-                width=$(json class.$mark.width)
-                height=$(json class.$mark.height)
-                x=$(json class.$mark.x)
-                y=$(json class.$mark.y)
-                toX=$(json class.$mark.toX)
-                toY=$(json class.$mark.toY)
-                scale=$(json class.$mark.scale)
+                # get time and mask it for teamInfo
+                width=$(json global.time.width)
+                height=$(json global.time.height)
+                x=$(json global.time.x)
+                y=$(json global.time.y)
+                scale=$(json global.time.scale)
                 if [ "$scale" == "1.0" ]; then
                     unset scale
                 else
                     scale=",scale=$(calc $width*$scale):-1"
                 fi
-                fc="${fc}color=c=white:s=${width}x${height}:r=$frameRate[${mark}BG];"
-                fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.25:0.1[${mark}Key];"
-                fc="${fc}[${mark}BG][${mark}Key]overlay=shortest=1,colorkey=white:0.01:0[$mark];"
-                fc="${fc}[body][$mark]overlay=shortest=1:x=$toX:y=$toY$scale[body];"
-            done
-            width=$(json global.etrobosim.width)
-            height=$(json global.etrobosim.height)
-            toX=$(json global.etrobosim.toX)
-            toY=$(json global.etrobosim.toY)
-            scale=$(json global.etrobosim.scale)
-            if [ "$scale" == "1.0" ]; then
-                unset scale
-            else
-                fc="${fc}[body]scale=$(calc $width*$scale):-1[body];"
-            fi
+                fc="${fc}[timeSrc]crop=$width:$height:$x:$y$scale[time];"
+                fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[timeMask];"
+                fc="${fc}[teamInfoSrc][timeMask]overlay=shortest=1:x=$x:y=$y[teamInfoSrc];"
 
-            # make stage
-            fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[stage];"
-            fc="${fc}[stage][body]overlay=shortest=1:x=$toX:y=$toY[stage];"
-            for info in ${informations[@]}; do
-                if [ -n "$(json common.$info.scale)" ]; then
-                    fc="${fc}[stage][$info]overlay=shortest=1:x=$(json common.$info.toX):y=$(json common.$info.toY)[stage];"
+                # get informations
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        width=$(json common.$info.width)
+                        height=$(json common.$info.height)
+                        x=$(json common.$info.x)
+                        y=$(json common.$info.y)
+                        scale=$(json common.$info.scale)
+                        if [ "$scale" == "1.0" ]; then
+                            unset scale
+                        else
+                            scale=",scale=$(calc $width*$scale):-1"
+                        fi
+                        fc="${fc}[${info}Src]crop=$width:$height:$x:$y$scale[$info];"
+                    fi
+                done
+
+                # make and split difference stream
+                fc="${fc}[1:v]fps=$frameRate[body];"
+                fc="${fc}[2:v]fps=$frameRate[filter];"
+                fc="${fc}color=c=black:s=$(json global.matchMakerScreenWidth)x$(json global.matchMakerScreenHeight):r=$frameRate,split[bk1][bk2];"
+                fc="${fc}[filterSrc][filter]blend=all_mode=grainextract,lutyuv=val-128[mask];"
+                fc="${fc}[mask]lutrgb=g=0:b=0,lutyuv='255*gt(val,35)':u=128:v=128[mask];"
+                fc="${fc}[mask][bk1][bk2][src]threshold,lutyuv=y='val*gt(val,25)'[diffStream];"
+                for ((i=0; i<${#markers[@]}-1; i++)); do
+                    if [ $i -lt $((${#markers[@]}-2)) ]; then
+                        fc="${fc}[diffStream]split[diffStream][${markers[$i]}Diff];"
+                    else
+                        fc="${fc}[diffStream]split[${markers[$i]}Diff][${markers[$(($i+1))]}Diff];"
+                    fi
+                done
+
+                # get markers and make body
+                for mark in ${markers[@]}; do
+                    width=$(json class.$mark.width)
+                    height=$(json class.$mark.height)
+                    x=$(json class.$mark.x)
+                    y=$(json class.$mark.y)
+                    toX=$(json class.$mark.toX)
+                    toY=$(json class.$mark.toY)
+                    scale=$(json class.$mark.scale)
+                    if [ "$scale" == "1.0" ]; then
+                        unset scale
+                    else
+                        scale=",scale=$(calc $width*$scale):-1"
+                    fi
+                    fc="${fc}color=c=white:s=${width}x${height}:r=$frameRate[${mark}BG];"
+                    fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.25:0.1[${mark}Key];"
+                    fc="${fc}[${mark}BG][${mark}Key]overlay=shortest=1,colorkey=white:0.01:0[$mark];"
+                    fc="${fc}[body][$mark]overlay=shortest=1:x=$toX:y=$toY$scale[body];"
+                done
+                width=$(json global.etrobosim.width)
+                height=$(json global.etrobosim.height)
+                toX=$(json global.etrobosim.toX)
+                toY=$(json global.etrobosim.toY)
+                scale=$(json global.etrobosim.scale)
+                if [ "$scale" == "1.0" ]; then
+                    unset scale
+                else
+                    fc="${fc}[body]scale=$(calc $width*$scale):-1[body];"
                 fi
-            done
-            fc="${fc}[stage][time]overlay=shortest=1:x=$(json global.time.toX):y=$(json global.time.toY)"
+
+                # make stage
+                fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[stage];"
+                fc="${fc}[stage][body]overlay=shortest=1:x=$toX:y=$toY[stage];"
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        fc="${fc}[stage][$info]overlay=shortest=1:x=$(json common.$info.toX):y=$(json common.$info.toY)[stage];"
+                    fi
+                done
+                fc="${fc}[stage][time]overlay=shortest=1:x=$(json global.time.toX):y=$(json global.time.toY)"
+            fi
 
             # cast spell
             if [ -n "$getfilter" ]; then

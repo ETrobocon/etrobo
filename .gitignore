@@ -7,6 +7,8 @@
 !/dist/etrobosim2021_4.19-public_mac.tar.gz
 !/dist/etrobosim2021_4.19-public_win.tar.gz
 !/dist/settings.json.default
+!/dist/filter.png
+!/dist/mmmux.json
 !/dist/sample_c4/
 !/dist/sample_mruby/
 !/dist/etroboc_common/

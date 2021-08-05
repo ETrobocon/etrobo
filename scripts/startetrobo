@@ -222,6 +222,14 @@ if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
     sudo mv tmpFile "$BeerHall/etc/profile.d/etrobo.sh"
 fi
 
+# repair mode
+unset repair
+if [ "$1" = "repair" ]; then
+    shift
+    repair="$1"
+    shift
+fi
+
 # platform update and git clone etrobo
 if [ ! -d "$ETROBO_ROOT" ]; then
     echo
@@ -289,7 +297,11 @@ if [ -d "$ETROBO_ROOT" ]; then
 fi
 
 # install Athrill2 & UnityETroboSim
-"$ETROBO_ROOT/scripts/setup.sh"
+if [ -n "$repair" ]; then
+    "$ETROBO_ROOT/scripts/setup.sh repair $repair"
+else
+    "$ETROBO_ROOT/scripts/setup.sh"
+fi
 
 # invoke etrobo environment
 cd "$ETROBO_ROOT"

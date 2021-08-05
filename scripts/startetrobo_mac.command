@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.23a.210513"
+export BEERHALL_VER="5.24a.210725"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -12,20 +12,27 @@ echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
 #
 
 if [ "$1" = "update" ]; then
+    shift
     if [ -z "$BEERHALL" ]; then
         BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
     fi
-    if [ "$2" = "BeerHall" ]; then
+    if [ "$1" = "BeerHall" ]; then
+        shift
         echo "update BeerHall Cellar:"
         makeBeerHall="update"
     else
         echo "update BeerHall invoker:"
+        target="$BEERHALL/etrobo/scripts/startetrobo_mac.command"
+        if [ -f "$target" ]; then
+            cp -f "$target" ./
+        fi
         makeBeerHall="rebuild"
     fi
     rm -f "$BEERHALL/BeerHall"
 fi
 
 if [ "$1" = "clean" ]; then
+    shift
     if [ -z "$BEERHALL" ]; then
         BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
     fi
@@ -142,6 +149,7 @@ if [ -z "$BEERHALL" ]; then
         hallName="BeerHall"
     else
         hallName="$1"
+        shift
     fi
 
     pwd="$(cd "$(dirname "$0")"; pwd)"
@@ -431,7 +439,8 @@ if [ -n "$makeBeerHall" ]; then
     echo 'if [ "$1" != "setpath" ]; then' >> $beer
     echo '    export BEERHALL_INVOKER="ready"' >> $beer
     echo '    cd "$HOME"' >> $beer
-    echo '    if [ -n "$1" ]; then' >> $beer
+    echo '    if [ -n "$1" ]; then' >> $beer    
+    echo '        echo "bash on BeerHall is invoked by params: $@"' >> $beer
     echo '        bash -c "$@"' >> $beer
     echo '    else' >> $beer
     echo '        bash -l' >> $beer
@@ -456,6 +465,10 @@ echo "bash on BeerHall is invoked on `pwd`"
 #"$BEERHALL/BeerHall" code .
 
 # for startetrobo
-"$BEERHALL/BeerHall" ./startetrobo
+echo "invoker params: $@"
+param1="$1"
+shift
+paramAt="$@"
+"$BEERHALL/BeerHall" "./startetrobo $param1 $paramAt"
 
 

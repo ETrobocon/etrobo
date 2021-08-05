@@ -24,10 +24,26 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
 fi
 cd "$ETROBO_ROOT"
 
+unset update
 if [ "$1" = "update" ]; then
-    update="update"
+    update="$1"
     option="$2"
     option2="$3"
+    if [ "$option" = "repair" ]; then
+        update="$option"
+        option="$option2"
+        if [ "$option" = "mruby" ]; then
+            echo "delete mruby installation"
+            rm -f "$ETROBO_CACHE/$ETROBO_MRUBY_VER."*
+            rm -f "dist/$ETROBO_MRUBY_VER."*
+            rm -f "$ETROBO_MRUBY_ROOT/../$ETROBO_MRUBY_VER."*
+            rm -rf "$ETROBO_MRUBY_EV3RT"
+            rm -rf "$ETROBO_MRUBY_ROOT/"
+        fi
+    fi
+fi
+
+if [ -n "$update" ]; then
     cd "$ETROBO_ROOT"
     rm -f ~/startetrobo
     cp -f scripts/startetrobo ~/
@@ -53,6 +69,11 @@ if [ "$1" = "update" ]; then
     fi
     etrobopkg
     . "$scripts/sim" env
+fi
+
+if [ "$update" = "repair" ] && [ "$option" = "mruby" ]; then
+    echo "repair mruby installation"
+    "$ETROBO_SCRIPTS/build_athrill.sh" official
 fi
 
 if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then

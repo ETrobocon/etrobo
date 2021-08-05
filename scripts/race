@@ -6,8 +6,13 @@
 # Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
+
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
+
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "Usage: race [MODE] [matchmaker] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
+    echo "Usage: race [matchmaker] [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
     echo
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
@@ -90,6 +95,7 @@ ERR_SEQ_REQUESTS_EMPTY=206
 ERR_SEQ_SIM_LAUNCH_FAILED=207
 ERR_SEQ_FFMPEG_FAILED=208
 ERR_SEQ_ZIP_FAILED=209
+ERR_SEQ_TOO_MANY_FILES=210
 
 exit_code=$ERR_OK
 
@@ -106,16 +112,17 @@ fi
 #
 # get options
 #
-mode="get"
-if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
-    mode="$1"
-    shift
-fi
 
 unset matchmaker
 if [ "$1" = "matchmaker" ]; then
     matchmaker="$1"
+    shift
+fi
+
+mode="get"
+if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
+|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
+    mode="$1"
     shift
 fi
 
@@ -206,9 +213,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
 
     # prepare ev3rtfs
     echo -n "file archiver: __ev3rtfs "
+    l_files=0;
     if [ -d "$proj/__ev3rtfs" ]; then
         cp -r "$proj/__ev3rtfs" "$raceTemp/"
         if [ "$?" == "0" ]; then
+            l_files=`ls -1 "$proj/__ev3rtfs" | wc -l`
             echo "is copied."
         else
             echo "ERROR while coping."
@@ -217,10 +226,12 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
     else
         echo "doesn't exists."
     fi
+    r_files=0;
     echo -n "file archiver: __ev3rtfs_r "
     if [ -d "$proj/__ev3rtfs_r" ]; then
         cp -r "$proj/__ev3rtfs_r" "$raceTemp/"
         if [ "$?" == "0" ]; then
+            r_files=`ls -1 "$proj/__ev3rtfs_r" | wc -l`
             echo "is copied."
         else
             echo "ERROR while coping."
@@ -228,6 +239,11 @@ if [ "$mode" == "zip" ] || [ "$mode" == "upload" ]; then
         fi
     else
         echo "doesn't exists."
+    fi
+
+    files=$(($l_files + $r_files))
+    if [ $files -gt 256 ]; then
+        echo "WARNING: there are too many ($files) files in __ev3rtfs/_r."
     fi
 
     # prepare l_app
@@ -294,7 +310,7 @@ else
     #
     target=`ls -tr "$raceFolder/Requests" | grep \.zip$ | head -n 1`
     if [ -n "$target" ]; then
-        echo "race sequencer: get $target"
+        echo -n "race sequencer: get $target"
         touch "$raceFolder/${target}.manifest"
         if [ -n "$matchmaker" ]; then
             rm -f "$raceFolder/ERROR"
@@ -302,27 +318,40 @@ else
             rm -f "$raceFolder/END"
             rm -f "$raceFolder/WAITING"
         fi
-        cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST"
-        unzip -o $target > /dev/null
-        unzip_error="$?"
-        if [ "$mode" != "get" ]; then
-            rm -f "$raceFolder/Requests/$target"
+
+        cp "$raceFolder/Requests/$target" "$ETROBO_SIM_DIST" > /dev/null 2>&1
+        if [ "$?" != "0" ]; then
+            echo ""
+            echo "race sequencer: internal server error, can't access to this file."
+            echo "race sequencer: if you don't receive this result file, please re-run it."
+            exit $ERR_SEQ_UNZIP_FAILED
         fi
+        if [ "$mode" != "get" ]; then
+            rm -f "$raceFolder/Requests/$target" > /dev/null 2>&1
+        fi
+
+        # check race zip file
+        echo " and now checking this file"
+        checker="`unzip -l $target | awk '{print $4}'`"
+        if [ `echo "$checker" | grep -cE '^__race/$'` -eq 0 ]; then
+            echo "race sequencer: $target isn't contain '__race' folder."
+            exit $ERR_SEQ_RACE_NOT_FOUND
+        elif [ `echo "$checker" | grep -cE '^__race/[lr]___race.asp$'` -eq 0 ]; then
+            echo "race sequencer: $target isn't contain '*___race.asp' file."
+            exit $ERR_SEQ_ASP_NOT_FOUND
+        elif [ `echo "$checker" | grep -cE '^__race/__ev3rtfs(_r)?/.{1,}'` -gt 256 ]; then
+            echo "race sequencer: too many files in __ev3rtfs/_r"
+            exit $ERR_SEQ_TOO_MANY_FILES
+        fi
+
+        # unzip race zip into simdist
+        unzip -qqo $target
+        unzip_error="$?"
         if [ "$unzip_error" != "0" ]; then
             echo "race sequencer: UNZIP ERROR"
             exit $ERR_SEQ_UNZIP_FAILED
         fi
         rm "$ETROBO_SIM_DIST/$target"
-        if [ ! -d __race ]; then
-            echo "race sequencer: $target isn't contain '__race' folder."
-            exit $ERR_SEQ_RACE_NOT_FOUND
-        elif [ ! -f "__race/l___race.asp" ] || [ ! -f "__race/r___race.asp" ]; then
-            echo "race sequencer: $target isn't contain '*___race.asp' file."
-            exit $ERR_SEQ_ASP_NOT_FOUND
-        fi
-        if [ "$mode" != "get" ]; then
-            rm -f "$raceFolder/Requests/$target"
-        fi
 
         # calc md5sum
         unset sum
@@ -471,7 +500,7 @@ if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$m
     frameRateMode="0"
     frameRate="60"
     motorSound="0"
-    captureRate="3"
+    captureRate="2"
     captureDir="$captDir"
     forceShutdown="$forceShutdown"
     Poles="0"
@@ -623,6 +652,9 @@ else
     src="$captDir_bashPath/$coursePrefix.csv"
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
+        if [ -d "$raceFolder/common/csv" ]; then
+            cp "$src" "$raceFolder/common/csv/$requestID.csv"
+        fi
     fi
 
     # update result.json
@@ -646,8 +678,16 @@ else
     csvBLOCK_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $17}'`"
     csvBLOCK_BINGO="`echo "$record" | awk -F ',' '{print $18}'`"
     csvENTRY_BONUS="`echo "$record" | awk -F ',' '{print $19}'`"
+    csvBLOCK_YUKOIDOP="`echo "$record" | awk -F ',' '{print $20}'`"
+    csvBLOCK_YUKOIDOC="`echo "$record" | awk -F ',' '{print $21}'`"
+    csvBLOCK_BINGOP="`echo "$record" | awk -F ',' '{print $22}'`"
+    csvMeasurementMode="`echo "$record" | awk -F ',' '{print $23}'`"
 
-    json="`cat result.json`"
+    if [ -f result.json ]; then
+        json="`cat result.json`"
+    else
+        json="{}"
+    fi
     json="`echo \"$json\" | jq \".${course}Measurement.TIME|=\\\"$csvTIME\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.MEASUREMENT_TIME|=\\\"$csvMEASUREMENT_TIME\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.RUN_TIME|=\\\"$csvRUN_TIME\\\"\"`"
@@ -664,6 +704,9 @@ else
     json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_NUMBER_CIRCLE|=\\\"$csvBLOCK_NUMBER_CIRCLE\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGO|=\\\"$csvBLOCK_BINGO\\\"\"`"
     json="`echo \"$json\" | jq \".${course}Measurement.ENTRY_BONUS|=\\\"$csvENTRY_BONUS\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOP|=\\\"$csvBLOCK_YUKOIDOP\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOC|=\\\"$csvBLOCK_YUKOIDOC\\\"\"`"
+    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGOP|=\\\"$csvBLOCK_BINGOP\\\"\"`"
 
     echo $json | jq -M . > result.json
 
@@ -702,13 +745,15 @@ else
 
     # encode race video
     echo "race sequencer: encode race video"
-    ffmpeg -y -r 20 -i "$captDir_bashPath/${coursePrefix}_%08d.png" -vcodec libx264 -pix_fmt yuv420p -loglevel 8 "$result/$dest.mp4" 
+    ffutil encode $captureRate "$captDir_bashPath/${coursePrefix}_%08d.png" "$result/$dest.mp4" fatal
     if [ "$?" != "0" ];then
         echo "race sequencer: ffmpeg encoding ERROR!!"
         exit_code=$ERR_SEQ_FFMPEG_FAILED
         if [ -n "$matchmaker" ]; then
             touch "$raceFolder/ERROR"
         fi
+    elif [ -d "$raceFolder/common/raceserv" ]; then
+        cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$requestID.mp4"
     fi
 
     # add files from matchmaker

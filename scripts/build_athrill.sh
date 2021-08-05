@@ -15,8 +15,8 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2021.05.28a
-ATHRILL_OFFICIAL_COMMIT="70bc17fa2915d5bde544779424d4eb7149b5da3b"
+# the ETrobo official certified commit: Ver.2021.07.31a
+ATHRILL_OFFICIAL_COMMIT="64641d258e6791596f9dcffe4e135cf21dd95d1d"
 TARGET_OFFICIAL_COMMIT="84e8586336b7a1514fa152a4c0091bb13533b323"
 SAMPLE_OFFICIAL_COMMIT="26983b25742c01b65dfba9b23325fce7cb22da50"
 

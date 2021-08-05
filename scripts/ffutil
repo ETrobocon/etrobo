@@ -1,0 +1,655 @@
+#!/usr/bin/env bash
+#
+# Multi-platform movie utilities that run with ffmpeg and ImageMagick
+#   ffutil
+# Author: jtFuruhata
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
+
+#
+# Notice:
+#   "tpad filter" doesn't work on Ubuntu 18.04 because the version of ffmpeg official package is 3.4.8.
+#
+# Further Information: See https://ffmpeg.org/
+#
+
+# ffmpeg for windows constants
+ffmpeg_win_root="$ETROBO_USERPROFILE/etrobosim"
+ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+# show usage
+if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
+    echo "usage: ffutil <command> [<params> ...]"
+    echo "  /path/to/file ... all file path must be the UNIX style."
+    echo "  captureRate   ... 1=60fps 2=30fps 3=20fps 4=15fps"
+    echo "  loglevel      ... quiet(-8), fatal(8), error(16), info(32) etc..."
+    echo
+    echo "ffutil install"
+    echo "      install ffmpeg and ImageMagick"
+    echo "ffutil show"
+    echo "      show applications version and encoder"
+    echo "ffutil streaminfo </path/to/file> [<loglevel>]"
+    echo "      show video stream information"
+    echo "ffutil encode [multiplex|demultiplex] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      encode a movie file or image files to a movie file"
+    echo "ffutil stretch [bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      stretch <stretchFrames> frames by last frame"
+    echo "ffutil mmmux entry|primary|advanced left|right [getfilter] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      multiplex with MatchMaker movie"
+    exit 0
+fi
+
+#
+# path transform function from the Unix style to the Windows style
+#
+# getWinPath </mnt/drive/path/to/winDir> win [escape] [restrict]
+#   escape   ... all \ will be converted to escaped \\
+#   restrict ... return null when a path doesn't start with /mnt/   
+function getWinPath () {
+    result="$1"
+    unset win
+    unset escape
+    unset restrict
+    if [ "$2" == "win" ]; then
+        win="$2"
+        shift
+    fi
+    if [ "$2" == "escape" ]; then
+        escape="$2"
+        shift
+    fi
+    if [ "$2" == "restrict" ]; then
+        restrict="$2"
+        shift
+    fi
+
+    if [ -n "$win" ]; then
+        if [ -n "$restrict" ] && [ -z "`echo "$result" | grep '^/mnt/'`" ]; then
+            unset result
+        else
+            result="`echo \"$result\" | sed -E 's/^\/mnt\///' | sed -E 's/^(.{1})/\U&:/'`"
+        fi
+
+        if [ -n "$escape" ]; then
+            result="`echo \"$result\" | sed -E 's/\//\\\\\\\\/g'`"
+        else
+            result="`echo \"$result\" | sed -E 's/\//\\\\/g'`"
+        fi
+    fi
+
+    echo "$result"
+}
+
+#
+# floating point calculation using by awk
+#
+# calc "<formula>"
+calc () {
+    awk "BEGIN { print $1 }"
+}
+
+#
+# get value from JSON object
+#
+# json <envvar>.key.to.value
+json () {
+    argv="$1"
+    envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
+    key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
+    eval "echo \$$envvar | jq -r $key"
+}
+
+# unset option
+if [ "$1" == "unset" ]; then
+    unset ETROBO_FFUTIL_READY
+    unset ETROBO_FFMPEG
+    unset ETROBO_FFPROBE
+    unset ETROBO_IM
+    unset ETROBO_FFMPEG_OS
+    unset ETROBO_FFPROBE_OS
+    unset ETROBO_IM_OS
+    unset ETROBO_FFMPEG_VER
+    unset ETROBO_FFPROBE_VER
+    unset ETROBO_IM_VER
+    unset ETROBO_ENC_NAME
+    unset ETROBO_ENC_CODEC
+    unset ETROBO_ENC_HW
+    unset ETROBO_ENC_HW_OPT
+    unset ETROBO_ENC_HWFORMAT
+    unset ETROBO_ENC_HWFORMAT_OPT
+    unset getWinPath
+
+# install ffmpeg and ImageMagick
+elif [ "$1" == "install" ]; then
+    shift
+    if [ "$ETROBO_OS" == "win" ]; then
+        echo "download ffmpeg from $ffmpeg_win_url"
+        cd "$ffmpeg_win_root"
+        rm -f ffmpeg.zip
+        rm -rf ffmpeg
+        curl -L "$ffmpeg_win_url" -o ffmpeg.zip
+        echo "install ffmpeg into $ffmpeg_win_root"
+        ffmpeg_folder=`unzip -Z ffmpeg.zip | head -n 3 | tail -n 1 | sed -E 's/^.*\ (.*)\/$/\1/'`
+        unzip ffmpeg.zip > /dev/null
+        mv -f "$ffmpeg_folder" ffmpeg
+        rm -f ffmpeg.zip
+        echo "update debian packages"
+        sudo apt -y update
+        sudo apt -y upgrade
+        echo "install ImageMagick"
+        sudo apt -y install imagemagick
+        echo "done."
+    elif [ "$ETROBO_OS" == "mac" ]; then
+        echo "install ffmpeg"
+        brew install ffmpeg
+        echo "install ImageMagick"
+        brew install imagemagick
+        echo "done."
+    else
+        echo "update debian packages"
+        sudo apt -y update
+        sudo apt -y upgrade
+        echo "install ffmpeg"
+        sudo apt -y install ffmpeg
+        echo "install ImageMagick"
+        sudo apt -y install imagemagick
+        echo "done."
+    fi
+    exit 0
+
+# determine which ffmpeg will be used and set envvers
+elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
+    echo "--------"
+    echo " ffutil - Multi-platform movie utilities with hardware acceleration"
+    echo "--------"
+    echo "initialize: start"
+
+    # detect executable binary
+    export ETROBO_FFUTIL_READY="detecting"
+    export ETROBO_FFMPEG="`which ffmpeg`"
+    export ETROBO_FFPROBE="`which ffprobe`"
+    export ETROBO_IM="`which convert`"
+    export ETROBO_FFMPEG_OS="linux"
+    export ETROBO_FFPROBE_OS="linux"
+    export ETROBO_IM_OS="linux"
+    if [ "$ETROBO_OS" == "win" ]; then
+        ffmpeg_win_path="$ffmpeg_win_root/ffmpeg/bin"
+        checker="$ffmpeg_win_path/ffmpeg.exe"
+        if [ -f "$checker" ]; then
+            export ETROBO_FFMPEG="$checker"
+            export ETROBO_FFMPEG_OS="win"
+        fi
+        checker="$ffmpeg_win_path/ffprobe.exe"
+        if [ -f "$checker" ]; then
+            export ETROBO_FFPROBE="$checker"
+            export ETROBO_FFPROBE_OS="win"
+        fi
+    elif [ "$ETROBO_OS" == "mac" ]; then
+        export ETROBO_FFMPEG_OS="mac"
+        export ETROBO_FFPROBE_OS="mac"
+        export ETROBO_IM_OS="mac"
+    fi
+    $ETROBO_FFMPEG -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_FFMPEG_VER=`$ETROBO_FFMPEG -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ffmpeg $ETROBO_FFMPEG_VER for $ETROBO_FFMPEG_OS on $ETROBO_FFMPEG"
+    else
+        echo "error: ffmpeg not found."
+        unset ETROBO_FFUTIL_READY
+        unset ETROBO_FFMPEG
+        unset ETROBO_FFMPEG_OS
+        unset ETROBO_FFMPEG_VER
+    fi
+    $ETROBO_FFPROBE -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_FFPROBE_VER=`$ETROBO_FFPROBE -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ffprobe $ETROBO_FFPROBE_VER for $ETROBO_FFPROBE_OS on $ETROBO_FFPROBE"
+    else
+        echo "error: ffprobe not found."
+        unset ETROBO_FFUTIL_READY
+        unset ETROBO_FFPROBE
+        unset ETROBO_FFPROBE_OS
+        unset ETROBO_FFPROBE_VER
+    fi
+    $ETROBO_IM -version > /dev/null 2>&1
+    if [ "$?" == "0" ]; then
+        export ETROBO_IM_VER=`$ETROBO_IM -version | head -n 1 | awk '{print $3}' | sed -E 's/(^[0-9]*.[0-9]*.[0-9]*)-.*$/\1/'`
+        echo "found: ImageMagick $ETROBO_IM_VER for $ETROBO_IM_OS on $ETROBO_IM"
+    else
+        echo "error: ImageMagick not found."
+        unset ETROBO_FFUTIL_READY
+        unset ETROBO_IM
+        unset ETROBO_IM_OS
+        unset ETROBO_IM_VER
+    fi
+
+    #
+    # detect H.264 hardware encoder
+    #
+    # detection order on windows and linux
+    #   nVIDIA CUDA/NVENC -> AMD VCE/AMF -> Intel QSV -> libx264
+    # on mac, always try to use hwaccel via Video Toolbox
+    #
+    if [ -n "$ETROBO_FFUTIL_READY" ]; then
+        export ETROBO_FFUTIL_READY="ready"
+        
+        if [ "$ETROBO_FFMPEG_OS" == "win" ]; then
+            temp="$ffmpeg_win_root"
+        else
+            temp="$ETROBO_ROOT/dist"
+        fi
+
+        png_bash="$temp/test.png"
+        mp4_bash="$temp/test.mp4"
+        png="`getWinPath \"$png_bash\" $ETROBO_FFMPEG_OS`"
+        mp4="`getWinPath \"$mp4_bash\" $ETROBO_FFMPEG_OS`"
+        $ETROBO_IM -size 1280x800 xc:white "$png_bash"
+        evaluater='"$ETROBO_FFMPEG" -y -r 30 -loop 1 $enc_hw_opt $enc_hw $enc_hwformat_opt $enc_hwformat -i "$png" -t 1 -pix_fmt yuv420p -c:v $enc_codec -b:v 2M "$mp4"'
+
+        # encoder settings
+        encs='
+        [
+            {"name": "nVIDIA CUDA/NVENC",  "codec": "h264_nvenc",        "hw": "cuda", "hwformat": "cuda"},
+            {"name": "AMD VCE/AMF",        "codec": "h264_amf",          "hw": "auto", "hwformat": ""    },
+            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": ""    },
+            {"name": "Apple Video Toolbox","codec": "h264_videotoolbox", "hw": "auto", "hwformat": ""    },
+            {"name": "libx264 soft encode","codec": "libx264",           "hw": ""   ,  "hwformat": ""    }
+        ]'
+
+        echo "checking: ffmpeg encoders availability"
+        unset detecting
+        len=`echo $encs | jq length`
+        for i in $( seq 0 $(($len - 1)) ); do
+            if [ -z $detecting ]; then
+                enc_name=`echo $encs | jq -r .[$i].name`
+                enc_codec=`echo $encs | jq -r .[$i].codec`
+                enc_hw=`echo $encs | jq -r .[$i].hw`
+                enc_hwformat=`echo $encs | jq -r .[$i].hwformat`
+                if [ -z "$enc_hw" ]; then
+                    unset enc_hw_opt
+                    unset enc_hw
+                else
+                    enc_hw_opt="-hwaccel"
+                fi
+                if [ -z "$enc_hwformat" ]; then
+                    unset enc_hwformat_opt
+                    unset enc_hwformat
+                else
+                    enc_hwformat_opt="-hwaccel_output_format"
+                fi
+
+                result=`$(eval echo "$evaluater") >/dev/null 2>&1; echo $?`
+                if [ "$result" == "0" ]; then
+                    echo "    $enc_name: available"
+                    detecting="detected"
+                else
+                    echo "    $enc_name: unavailable"
+                    if [ -z "$enc_hw" ]; then
+                        unset ETROBO_FFUTIL_READY
+                        echo "fatal error: no available encoder"
+                        exit 1
+                    fi
+                fi
+            fi
+        done
+
+        rm -f "$png"
+        rm -f "$mp4"
+        export ETROBO_ENC_NAME="$enc_name"
+        export ETROBO_ENC_CODEC="$enc_codec"
+        export ETROBO_ENC_HW="$enc_hw"
+        export ETROBO_ENC_HW_OPT="$enc_hw_opt"
+        export ETROBO_ENC_HWFORMAT="$enc_hwformat"
+        export ETROBO_ENC_HWFORMAT_OPT="$enc_hwformat_opt"
+        echo "initialize: done. ready for use ffutil with $ETROBO_ENC_NAME"
+    fi
+fi
+
+# do commands
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    if [ -n "$ETROBO_FFUTIL_READY" ]; then
+        command="$1"
+        shift
+
+        # show applications version and encoder
+        # show
+        if [ "$command" == "show" ]; then
+            echo "     ffmpeg $ETROBO_FFMPEG_VER for $ETROBO_FFMPEG_OS / encoder: $ETROBO_ENC_NAME"
+            echo "    ffprobe $ETROBO_FFPROBE_VER for $ETROBO_FFPROBE_OS"
+            echo "ImageMagick $ETROBO_IM_VER for $ETROBO_IM_OS"
+        fi
+
+        # get video stream information by ffprobe
+        # streaminfo </path/to/file> [<loglevel>]
+        if [ "$command" == "streaminfo" ]; then
+            path="`getWinPath \"$1\" $ETROBO_FFPROBE_OS`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$2" ]; then
+                loglevel="$2"
+            fi
+            streams="`$ETROBO_FFPROBE -show_streams -print_format json $loglevel_opt $loglevel \"$path\" | jq -M -c .streams[0]`"
+            echo $streams
+        fi
+
+        # encode from a movie or image files to a movie file
+        # encode [multiplex|demultiplex] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "encode" ]; then
+            unset multiplex
+            if [ "$1" == "multiplex" ] || [ "$1" == "demultiplex" ]; then
+                multiplex="$1"
+                shift
+            fi
+
+            bitrate="2M"
+            if [ "$1" == "bitrate" ]; then
+                bitrate="$2"
+                shift 2
+            fi
+
+            captureRate=(0 60 30 20 15)
+            frameRate=${captureRate[$1]}
+            if [ -z "$frameRate" ]; then
+                frameRate=30
+            fi
+            source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
+            srcPrefix="`echo \"$source\" | sed -E 's/^(.*)\..*$/\1/'`"
+            srcPostfix="`echo \"$source\" | sed -E 's/^.*\.(.*)$/\1/'`"
+            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            destPrefix="`echo \"$destination\" | sed -E 's/^(.*)\..*$/\1/'`"
+            destPostfix="`echo \"$destination\" | sed -E 's/^.*\.(.*)$/\1/'`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+            if [ "$multiplex" == "multiplex" ]; then
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "${srcPrefix}_mmmux.${srcPostfix}" \
+                    -i "${srcPrefix}_2.${srcPostfix}" \
+                    -i "${srcPrefix}_3.${srcPostfix}" \
+                    -i "${srcPrefix}_4.${srcPostfix}" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    -filter_complex " \
+                        color=s=1280x800:c=black:r=$frameRate [base]; \
+                        [0:v] scale=640x400 [upperleft]; \
+                        [1:v] scale=640x400 [upperright]; \
+                        [2:v] scale=640x400 [lowerleft]; \
+                        [3:v] scale=640x400 [lowerright]; \
+                        [base][upperleft] overlay=shortest=1:x=0 [tmp1]; \
+                        [tmp1][upperright] overlay=shortest=1:x=640 [tmp2]; \
+                        [tmp2][lowerleft] overlay=shortest=1:y=400 [tmp3]; \
+                        [tmp3][lowerright] overlay=shortest=1:x=640:y=400 \
+                    " \
+                    $loglevel_opt $loglevel \
+                    "$destination"
+            elif [ "$multiplex" == "demultiplex" ]; then
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    -vf crop=640:400:0:0 \
+                    "${destPrefix}_1.${destPostfix}"
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    -vf crop=640:400:640:0 \
+                    "${destPrefix}_2.${destPostfix}"
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    -vf crop=640:400:0:400 \
+                    "${destPrefix}_3.${destPostfix}"
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    -vf crop=640:400:640:400 \
+                    "${destPrefix}_4.${destPostfix}"
+            else
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    "$destination"
+            fi
+        fi
+
+        # stretch <stretchFrames> frames by last frame
+        # ffutil stretch [bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "stretch" ]; then
+            bitrate="2M"
+            if [ "$1" == "bitrate" ]; then
+                bitrate="$2"
+                shift 2
+            fi
+            stretchFrames="$1"
+            source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
+            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+            "$ETROBO_FFMPEG" -y \
+                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                -i "$source" \
+                -vf tpad=stop=${stretchFrames}:stop_mode=clone \
+                -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                $loglevel_opt $loglevel \
+                "$destination"
+        fi
+        # MatchMaker multiplexer
+        # mmmux entry|primary|advanced left|right [getfilter|setfilter <filter>] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "mmmux" ]; then
+            class="entry"
+            if [ "$1" == "entry" ] || [ "$1" == "primary" ] || [ "$1" == "advanced" ]; then
+                class="$1"
+                shift
+            fi
+            course="left"
+            if [ "$1" == "left" ] || [ "$1" == "right" ]; then
+                course="$1"
+                shift
+            fi
+            unset getfilter
+            if [ "$1" == "getfilter" ]; then
+                getfilter="$1"
+                shift
+            else
+                echo "Prepare filter-complex for $class class, $course course."
+            fi
+            unset setfilter
+            if [ "$1" == "setfilter" ]; then
+                setfilter="$2"
+                shift 2
+            fi
+            bitrate="2M"
+            if [ "$1" == "bitrate" ]; then
+                bitrate="$2"
+                shift 2
+            fi
+
+            captureRate=(0 60 30 20 15)
+            frameRate=${captureRate[$1]}
+            if [ -z "$frameRate" ]; then
+                frameRate=30
+            fi
+            sourcePath="`echo $2 | sed -E 's/^(.*)\/.*$/\1/'`"
+            if [ ! -f "$sourcePath/filter.png" ]; then
+                cp -f "$ETROBO_ROOT/dist/filter.png" "$sourcePath/"
+            fi
+            sourcePath="$(getWinPath $sourcePath $ETROBO_FFMPEG_OS)"            
+            source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
+            srcPrefix="`echo \"$source\" | sed -E 's/^(.*)\..*$/\1/'`"
+            srcPostfix="`echo \"$source\" | sed -E 's/^.*\.(.*)$/\1/'`"
+            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            destPrefix="`echo \"$destination\" | sed -E 's/^(.*)\..*$/\1/'`"
+            destPostfix="`echo \"$destination\" | sed -E 's/^.*\.(.*)$/\1/'`"
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+
+            # load mmmux settings
+            global="`cat \"$ETROBO_ROOT/dist/mmmux.json\" | jq -c .global`"
+            common="`cat \"$ETROBO_ROOT/dist/mmmux.json\" | jq -c .$course.common`"
+            class="`cat \"$ETROBO_ROOT/dist/mmmux.json\" | jq -c .$course.$class`"
+            readarray -t informations <<< $(echo "$common" | jq -r keys_unsorted[])
+            readarray -t markers <<< $(echo "$class" | jq -r keys_unsorted[])
+            
+            #
+            # generate filter complex
+            #
+
+            if [ -n "$setfilter" ]; then
+                fc="$setfilter"
+            else
+                # split MatchMaker source
+                fc="[0:v]setpts=PTS/$(calc $(json global.matchMakerFrameRate)/$frameRate),fps=$frameRate[src];"
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        fc="${fc}[src]split[src][${info}Src];"
+                    fi
+                done
+                fc="${fc}[src]split[src][timeSrc];"
+                fc="${fc}[src]split[src][filterSrc];"
+
+                # get time and mask it for teamInfo
+                width=$(json global.time.width)
+                height=$(json global.time.height)
+                x=$(json global.time.x)
+                y=$(json global.time.y)
+                scale=$(json global.time.scale)
+                if [ "$scale" == "1.0" ]; then
+                    unset scale
+                else
+                    scale=",scale=$(calc $width*$scale):-1"
+                fi
+                fc="${fc}[timeSrc]crop=$width:$height:$x:$y$scale[time];"
+                fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[timeMask];"
+                fc="${fc}[teamInfoSrc][timeMask]overlay=shortest=1:x=$x:y=$y[teamInfoSrc];"
+
+                # get informations
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        width=$(json common.$info.width)
+                        height=$(json common.$info.height)
+                        x=$(json common.$info.x)
+                        y=$(json common.$info.y)
+                        scale=$(json common.$info.scale)
+                        if [ "$scale" == "1.0" ]; then
+                            unset scale
+                        else
+                            scale=",scale=$(calc $width*$scale):-1"
+                        fi
+                        fc="${fc}[${info}Src]crop=$width:$height:$x:$y$scale[$info];"
+                    fi
+                done
+
+                # make and split difference stream
+                fc="${fc}[1:v]fps=$frameRate[body];"
+                fc="${fc}[2:v]fps=$frameRate[filter];"
+                fc="${fc}color=c=black:s=$(json global.matchMakerScreenWidth)x$(json global.matchMakerScreenHeight):r=$frameRate,split[bk1][bk2];"
+                fc="${fc}[filterSrc][filter]blend=all_mode=grainextract,lutyuv=val-128[mask];"
+                fc="${fc}[mask]lutrgb=g=0:b=0,lutyuv='255*gt(val,35)':u=128:v=128[mask];"
+                fc="${fc}[mask][bk1][bk2][src]threshold,lutyuv=y='val*gt(val,25)'[diffStream];"
+                for ((i=0; i<${#markers[@]}-1; i++)); do
+                    if [ $i -lt $((${#markers[@]}-2)) ]; then
+                        fc="${fc}[diffStream]split[diffStream][${markers[$i]}Diff];"
+                    else
+                        fc="${fc}[diffStream]split[${markers[$i]}Diff][${markers[$(($i+1))]}Diff];"
+                    fi
+                done
+
+                # get markers and make body
+                for mark in ${markers[@]}; do
+                    width=$(json class.$mark.width)
+                    height=$(json class.$mark.height)
+                    x=$(json class.$mark.x)
+                    y=$(json class.$mark.y)
+                    toX=$(json class.$mark.toX)
+                    toY=$(json class.$mark.toY)
+                    scale=$(json class.$mark.scale)
+                    if [ "$scale" == "1.0" ]; then
+                        unset scale
+                    else
+                        scale=",scale=$(calc $width*$scale):-1"
+                    fi
+                    fc="${fc}color=c=white:s=${width}x${height}:r=$frameRate[${mark}BG];"
+                    fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.25:0.1[${mark}Key];"
+                    fc="${fc}[${mark}BG][${mark}Key]overlay=shortest=1,colorkey=white:0.01:0[$mark];"
+                    fc="${fc}[body][$mark]overlay=shortest=1:x=$toX:y=$toY$scale[body];"
+                done
+                width=$(json global.etrobosim.width)
+                height=$(json global.etrobosim.height)
+                toX=$(json global.etrobosim.toX)
+                toY=$(json global.etrobosim.toY)
+                scale=$(json global.etrobosim.scale)
+                if [ "$scale" == "1.0" ]; then
+                    unset scale
+                else
+                    fc="${fc}[body]scale=$(calc $width*$scale):-1[body];"
+                fi
+
+                # make stage
+                fc="${fc}color=c=black:s=${width}x${height}:r=$frameRate[stage];"
+                fc="${fc}[stage][body]overlay=shortest=1:x=$toX:y=$toY[stage];"
+                for info in ${informations[@]}; do
+                    if [ -n "$(json common.$info.scale)" ]; then
+                        fc="${fc}[stage][$info]overlay=shortest=1:x=$(json common.$info.toX):y=$(json common.$info.toY)[stage];"
+                    fi
+                done
+                fc="${fc}[stage][time]overlay=shortest=1:x=$(json global.time.toX):y=$(json global.time.toY)"
+            fi
+
+            # cast spell
+            if [ -n "$getfilter" ]; then
+                echo "$fc"
+            else
+                echo "now multiplexing..."
+                "$ETROBO_FFMPEG" \
+                    -y -r $frameRate \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "${srcPrefix}_0.${srcPostfix}" \
+                    -i "${srcPrefix}_1.${srcPostfix}" \
+                    -i "$sourcePath/filter.png" \
+                    -filter_complex "$fc" \
+                    -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                    $loglevel_opt $loglevel \
+                    "$destination"
+            fi
+        fi
+    else
+        echo 'error: unable to use ffutil. run `ffutil install` first.'
+        exit 1
+    fi
+fi

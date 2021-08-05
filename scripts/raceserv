@@ -7,10 +7,23 @@
 # See LICENSE
 #
 # fp0 ... 2021/07/17 13:00～2021/07/17 16:00
-# fp1 ... 2021/07/26 12:00～2021/08/01 20:00
-# fp2 ... 2021/08/29 12:00～2021/09/08 20:00
-# fp3 ... 2021/10/30 12:00～2021/11/05 20:00
+# fp1 ... 2021/07/26 09:30～2021/08/01 20:00
+# fp2 ... 2021/08/29 09:30～2021/09/08 20:00
+# fp3 ... 2021/10/30 09:30～2021/11/05 20:00
 #
+
+# ToDo:
+#   You should make symbolick link to relayFolder/Requests and relayFolder/Results from raceFolder.
+#       sudo mount -t drvfs <WindowsDriveLetter>: "$mountPath"
+#       ln -s /path/to/relayFolder/Requests /path/to/raceFolder/Requests
+#       ln -s /path/to/relayFolder/Results /path/to/raceFolder/Results
+#
+#   To export CSV and movie files, you also should make these folder and symbolick link to there.
+#       mkdir /path/to/relayFolder/common
+#       mkdir /path/to/relayFolder/common/csv
+#       mkdir /path/to/relayFolder/common/raceserv
+#       mkdir /path/to/relayFolder/common/matchmaker
+#       ln -s /path/to/relayFolder/common /path/to/raceFolder/common
 
 #
 # define error codes
@@ -31,6 +44,7 @@ ERR_SEQ_REQUESTS_EMPTY=206
 ERR_SEQ_SIM_LAUNCH_FAILED=207
 ERR_SEQ_FFMPEG_FAILED=208
 ERR_SEQ_ZIP_FAILED=209
+ERR_SEQ_TOO_MANY_FILES=210
 
 exit_code=ERR_OK
 
@@ -49,14 +63,14 @@ if [ "$1" == "vm" ]; then
     shift
 fi
 
-if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
-    # recognize matchmaker option
-    unset matchmaker
-    if [ "$1" == "matchmaker" ]; then
-        matchmaker="$1"
-        shift
-    fi
+# recognize matchmaker option
+unset matchmaker
+if [ "$1" == "matchmaker" ]; then
+    matchmaker="$1"
+    shift
+fi
 
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -153,6 +167,8 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                             mes="illegal zip file: __race folder not found. you should run 'race zip'." ;;
                         "$ERR_SEQ_ASP_NOT_FOUND" ) 
                             mes="illegal zip file: .asp file not found. you should run 'make app=<projName> sim up' first." ;;
+                        "$ERR_SEQ_TOO_MANY_FILES" ) 
+                            mes="illegal zip file: too many files in __ev3rtfs/_r. you should reduce file counts less than 256." ;;
                         "$ERR_SEQ_MD5SUM_MISMATCH" ) 
                             mes="illegal zip file: MD5 check sum mismatched. you should run 'update' first." ;;
                         "$ERR_SEQ_FFMPEG_FAILED" ) 
@@ -180,5 +196,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] fp1|fp2|fp3|final [matchmaker] /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker] fp1|fp2|fp3|final /path/to/raceFolder [/path/to/relayFolder]" 
 fi

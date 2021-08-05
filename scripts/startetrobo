@@ -7,6 +7,10 @@ echo '-------------'
 # See LICENSE
 #
 
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
+
 # check dev branch
 if [ "$ETROBO_ENV" = "available" ]; then
     current="`pwd`"
@@ -305,6 +309,10 @@ if [ -z "$ETROBO_ENV" ]; then
     . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 if [ "$ETROBO_ENV" = "available" ]; then
+    if [ -f ffutil_autoload ]; then
+        . ffutil env
+    fi
+
     if [ "$1" = "shell" ]; then
         bash -l
     else

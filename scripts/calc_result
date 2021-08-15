@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+#
+# Uncertain Result Time calculator
+#   calc_result
+# Author: jtFuruhata
+# Copyright (c) 2021 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# Notice: Field names must not contain white spaces.
+#
+
+# show usage
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: calc_result [YEAR] [<CLASS>] /path/to/CSV"
+    echo
+    echo "Calcuate uncertain Result Time from a CSV file."
+    echo
+    echo "  YEAR(default:'2021'): specify the year of competition rules"
+    echo
+    echo "  CLASS Options:  (default: 'auto')"
+    echo "    auto   ... choose in depending on filename prefix(A|P|E)"
+    echo "    advanced . choose 'advanced' class"
+    echo "    primary .. choose 'primary' class"
+    echo "    entry  ... choose 'entry' class"
+    echo
+    exit 0
+fi
+
+# determine options
+year="2021"
+if [[ "$1" =~ ^[0-9]{4} ]];then
+    year="$1"
+    shift
+fi
+
+class="auto"
+if [ "$1" == "advanced" ] || [ "$1" == "primary" ] || [ "$1" == "entry" ]; then
+    class="$1"
+    shift
+fi
+
+csv="$1"
+
+# determine auto modes
+if [ "$class" == "auto" ]; then
+    if [[ "$(basename $csv)" =~ ^A ]];then
+        class="advanced"
+    elif [[ "$(basename $csv)" =~ ^P ]];then
+        class="primary"
+    elif [[ "$(basename $csv)" =~ ^E ]];then
+        class="entry"
+    else
+        echo "FATAL ERROR: class auto detection failed."
+        exit 1
+    fi
+fi
+
+#echo -n "start to calc $year result: $class class: now loading "
+
+#
+# floating point calculation using by awk
+#
+# calc "<formula>"
+calc () {
+    awk "BEGIN { print $1 }"
+}
+
+#
+# get/set value from/to JSON object
+#
+# json <envvar>.key.to.value [= <value>]
+json () {
+    argv="$1"
+    op="$2"
+    value="$3"
+    envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
+    key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
+    if [ -z "$op" ]; then
+        eval "echo \$$envvar | jq -r $key"
+    elif [ "$op" == "=" ]; then
+        eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
+    fi
+}
+
+# stringify a CSV file to JSON
+fields=(`cat "$1" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+mapper=""
+for ((i=0; i<${#fields[@]}; i++)); do
+    if [ -n "$mapper" ];then
+        mapper="$mapper,"
+    fi
+    mapper="${mapper}\"${fields[$i]}\":.[$i]"
+done
+result=`cat "$1" | sed -e '1d' -e 's/\r//g' \
+ | jq -csR 'split("\n")|map(split(","))|map({'$mapper'})|del(.[][]|nulls)' \
+ | sed -E 's/,\{\}//' | jq -c .`
+lastIndex=`echo "$result" | jq '.|length-1'`
+
+# determine course
+coursePrefix=`json result.[0].Filename | sed -E 's/^([LR])_.*$/\1/'`
+course="left"
+if [ "$coursePrefix" == "R" ]; then
+    course="right"
+fi
+
+# define competition rules
+if [ "$year" == "2021" ]; then
+    # ETrobocon 2021
+    #echo -n "and validating on $course course... "
+
+    # time0
+    time0='
+    { 
+        "Time": "0",
+        "Counter": "0",
+        "Filename": "",
+        "TIME": "0",
+        "MEASUREMENT_TIME": "0",
+        "RUN_TIME": "0",
+        "GATE1": "0",
+        "GATE2": "0",
+        "GOAL": "0",
+        "GARAGE_STOP": "0",
+        "GARAGE_TIME": "0",
+        "SLALOM": "0",
+        "PETBOTTLE": "6",
+        "BLOCK_IN_GARAGE": "0",
+        "BLOCK_YUKOIDO": "0",
+        "CARD_NUMBER_CIRCLE": "0",
+        "BLOCK_NUMBER_CIRCLE": "0",
+        "BLOCK_BINGO": "0",
+        "ENTRY_BONUS": "0",
+        "BLOCK_YUKOIDOP": "0",
+        "BLOCK_YUKOIDOC": "0",
+        "BLOCK_BINGOP": "0",
+        "MeasurementMode": "READY"
+    }'
+    time0="`echo "$time0" | jq -c .`"
+    start=`echo "$result" | jq '.[]|select(.Counter=="0" and .MeasurementMode=="GO")'`
+    end=`json result.[$lastIndex]`
+
+    # start time validation
+    unset status
+    if [ "`json time0.RUN_TIME`" == "`json start.RUN_TIME`" ] \
+    && [ "`json time0.GATE1`" == "`json start.GATE1`" ] \
+    && [ "`json time0.GATE2`" == "`json start.GATE2`" ] \
+    && [ "`json time0.GOAL`" == "`json start.GOAL`" ] \
+    && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
+    && [ "`json time0.GARAGE_TIME`" == "`json start.GARAGE_TIME`" ] \
+    && [ "`json time0.SLALOM`" == "`json start.SLALOM`" ] \
+    && [ "`json time0.PETBOTTLE`" == "`json start.PETBOTTLE`" ] \
+    && [ "`json time0.BLOCK_IN_GARAGE`" == "`json start.BLOCK_IN_GARAGE`" ] \
+    && [ "`json time0.BLOCK_YUKOIDO`" == "`json start.BLOCK_YUKOIDO`" ] \
+    && [ "`json time0.CARD_NUMBER_CIRCLE`" == "`json start.CARD_NUMBER_CIRCLE`" ] \
+    && [ "`json time0.BLOCK_NUMBER_CIRCLE`" == "`json start.BLOCK_NUMBER_CIRCLE`" ] \
+    && [ "`json time0.BLOCK_BINGO`" == "`json start.BLOCK_BINGO`" ] \
+    && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
+    && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
+    && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
+    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
+    && [ "`json end.MeasurementMode`" == "END" ]; then
+        #echo "validated."
+        status="retire"
+    else
+        #echo "validation failed. this race was eliminated."
+        status="eliminated"
+    fi
+
+    # calc result time
+    time=120000
+    bonus=0
+    result="120.0"
+    if [ "$status" != "eliminated" ]; then
+        # passed START gate
+        if [ "`json end.RUN_TIME`" != "0" ]; then
+            # passed GATE1 gate
+            if [ "`json end.GATE1`" != "0" ]; then
+                if [ "$class" != "advanced" ]; then
+                    bonus=$(($bonus+2000))
+                fi
+                # passed GATE2 gate
+                if [ "`json end.GATE2`" != "0" ]; then
+                    if [ "$class" != "advanced" ]; then
+                        bonus=$(($bonus+2000))
+                    fi
+                    # passed GOAL gate
+                    if [ "`json end.GOAL`" != "0" ]; then
+                        time=$((`json end.MEASUREMENT_TIME`/100*100))
+
+                        # mission bonus for entry class
+                        if [ "$class" == "entry" ]; then
+                            bonus=$(($bonus+(`json end.ENTRY_BONUS`*1000)))
+
+                        # mission bonus for primary class
+                        elif [ "$class" == "primary" ]; then
+                            # passed slalom
+                            if [ "`json end.SLALOM`" != "0" ]; then
+                                bonus=$(($bonus+5000))
+                                # petbottle remains
+                                pets=(0 500 1000 2000 3000 5000 8000)
+                                bonus=$(($bonus+${pets[`json end.PETBOTTLE`]}))
+                            fi
+                            # garage in
+                            if [ "`json end.GARAGE_STOP`" != "0" ]; then
+                                bonus=$(($bonus+5000))
+                                # block in
+                                if [ "`json end.BLOCK_IN_GARAGE`" != "0" ]; then
+                                    bonus=$(($bonus+8000))
+                                fi
+                            fi
+
+                        # mission bonus for advanced class
+                        elif [ "$class" == "advanced" ]; then
+                            if [ "`json end.BLOCK_YUKOIDO`" != "0" ]; then
+                                # effective movement into block circles
+                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDO`*500)))
+                                # effective movement into power spots
+                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDOP`*1000)))
+                                # effective movement onto the center mark
+                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDOC`*2000)))
+                                # bingos
+                                bonus=$(($bonus+(`json end.BLOCK_BINGO`*1000)))
+                                # bingos on power spots
+                                bonus=$(($bonus+(`json end.BLOCK_BINGO`*2000)))
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+        result="`calc \"int(($time-$bonus)/100)/10\"`"
+    fi
+    #echo "Uncertain Result Time: $result secs."
+    echo "$result"
+else
+    echo "FATAL ERROR: no competion rules for $year."
+    exit 1
+fi

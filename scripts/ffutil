@@ -94,14 +94,20 @@ calc () {
 }
 
 #
-# get value from JSON object
+# get/set value from/to JSON object
 #
-# json <envvar>.key.to.value
+# json <envvar>.key.to.value [= <value>]
 json () {
     argv="$1"
+    op="$2"
+    value="$3"
     envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
     key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
-    eval "echo \$$envvar | jq -r $key"
+    if [ -z "$op" ]; then
+        eval "echo \$$envvar | jq -r $key"
+    elif [ "$op" == "=" ]; then
+        eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
+    fi
 }
 
 # unset option
@@ -465,6 +471,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 $loglevel_opt $loglevel \
                 "$destination"
         fi
+        
         # MatchMaker multiplexer
         # mmmux entry|primary|advanced left|right [getfilter|setfilter <filter>] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]
         if [ "$command" == "mmmux" ]; then

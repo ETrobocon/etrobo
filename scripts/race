@@ -646,6 +646,7 @@ else
 
     # prepare result folder
     echo "race sequencer: prepare result folder"
+    resultTime="120.0"
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"
@@ -655,7 +656,12 @@ else
         if [ -d "$raceFolder/common/csv" ]; then
             cp "$src" "$raceFolder/common/csv/$requestID.csv"
         fi
+        
+        # calc uncertain result time
+        resultTime="`calc_result $class \"$src\"`"
     fi
+    echo "race sequencer: uncertain Result Time: $resultTime secs." 
+    echo "uncertain Result Time: $resultTime secs." >> console.log
 
     # update result.json
     record="`cat "$result/$dest.csv" | tail -n 1 | sed -E 's/\r//g'`"

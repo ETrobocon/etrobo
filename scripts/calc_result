@@ -58,14 +58,6 @@ fi
 #echo -n "start to calc $year result: $class class: now loading "
 
 #
-# floating point calculation using by awk
-#
-# calc "<formula>"
-calc () {
-    awk "BEGIN { print $1 }"
-}
-
-#
 # get/set value from/to JSON object
 #
 # json <envvar>.key.to.value [= <value>]
@@ -123,11 +115,8 @@ if [ "$year" == "2021" ]; then
         "GARAGE_STOP": "0",
         "GARAGE_TIME": "0",
         "SLALOM": "0",
-        "PETBOTTLE": "6",
         "BLOCK_IN_GARAGE": "0",
         "BLOCK_YUKOIDO": "0",
-        "CARD_NUMBER_CIRCLE": "0",
-        "BLOCK_NUMBER_CIRCLE": "0",
         "BLOCK_BINGO": "0",
         "ENTRY_BONUS": "0",
         "BLOCK_YUKOIDOP": "0",
@@ -148,19 +137,19 @@ if [ "$year" == "2021" ]; then
     && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
     && [ "`json time0.GARAGE_TIME`" == "`json start.GARAGE_TIME`" ] \
     && [ "`json time0.SLALOM`" == "`json start.SLALOM`" ] \
-    && [ "`json time0.PETBOTTLE`" == "`json start.PETBOTTLE`" ] \
     && [ "`json time0.BLOCK_IN_GARAGE`" == "`json start.BLOCK_IN_GARAGE`" ] \
     && [ "`json time0.BLOCK_YUKOIDO`" == "`json start.BLOCK_YUKOIDO`" ] \
-    && [ "`json time0.CARD_NUMBER_CIRCLE`" == "`json start.CARD_NUMBER_CIRCLE`" ] \
-    && [ "`json time0.BLOCK_NUMBER_CIRCLE`" == "`json start.BLOCK_NUMBER_CIRCLE`" ] \
     && [ "`json time0.BLOCK_BINGO`" == "`json start.BLOCK_BINGO`" ] \
     && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
     && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
     && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
-    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
-    && [ "`json end.MeasurementMode`" == "END" ]; then
-        #echo "validated."
-        status="retire"
+    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ]; then
+        if [ "`json end.MeasurementMode`" != "END" ]; then
+            status="judgemental retire"
+        else
+            #echo "validated."
+            unset status
+        fi
     else
         #echo "validation failed. this race was eliminated."
         status="eliminated"
@@ -228,7 +217,7 @@ if [ "$year" == "2021" ]; then
                 fi
             fi
         fi
-        result="`calc \"int(($time-$bonus)/100)/10\"`"
+        result="`awk \"BEGIN { printf \\\"%.1f\\\",($time-$bonus)/1000 }\"`"
     fi
     #echo "Uncertain Result Time: $result secs."
     echo "$result"

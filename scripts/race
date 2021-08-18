@@ -657,11 +657,11 @@ else
             cp "$src" "$raceFolder/common/csv/$requestID.csv"
         fi
         
-        # calc uncertain result time
+        # calc preliminary result time
         resultTime="`calc_result $class \"$src\"`"
     fi
-    echo "race sequencer: uncertain Result Time: $resultTime secs." 
-    echo "uncertain Result Time: $resultTime secs." >> console.log
+    echo "race sequencer: Preliminary Result Time: $resultTime secs." 
+    echo "Preliminary Result Time: $resultTime secs." >> console.log
 
     # update result.json
     record="`cat "$result/$dest.csv" | tail -n 1 | sed -E 's/\r//g'`"

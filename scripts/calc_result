@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Uncertain Result Time calculator
+# Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
 # Copyright (c) 2021 ETロボコン実行委員会, Released under the MIT license
@@ -13,7 +13,7 @@
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "usage: calc_result [YEAR] [<CLASS>] /path/to/CSV"
     echo
-    echo "Calcuate uncertain Result Time from a CSV file."
+    echo "Calcuate preliminary Result Time from a CSV file."
     echo
     echo "  YEAR(default:'2021'): specify the year of competition rules"
     echo
@@ -219,7 +219,7 @@ if [ "$year" == "2021" ]; then
         fi
         result="`awk \"BEGIN { printf \\\"%.1f\\\",($time-$bonus)/1000 }\"`"
     fi
-    #echo "Uncertain Result Time: $result secs."
+    #echo "Preliminary Result Time: $result secs."
     echo "$result"
 else
     echo "FATAL ERROR: no competion rules for $year."

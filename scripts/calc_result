@@ -9,11 +9,17 @@
 # Notice: Field names must not contain white spaces.
 #
 
+teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
+divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
+
 # show usage
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "usage: calc_result [YEAR] [<CLASS>] /path/to/CSV"
+    echo "usage: calc_result [serv|ranking </path/to/relayFolder>] [YEAR] [<CLASS>] /path/to/CSV"
     echo
     echo "Calcuate preliminary Result Time from a CSV file."
+    echo
+    echo "  serv ... run on server which running at </path/to/relayFolder>"
+    echo "  ranking ... run on server with the ranking site at </path/to/relayFolder>"
     echo
     echo "  YEAR(default:'2021'): specify the year of competition rules"
     echo
@@ -27,6 +33,30 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
 fi
 
 # determine options
+unset serv
+unset relayFolder
+unset trigger
+unset lock
+if [ "$1" == "serv" ] || [ "$1" == "ranking" ]; then
+    serv="$1"
+    relayFolder="$2"
+    shift 2
+
+    destResult="$relayFolder/common/results.csv"
+    destRanking="$relayFolder/Ranking/results.csv"
+    destTrigger="$relayFolder/Ranking/trigger.txt"
+    destLock="$relayFolder/Ranking/lock.txt"
+    if [ "$serv" == "ranking" ]; then
+        if [ -e "$destTrigger" ]; then
+            rm -rf "$destTrigger"
+            trigger="triggered"
+        fi
+        if [ -e "$destLoop" ]; then
+            lock="locked"
+        fi
+    fi
+fi
+
 year="2021"
 if [[ "$1" =~ ^[0-9]{4} ]];then
     year="$1"
@@ -40,21 +70,74 @@ if [ "$1" == "advanced" ] || [ "$1" == "primary" ] || [ "$1" == "entry" ]; then
 fi
 
 csv="$1"
+csv_filename="$(basename $csv)"
 
+unset ranking
+
+# lookup teamID
+unset teamID
+if [ -n "$serv" ]; then
+    requestID="`echo \"$csv_filename\" | sed -E 's/^(.*)\.csv/\1/' | grep -E '^[0-9|a-f|A-F]{8}-*[0-9|a-f|A-F]{4}-*[0-9|a-f|A-F]{4}-*[0-9|a-f|A-F]{4}-*[0-9|a-f|A-F]{12}$'`"
+    if [ -n "$requestID" ]; then
+        teamID="`ETroboSimRunner.Relay.sh lookup $relayFolder $requestID`"
+        if [ "$?" != "0" ]; then
+            echo "FATAL ERROR: teamID ($requestID) lookup failed. "
+            exit 1
+        fi
+    else
+        echo "FATAL ERROR: this filename isn't contain a requestID."
+        exit 1
+    fi
+    ranking[0]="$requestID"
+    ranking[1]="$teamID"
+fi
 # determine auto modes
+unset categoryCode
 if [ "$class" == "auto" ]; then
-    if [[ "$(basename $csv)" =~ ^A ]];then
-        class="advanced"
-    elif [[ "$(basename $csv)" =~ ^P ]];then
-        class="primary"
-    elif [[ "$(basename $csv)" =~ ^E ]];then
-        class="entry"
+    if [[ "$csv_filename" =~ ^A ]];then
+        categoryCode="A"
+    elif [[ "$csv_filename" =~ ^P ]];then
+        categoryCode="P"
+    elif [[ "$csv_filename" =~ ^E ]];then
+        categoryCode="E"
+    elif [ -n "$teamID" ]; then
+        # stringify 'Teams' lookup CSV file to JSON
+        fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+        mapper=""
+        for ((i=0; i<${#fields[@]}; i++)); do
+            if [ -n "$mapper" ];then
+                mapper="$mapper,"
+            fi
+            mapper="${mapper}\"${fields[$i]}\":.[$i]"
+        done
+        teams=`cat "$teamsCSV" | sed -e '1d' -e 's/\r//g' \
+        | jq -csR 'split("\n")|map(split(","))|map({'$mapper'})|del(.[][]|nulls)' \
+        | sed -E 's/,\{\}//' | jq -c .`
+
+        categoryCode=`echo "$teams" | jq -r ".[]|select(.Id==\"$teamID\")|.CategoryCode"`
+        if [ -z "$categoryCode" ]; then
+            echo "FATAL ERROR: class auto detection (lookup from teamID) failed."
+            exit 1
+        fi
     else
         echo "FATAL ERROR: class auto detection failed."
         exit 1
     fi
+    if [ "$categoryCode" == "A" ]; then
+        class="advanced"
+    elif [ "$categoryCode" == "P" ]; then
+        class="primary"
+    elif [ "$categoryCode" == "E" ]; then
+        class="entry"
+    fi
+elif [ "$class" == "advanced" ]; then
+    categoryCode == "A"
+elif [ "$class" == "primary" ]; then
+    categoryCode == "P"
+elif [ "$class" == "entry" ]; then
+    categoryCode == "E"
 fi
-
+ranking[2]="$categoryCode"
 #echo -n "start to calc $year result: $class class: now loading "
 
 #
@@ -91,14 +174,42 @@ lastIndex=`echo "$result" | jq '.|length-1'`
 # determine course
 coursePrefix=`json result.[0].Filename | sed -E 's/^([LR])_.*$/\1/'`
 course="left"
+ranking[3]='L'
 if [ "$coursePrefix" == "R" ]; then
     course="right"
+    ranking[3]='R'
 fi
 
 # define competition rules
 if [ "$year" == "2021" ]; then
     # ETrobocon 2021
     #echo -n "and validating on $course course... "
+
+    # CSV header for ranking site
+    ranking_header=(
+        Id
+        TeamId
+        CategoryCode
+        CourseKubun
+        RunTime
+        ResultTime
+        StatusCode
+        HalfwayGate1
+        HalfwayGate2
+        CarryBlocks
+        PassedSlalom
+        AvoidObstacles
+        GarageIn
+        BringInBlock
+        MovedBlocks
+        MovedPowerSpots
+        MovedCenter
+        MovedBingo
+        MovedPowerBingo
+    )
+    for ((i=4; i<${#ranking_header[@]}; i++)); do
+        ranking[$i]=""
+    done
 
     # time0
     time0='
@@ -163,38 +274,55 @@ if [ "$year" == "2021" ]; then
         # passed START gate
         if [ "`json end.RUN_TIME`" != "0" ]; then
             # passed GATE1 gate
+            ranking[7]="FALSE"
             if [ "`json end.GATE1`" != "0" ]; then
                 if [ "$class" != "advanced" ]; then
                     bonus=$(($bonus+2000))
+                    ranking[7]="TRUE"
+                else
+                    ranking[7]=""
                 fi
                 # passed GATE2 gate
+                ranking[8]="FALSE"
                 if [ "`json end.GATE2`" != "0" ]; then
                     if [ "$class" != "advanced" ]; then
                         bonus=$(($bonus+2000))
+                        ranking[8]="TRUE"
+                    else
+                        ranking[8]=""
                     fi
                     # passed GOAL gate
                     if [ "`json end.GOAL`" != "0" ]; then
                         time=$((`json end.MEASUREMENT_TIME`/100*100))
+                        status="goal"
 
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
-                            bonus=$(($bonus+(`json end.ENTRY_BONUS`*1000)))
+                            ranking[9]="`json end.ENTRY_BONUS`"
+                            bonus=$(($bonus+(${ranking[9]}*1000)))
 
                         # mission bonus for primary class
                         elif [ "$class" == "primary" ]; then
                             # passed slalom
+                            ranking[10]="FALSE"
                             if [ "`json end.SLALOM`" != "0" ]; then
                                 bonus=$(($bonus+5000))
+                                ranking[10]="TRUE"
                                 # petbottle remains
                                 pets=(0 500 1000 2000 3000 5000 8000)
-                                bonus=$(($bonus+${pets[`json end.PETBOTTLE`]}))
+                                ranking[11]="`json end.PETBOTTLE`"
+                                bonus=$(($bonus+${pets[${ranking[11]}]}))
                             fi
                             # garage in
+                            ranking[12]="FALSE"
+                            ranking[13]="FALSE"
                             if [ "`json end.GARAGE_STOP`" != "0" ]; then
                                 bonus=$(($bonus+5000))
+                                ranking[12]="TRUE"
                                 # block in
                                 if [ "`json end.BLOCK_IN_GARAGE`" != "0" ]; then
                                     bonus=$(($bonus+8000))
+                                    ranking[13]="TRUE"
                                 fi
                             fi
 
@@ -202,25 +330,86 @@ if [ "$year" == "2021" ]; then
                         elif [ "$class" == "advanced" ]; then
                             if [ "`json end.BLOCK_YUKOIDO`" != "0" ]; then
                                 # effective movement into block circles
-                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDO`*500)))
+                                ranking[14]="`json end.BLOCK_YUKOIDO`"
+                                bonus=$(($bonus+(${ranking[14]}*500)))
                                 # effective movement into power spots
-                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDOP`*1000)))
+                                ranking[15]="`json end.BLOCK_YUKOIDOP`"
+                                bonus=$(($bonus+(${ranking[15]}*1000)))
                                 # effective movement onto the center mark
-                                bonus=$(($bonus+(`json end.BLOCK_YUKOIDOC`*2000)))
+                                ranking[16]="`json end.BLOCK_YUKOIDOC`"
+                                bonus=$(($bonus+(${ranking[16]}*2000)))
                                 # bingos
-                                bonus=$(($bonus+(`json end.BLOCK_BINGO`*1000)))
+                                ranking[17]="`json end.BLOCK_BINGO`"
+                                bonus=$(($bonus+(${ranking[17]}*1000)))
                                 # bingos on power spots
-                                bonus=$(($bonus+(`json end.BLOCK_BINGO`*2000)))
+                                ranking[18]="`json end.BLOCK_BINGOP`"
+                                bonus=$(($bonus+(${ranking[18]}*2000)))
                             fi
                         fi
                     fi
                 fi
             fi
         fi
-        result="`awk \"BEGIN { printf \\\"%.1f\\\",($time-$bonus)/1000 }\"`"
+        result=$(awk "BEGIN { printf \"%.1f\",($time-$bonus)/1000 }")
     fi
     #echo "Preliminary Result Time: $result secs."
     echo "$result"
+
+    # prepare result data
+    ranking[4]=$(awk "BEGIN { printf \"%.1f\",$time/1000 }")
+    ranking[5]=$result
+    if [ "$status" == "goal" ]; then
+        ranking[6]='1'
+    elif [ "$status" == "eliminated" ]; then
+        ranking[6]='9'
+    else
+        ranking[6]='6'
+    fi
+
+    # exclusive access to the RPA
+    if [ "$serv" == "ranking" ]; then
+        # wait until the RPA is busy
+        loop="$lock"
+        while [ -n "$loop" ]; do
+            if [ ! -e "$destLock" ]; then
+                unset loop
+            else
+                lock="locked"
+                sleep 1
+            fi
+        done
+
+        # delete results.csv for ranking when trigger.txt doesn't exists
+        if [ -z "$trigger" ] || [ -n "$lock" ]; then
+            rm -rf "$destRanking"
+        fi
+    fi
+
+    # write into CSVs
+    if [ -n "$serv" ]; then
+        # make header line
+        record="${ranking_header[0]}"
+        for ((i=1; i<${#ranking_header[@]}; i++)); do
+            record="$record,${ranking_header[$i]}"
+        done
+        if [ ! -e "$destResult" ]; then
+            echo "$record" > "$destResult"
+        fi
+        if [ "$serv" == "ranking" ] && [ ! -e "$destRanking" ]; then
+            echo "$record" > "$destRanking"
+        fi
+
+        # make record line
+        record="${ranking[0]}"
+        for ((i=1; i<${#ranking[@]}; i++)); do
+            record="$record,${ranking[$i]}"
+        done
+        echo "$record" >> "$destResult"
+        if [ "$serv" == "ranking" ]; then
+            echo "$record" >> "$destRanking"
+            touch "destTrigger"
+        fi
+    fi
 else
     echo "FATAL ERROR: no competion rules for $year."
     exit 1

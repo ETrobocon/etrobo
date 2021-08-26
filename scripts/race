@@ -654,11 +654,11 @@ else
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
         if [ -d "$raceFolder/common/csv" ]; then
-            cp "$src" "$raceFolder/common/csv/$requestID.csv"
+            cp "$src" "$raceFolder/common/csv/"
         fi
         
         # calc preliminary result time
-        resultTime="`calc_result $class \"$src\"`"
+        resultTime="`calc_result ranking \"$relayFolder\" $class \"$src\"`"
     fi
     echo "race sequencer: Preliminary Result Time: $resultTime secs." 
     echo "Preliminary Result Time: $resultTime secs." >> console.log

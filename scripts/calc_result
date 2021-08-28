@@ -52,6 +52,7 @@ if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ]; then
     relayFolder="$1"
     shift
 
+    requests="$relayFolder/common/Requests.csv"
     destResult="$relayFolder/common/results.csv"
     destRanking="$relayFolder/Ranking/results.csv"
     destTrigger="$relayFolder/Ranking/trigger.txt"
@@ -86,6 +87,7 @@ unset ranking
 
 # get requestID & lookup teamID
 unset requestID
+unset classPrefix
 if [ -n serv ]; then
     classPrefix=`echo $csv_filename | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
     case "$classPrefix" in
@@ -94,17 +96,24 @@ if [ -n serv ]; then
         "E" ) class="entry" ;;
     esac
     if [ -n "$classPrefix" ]; then
-        requestID="`echo $csv_filename | sed -E 's/^.{1}_(.*).zip$/\1/'`" 
+        requestID="`echo $csv_filename | sed -E 's/^.{1}_(.*).csv$/\1/'`" 
     else
-        requestID="`echo $csv_filename | sed -E 's/^(.*).zip$/\1/'`" 
+        requestID="`echo $csv_filename | sed -E 's/^(.*).csv$/\1/'`" 
     fi
 
-    if [ -z "teamID" ]; then
+    if [ -z "$teamID" ]; then
         if [ -n "$requestID" ]; then
-            teamID="`ETroboSimRunner.Relay.sh lookup $relayFolder $requestID`"
-            if [ "$?" != "0" ]; then
-                echo "FATAL ERROR: teamID ($requestID) lookup failed. "
-                exit 1
+            if [ -f "$requests" ]; then
+                teamID=$(cat "$requests" | sed -E 's/\r//g' \
+                | jq -csR 'split("\n")|map(split(","))|map({'"requestID":.[0],"teamID":.[1]'})|del(.[][]|nulls)' \
+                | jq -r ".[]|select(.requestID==\"$requestID\")|.teamID")
+            fi
+            if [ -z "$teamID" ]; then
+                teamID="`ETroboSimRunner.Relay.sh lookup $relayFolder $requestID`"
+                if [ "$?" != "0" ]; then
+                    echo "FATAL ERROR: teamID ($requestID) lookup failed. "
+                    exit 1
+                fi
             fi
         else
             echo "FATAL ERROR: this filename isn't contain a requestID."
@@ -251,7 +260,7 @@ if [ "$year" == "2021" ]; then
         ranking[7]=FALSE
         ranking[8]=FALSE
         ranking[10]=FALSE
-        ranking[11]=6
+        ranking[11]=0
         ranking[12]=FALSE
         ranking[13]=FALSE
     elif [ "$class" == "advanced" ]; then

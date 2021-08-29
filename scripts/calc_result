@@ -53,10 +53,10 @@ if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ]; then
     shift
 
     requests="$relayFolder/common/Requests.csv"
-    destResult="$relayFolder/common/results.csv"
-    destRanking="$relayFolder/Ranking/results.csv"
-    destTrigger="$relayFolder/Ranking/trigger.txt"
-    destLock="$relayFolder/Ranking/lock.txt"
+    destResult="$relayFolder/common/work/results.csv"
+    destRanking="$relayFolder/common/results.csv"
+    destTrigger="$relayFolder/common/trigger.txt"
+    destLock="$relayFolder/common/lock.txt"
     if [ "$serv" == "ranking" ]; then
         if [ -e "$destTrigger" ]; then
             rm -rf "$destTrigger"
@@ -164,11 +164,11 @@ if [ "$class" == "auto" ]; then
         class="entry"
     fi
 elif [ "$class" == "advanced" ]; then
-    categoryCode == "A"
+    categoryCode="A"
 elif [ "$class" == "primary" ]; then
-    categoryCode == "P"
+    categoryCode="P"
 elif [ "$class" == "entry" ]; then
-    categoryCode == "E"
+    categoryCode="E"
 fi
 ranking[2]="$categoryCode"
 #echo -n "start to calc $year result: $class class: now loading "
@@ -458,10 +458,9 @@ if [ "$year" == "2021" ]; then
         echo "$record" >> "$destResult"
         if [ "$serv" == "ranking" ]; then
             echo "$record" >> "$destRanking"
-            touch "destTrigger"
+            touch "$destTrigger"
         fi
     fi
-    echo "done: $((`date "+%s"` - start_time)) secs"
 else
     echo "FATAL ERROR: no competion rules for $year."
     exit 1

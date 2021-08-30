@@ -367,7 +367,7 @@ if [ "$year" == "2021" ]; then
                                 bonus=$(($bonus+${pets[${ranking[11]}]}))
                             fi
                             # garage in
-                            if [ "`json end.GARAGE_STOP`" != "0" ]; then
+                            if [ "`json end.GARAGE_STOP`" == "1" ]; then
                                 bonus=$(($bonus+5000))
                                 ranking[12]="TRUE"
                                 # block in

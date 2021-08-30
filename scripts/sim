@@ -615,8 +615,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 unset loop
             fi
             if [ -n "$restriction" ]; then
-                if [ $((`date "+%s"` - start_time)) -gt 600 ] && [ -n "$auto_start" ]; then
-                    echo "[ launcher: past 10 minute from `date --date=@$start_time`. ]"
+                if [ $((`date "+%s"` - start_time)) -gt 300 ] && [ -n "$auto_start" ]; then
+                    echo "[ launcher: past 5 minute from `date --date=@$start_time`. ]"
                     unset loop
                 fi
             fi

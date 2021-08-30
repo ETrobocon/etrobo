@@ -358,7 +358,7 @@ if [ "$year" == "2021" ]; then
                         # mission bonus for primary class
                         elif [ "$class" == "primary" ]; then
                             # passed slalom
-                            if [ "`json end.SLALOM`" != "0" ]; then
+                            if [ "`json end.SLALOM`" == "1" ]; then
                                 bonus=$(($bonus+5000))
                                 ranking[10]="TRUE"
                                 # petbottle remains

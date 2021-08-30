@@ -379,7 +379,7 @@ if [ "$year" == "2021" ]; then
 
                         # mission bonus for advanced class
                         elif [ "$class" == "advanced" ]; then
-                            if [ "`json end.BLOCK_YUKOIDO`" != "0" ]; then
+                            if [ "`json end.BLOCK_YUKOIDO`" != "0" ] || [ "`json end.BLOCK_YUKOIDOC`" != "0" ]; then
                                 # effective movement into block circles
                                 ranking[14]="`json end.BLOCK_YUKOIDO`"
                                 bonus=$(($bonus+(${ranking[14]}*500)))

@@ -337,8 +337,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             hook="UIHttpServer start"
             comm_ready="init"
             counter=0
-            unset missingUIComm
-            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ] || [ -z "$missingUIComm" ]; do
+            missingUIComm="`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`"
+            while [ -z "$missingUIComm" ] && [ -n "$loop" ]; do
+                unset missingUIComm
                 simCheckSim="`sim check sim`"
                 counter=$(( $counter + 1 ))
                 if [ $counter -ge 30 ]; then
@@ -351,6 +352,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         cp -f "$ETROBO_SIM_LOG" "$(dirname "$ETROBO_SIM_LOG")/Player-missingUIComm.log"
                         missingUIComm="missing"
                     fi
+                fi
+                if [ -z "$missingUIComm" ]; then
+                    missingUIComm="`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`"
                 fi
                 sleep 0.1
             done

@@ -337,13 +337,19 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             hook="UIHttpServer start"
             comm_ready="init"
             counter=0
-            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ]; do
-                if [ -z "`sim check sim`" ]; then
-                    counter=$(( $counter + 1 ))
-                    if [ $counter -ge 30 ]; then
+            unset missingUIComm
+            while [ -z "`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`" ] && [ -n "$loop" ] || [ -z "$missingUIComm" ]; do
+                simCheckSim="`sim check sim`"
+                counter=$(( $counter + 1 ))
+                if [ $counter -ge 30 ]; then
+                    if [ -z "$simCheckSim" ]; then
                         echo "[ launcher: etrobosim was already terminated. ]" | tee $console
                         unset loop
                         unset comm_ready
+                    elif [ -n "$restriction" ]; then
+                        echo "[ launcher: INTERNAL SERVER ERROR: missing UIComm ]" | tee $console
+                        cp -f "$ETROBO_SIM_LOG" "$(dirname "$ETROBO_SIM_LOG")/Player-missingUIComm.log"
+                        missingUIComm="missing"
                     fi
                 fi
                 sleep 0.1

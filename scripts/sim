@@ -163,6 +163,19 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # stop UnityETroboSim
         if [ -z "$2" ] || [ "$2" == "sim" ]; then
             shift
+
+            json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END`
+            sleep 1     # @ToDo: its magic number
+            counter=0
+            while [ -n "`echo $json | jq -r .measurement.mode`" ] && [ "`echo $json | jq -r .measurement.mode`" != "END" ]; do
+                sleep 0.1
+                json=`curl -s -X GET $ETROBO_SIM_COMM`
+                counter=$(( $counter + 1 ))
+                if [ $counter -ge 50 ]; then
+                    unset json
+                fi
+            done
+
             pid="`sim check sim`"
             while [ -n "$pid" ]; do
                 if [ "$ETROBO_OS" = "win" ]; then

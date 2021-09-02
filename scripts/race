@@ -626,10 +626,10 @@ else
 
     # force termination
     if [ -n "`asp check`" ]; then
-        asp stop
         if [ -z "$matchmaker" ]; then
             sim stop sim
         fi
+        asp stop
         wait $sim_pid
     fi
 

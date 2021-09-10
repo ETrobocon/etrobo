@@ -831,10 +831,14 @@ else
         if [ "$mode" == "finals" ] || [ "$mode" == "finals" ]; then
             cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$raceID.mp4"
             ffutil encode demultiplex $captureRate "$captDir_bashPath/${coursePrefix}_%08d.png" "$result/$dest.mp4" fatal
-            mv "$result/${dest}_1.mp4" "$raceFolder/common/raceserv/${raceID}_1.mp4"
-            mv "$result/${dest}_2.mp4" "$raceFolder/common/raceserv/${raceID}_2.mp4"
-            mv "$result/${dest}_3.mp4" "$raceFolder/common/raceserv/${raceID}_3.mp4"
-            mv "$result/${dest}_4.mp4" "$raceFolder/common/raceserv/${raceID}_4.mp4"
+            cp "$result/${dest}_1.mp4" "$raceFolder/common/raceserv/${raceID}_1.mp4"
+            cp "$result/${dest}_2.mp4" "$raceFolder/common/raceserv/${raceID}_2.mp4"
+            cp "$result/${dest}_3.mp4" "$raceFolder/common/raceserv/${raceID}_3.mp4"
+            cp "$result/${dest}_4.mp4" "$raceFolder/common/raceserv/${raceID}_4.mp4"
+            rm -f "$result/${dest}_1.mp4"
+            rm -f "$result/${dest}_2.mp4"
+            rm -f "$result/${dest}_3.mp4"
+            rm -f "$result/${dest}_4.mp4"
         else
             cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$requestID.mp4"
         fi

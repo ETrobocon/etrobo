@@ -9,7 +9,7 @@
 # for developer: Athrill2 launcher has been moved to `asp/athrill_runner`
 
 if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
-    echo "Usage: sim [import|export|prefs] [restrict] [l|left|r|right] [ver <version>] [show|check|status|stop] [manual] [noset|unprefs] [stdout] [btcat] [only|matchmaker] [launch|ctl [--help]]"
+    echo "Usage: sim [import|export|prefs] [restrict|flying] [l|left|r|right] [ver <version>] [banner <bannerName>] [show|check|status|stop] [manual] [noset|unprefs] [stdout] [btcat] [only|matchmaker] [launch|ctl [--help]]"
     exit 0
 fi
 
@@ -29,7 +29,7 @@ fi
 
 # `sim restrict` limits running time
 unset restriction
-if [ "$1" == "restrict" ]; then
+if [ "$1" == "restrict" ] || [ "$1" == "flying" ]; then
     restriction="$1"
     shift
 fi
@@ -40,6 +40,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SIM_DEV
     unset ETROBO_SIM_COMPANY
     unset ETROBO_SIM_NAME
+    unset ETROBO_SIM_DATA
     unset ETROBO_SIM_LOG
     unset ETROBO_SIM_DIST
     unset ETROBO_SIM_COMM
@@ -107,15 +108,28 @@ else
         os="$ETROBO_OS"
     fi
     if [ "$ETROBO_KERNEL" = "debian" ]; then
-        export ETROBO_LAUNCH_SIM="\"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}\" &"
+        simLocation="${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}"
+        export ETROBO_SIM_DATA="$simLocation/etrobosim_Data"
+        export ETROBO_LAUNCH_SIM="\"$simLocation/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}\" &"
     elif [ "$ETROBO_KERNEL" = "darwin" ]; then
-        export ETROBO_LAUNCH_SIM="open -a \"/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}\""
+        simLocation="/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}"
+        export ETROBO_SIM_DATA="$simLocation/Contents/Resources/Data"
+        export ETROBO_LAUNCH_SIM="open -a \"$simLocation\""
     else
         unset ETROBO_LAUNCH_SIM
     fi
 fi
 
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    #
+    # `banner <bannerName>` option selects topcenter<bannerName>.png for UnityETroboSim
+    #
+    unset banner
+    if [ "$1" = "banner" ]; then
+        banner="topcenter$2.png"
+        shift 2
+    fi
+
     #
     # `show` option shows full-path to UnityETroboSim
     #
@@ -343,6 +357,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -z `sim check sim` ]; then
                 if [ -f "$ETROBO_SIM_LOG" ]; then
                     mv -f "$ETROBO_SIM_LOG" "$(dirname "$ETROBO_SIM_LOG")/Player-prev.log"
+                fi
+                topcenter="$ETROBO_SIM_DATA/topcenter.png"
+                if [ -e "$topcenter" ]; then
+                    rm -rf "$topcenter"
+                fi
+                if [ -n "$banner" ]; then
+                    cp -f "$ETROBO_ROOT/dist/topcenter/$banner" "$topcenter"
                 fi
                 eval "$ETROBO_LAUNCH_SIM"
             fi
@@ -610,6 +631,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "[ launcher: end of this race ]" | tee $console
                     echo "$json" | jq . > result.json
                     unset loop
+                fi
+
+                if [ "$restriction" == "flying" ]; then
+                    "$ETROBO_SCRIPTS/asp" stop
                 fi
 
                 # competition rules

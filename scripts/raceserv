@@ -65,12 +65,12 @@ fi
 
 # recognize matchmaker option
 unset matchmaker
-if [ "$1" == "matchmaker" ]; then
+if [ "$1" == "matchmaker" ] || [ "$1" == "flying" ]; then
     matchmaker="$1"
     shift
 fi
 
-if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "final" ];then
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "finals" ] || [ "$1" == "csfinal" ];then
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -124,14 +124,14 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
                 unset main_loop
             fi
             # wait requests
-            if [ -n "$matchmaker" ]; then
+            if [ "$matchmaker" == "matchmaker" ]; then
                 if [ -f "$raceFolder/left" ]; then
                     course="left"
                 elif [ -f "$raceFolder/right" ]; then
                     course="right"
                 fi
             else
-                course="any"
+                course="auto"
             fi
 
             if [ -n "$course" ]; then
@@ -146,8 +146,8 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
             #
             # invoke race
             #
-            if [ "$mode" == "final" ]; then
-                race $sim_ver $mode $matchmaker $course "$raceFolder"
+            if [ -n "$matchmaker" ]; then
+                race $sim_ver $matchmaker $mode auto $course "$raceFolder"
                 race_error="$?"
             else
                 race $sim_ver $mode "$raceFolder"
@@ -196,5 +196,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker] fp1|fp2|fp3|final /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] fp1|fp2|fp3|finals|csfinal /path/to/raceFolder [/path/to/relayFolder]" 
 fi

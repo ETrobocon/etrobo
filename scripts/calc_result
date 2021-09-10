@@ -103,7 +103,9 @@ if [ -n serv ]; then
 
     if [ -z "$teamID" ]; then
         if [ -n "$requestID" ]; then
-            if [ -f "$requests" ]; then
+            if [ -n "$Requests" ]; then
+                teamID=`echo "$Requests" | jq -r ".[]|select(.ID==\"$requestID\")|.teamID"`
+            elif [ -f "$requests" ]; then
                 teamID=$(cat "$requests" | sed -E 's/\r//g' \
                 | jq -csR 'split("\n")|map(split(","))|map({'"requestID":.[0],"teamID":.[1]'})|del(.[][]|nulls)' \
                 | jq -r ".[]|select(.requestID==\"$requestID\")|.teamID")

@@ -131,6 +131,12 @@ if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload"
     shift
 fi
 
+if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+    if [ "$restrict" == "restrict" ]; then
+        unset restrict
+    fi
+fi
+
 class="auto"
 if [ "$1" = "auto" ] || [ "$1" = "advanced" ] || [ "$1" = "primary" ] \
 || [ "$1" = "entry" ] || [ "$1" = "sample" ]; then

@@ -178,4 +178,245 @@ elif [ "$1" == "objectiveCheck" ]; then
             echo "objective check: passed."
         fi
     done
+
+#
+# overlayPNG
+#
+# overlay MatchMaker result PNG over filter.png
+#
+elif [ "$1" == "overlayPNG" ]; then
+    srcdir="$commonFolder/matchmaker/results"
+    destdir="$commonFolder/raceserv/results"
+    ls -1 "$srcdir" \
+    | while read combinedID; do
+        echo "converting... $combinedID"
+        convert -transparent black "$srcdir/$combinedID/${combinedID}_リザルト.png" "$destdir/$combinedID.png"
+        convert "$ETROBO_ROOT/dist/filter.png" "$destdir/$combinedID.png" -compose over -composite "$destdir/$combinedID.png"
+    done
+
+#
+# mmmux
+#
+# MatchMaker movie muxing
+#
+elif [ "$1" == "mmmux" ]; then
+    srcDir="$commonFolder/matchmaker/results"
+    destDir="$commonFolder/raceserv"
+    ls -1 "$srcDir" \
+    | while read combinedID; do
+        echo "muxing... $combinedID"
+        ffutil mmmux 2 $destDir/${combinedID}_L.mp4 info
+        ffutil mmmux 2 $destDir/${combinedID}_R.mp4 info
+        ffutil encode multiplex 2 $destDir/${combinedID}_L.mp4 $destDir/results/${combinedID}_L.mp4 info
+        ffutil encode multiplex 2 $destDir/${combinedID}_R.mp4 $destDir/results/${combinedID}_R.mp4 info
+    done
+
+#
+# distribute results|all|<divisionID> [/path/to/commonFolder]
+#
+# divide result movies by divisionID
+#
+elif [ "$1" == "distribute" ]; then
+    shift
+    divisions=(1 2 4 5 6 8 9 11 12 13)
+    if [ "$1" == "results" ]; then
+        divisions="results"
+    elif [ "$1" != "all" ]; then
+        divisions=($1)
+    fi
+    shift
+
+    common="$commonFolder"
+    if [ -n "$1" ]; then
+        common="$1"
+    fi
+
+    tmpFolder="$common/tmp"
+    rm -rf "$tmpFolder"
+
+    if [ "$divisions" == "results" ]; then
+        ls -1 "$common/matchmaker/results" \
+        | while read combinedID; do
+            class="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\1/'`"
+            teamID="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\2/'`"
+            divisionID="`echo $Teams | jq -cr ".[]|select(.ID==\"$teamID\")|.divisionID"`"
+            groupID=$(printf "%02d" $(echo "$Divisions" | jq -cr ".[]|select(.ID==\"$divisionID\")|.groupID"))
+            
+            if [ ! -d "$tmpFolder/$groupID" ]; then
+                mkdir -p "$tmpFolder/$groupID"
+            fi
+
+            asset="$tmpFolder/asset/$groupID/$combinedID"
+            mkdir -p "$asset"
+            echo "division group:$groupID    combinedID:$combinedID"
+            cp "$common/raceserv/results_org/${combinedID}"*.* $tmpFolder/$groupID
+            cp "$common/raceserv/${combinedID}"*.* $asset
+            cp "$common/matchmaker/results_org/$combinedID/"*.* $asset
+        done
+    else
+        for divisionID in ${divisions[@]}; do
+            groupID=$(printf "%02d" $(echo "$Divisions" | jq -cr ".[]|select(.ID==\"$divisionID\")|.groupID"))
+            
+            if [ ! -d "$tmpFolder/$groupID" ]; then
+                mkdir -p "$tmpFolder/$groupID"
+            fi
+
+            echo $Teams | jq -c ".[]|select(.divisionID==\"$divisionID\")" \
+            | while read record; do
+                class=`json record.classLetter`
+                teamID=$(printf "%03d" $(json record.ID))
+                combinedID=${class}${teamID}
+                asset="$tmpFolder/asset/$groupID/$combinedID"
+                mkdir -p "$asset"
+                echo "division group:$groupID    combinedID:$combinedID"
+                cp "$common/raceserv/results_org/${combinedID}"*.* $tmpFolder/$groupID
+                cp "$common/raceserv/${combinedID}"*.* $asset
+                cp "$common/matchmaker/results_org/$combinedID/"*.* $asset
+            done
+        done
+    fi
+#
+# getNew [sync /path/to/relayFolder_remote] [YYMMDD.HHmm] [/path/to/relayFolder]
+#
+# sync and get MatchMaker CSV and result files from remote and copy into local common folder
+#
+elif [ "$1" == "getNew" ]; then
+    shift
+
+    unset remoteFolder
+    if [ "$1" == "sync" ]; then
+        remoteFolder="$2"
+        shift 2
+    fi
+
+    unset lastupdate
+    if [ -n "`echo $1 | grep -E '^[0-9]{2}[0-9]{2}[0-9]{2}\.[0-9]{2}[0-9]{2}$'`" ]; then
+        lastupdate="`echo $1 | sed -E 's/^([0-9]{2})([0-9]{2})([0-9]{2})\.([0-9]{2})([0-9]{2})$/20\1-\2-\3 \4:\5:00/'`"
+        shift
+    fi
+
+    if [ -z "$relayFolder" ]; then
+        if [ -n "$1" ]; then
+            relayFolder="$1"
+        else
+            echo "you should run `. preparefinal.sh /path/to/relayFolder` or specify relay folder."
+            exit 1
+        fi
+    fi
+
+    mmFolder="$relayFolder/common/matchmaker"
+    rm -rf "$mmFolder/results/"*
+
+    if [ -z "$lastupdate" ]; then
+        if [ -f "$mmFolder/lastupdate" ]; then
+            lastupdate="`date \"+%F %T\" -r \"$mmFolder/lastupdate\"`"
+        else
+            lastupdate="1970-01-01 00:00:00"
+        fi
+    fi
+    touch -d "$lastupdate" "$mmFolder/lastupdate"
+
+
+    if [ -n "$remoteFolder" ]; then
+        remoteFolder="$remoteFolder/common/matchmaker"
+
+        echo "preparing to sync with $remoteFolder ..."
+        ls -1 "$remoteFolder/results" \
+        | while read combinedID; do
+            unset loop
+            ls -1 "$remoteFolder/results/$combinedID" \
+            | while read file; do
+                if [ ! -d "$mmFolder/results_org/$combinedID" ]; then
+                    mkdir "$mmFolder/results_org/$combinedID"
+                fi
+                if [ ! -f "$mmFolder/results_org/$combinedID/$file" ] || [ "$remoteFolder/results/$combinedID/$file" -nt "$mmFolder/results_org/$combinedID/$file" ]; then
+                    if [ -z "$loop" ]; then
+                        loop="loop"
+                        if [ ! -f "$mmFolder/csv/${combinedID}_L.csv" ] || [ "$remoteFolder/csv/${combinedID}_L.csv" -nt "$mmFolder/csv/${combinedID}_L.csv" ]; then
+                            echo "update: ${combinedID}_L.csv"
+                            cp "$remoteFolder/csv/${combinedID}_L.csv" "$mmFolder/csv/${combinedID}_L.csv"
+                        fi
+                        if [ ! -f "$mmFolder/csv/${combinedID}_L.json" ] || [ "$remoteFolder/csv/${combinedID}_L.json" -nt "$mmFolder/csv/${combinedID}_L.json" ]; then
+                            echo "update: ${combinedID}_L.json"
+                            cp "$remoteFolder/csv/${combinedID}_L.json" "$mmFolder/csv/${combinedID}_L.json"
+                        fi
+                        if [ ! -f "$mmFolder/csv/${combinedID}_R.csv" ] || [ "$remoteFolder/csv/${combinedID}_R.csv" -nt "$mmFolder/csv/${combinedID}_R.csv" ]; then
+                            echo "update: ${combinedID}_R.csv"
+                            cp "$remoteFolder/csv/${combinedID}_R.csv" "$mmFolder/csv/${combinedID}_R.csv"
+                        fi
+                        if [ ! -f "$mmFolder/csv/${combinedID}_R.json" ] || [ "$remoteFolder/csv/${combinedID}_R.json" -nt "$mmFolder/csv/${combinedID}_R.json" ]; then
+                            echo "update: ${combinedID}_R.json"
+                            cp "$remoteFolder/csv/${combinedID}_R.json" "$mmFolder/csv/${combinedID}_R.json"
+                        fi
+                    fi
+                    echo "update: $file"
+                    cp "$remoteFolder/results/$combinedID/$file" "$mmFolder/results_org/$combinedID/$file"
+                fi
+            done
+        done
+        echo "finish syncing"
+    fi
+
+    ls -1 "$mmFolder/results_org" \
+    | while read combinedID; do
+        ls -1 "$mmFolder/results_org/$combinedID" \
+        | while read file; do
+            if [ "$mmFolder/results_org/$combinedID/$file" -nt "$mmFolder/lastupdate" ]; then
+                if [ ! -d "$mmFolder/results/$combinedID" ]; then
+                    mkdir "$mmFolder/results/$combinedID"
+                fi
+                echo "newer: $combinedID/$file"
+                cp "$mmFolder/results_org/$combinedID/$file" "$mmFolder/results/$combinedID/"
+            fi
+        done
+    done
+    touch -d "`date \"+%F %T\"`" "$mmFolder/lastupdate"
+
+#
+# updateDivisionName
+#
+# update division name
+#
+elif [ "$1" == "updateDivisionName" ]; then
+#    ls -1 $relayFolder/common/raceserv/results_org/*.png | grep -E '.*\/[EP]{1}[0-9]{3}\.png$' \
+    ls -1 $relayFolder/common/raceserv/*.png | grep -E '.*\/[EP]{1}[0-9]{3}.*\.png$' \
+    | while read file; do
+        teamID=`echo "$file" | sed -E 's/.*\/[EP]{1}([0-9]{3}).*\.png$/\1/'`
+        teamNo=`echo $teamID | sed -E 's/^00([1-9]{1})$/\1/' | sed -E 's/^0([1-9]{1}[0-9]{1})$/\1/'`
+        divisionID=`echo "$Teams" | jq -r ".[]|select(.ID==\"$(awk "BEGIN { print $teamNo }")\")|.divisionID"`
+        if [ "$divisionID" == "4" ]; then
+            echo "Tokyo : $file"
+            convert "$file" "$relayFolder/common/matchmaker/04.png" -gravity northwest -compose over -composite "$file"
+        elif [ "$divisionID" == "8" ]; then
+            echo "Kansai: $file"
+            convert "$file" "$relayFolder/common/matchmaker/08.png" -gravity northwest -compose over -composite "$file"
+        fi
+    done
+
+#
+# rerun
+#
+# do postproduction with matchmaker/results re-run files
+#
+elif [ "$1" == "rerun" ]; then
+    ls -1 "$relayFolder/common/matchmaker/results" \
+    | while read combinedID; do
+        echo "generate images: $combinedID"
+        sourceFolder="$relayFolder/common/matchmaker/results/$combinedID"
+        ffutil generateResultImages "$sourceFolder/${combinedID}_リザルト.png"
+        cp "$sourceFolder/${combinedID}.png" "$relayFolder/common/raceserv/results/"
+        cp "$sourceFolder/${combinedID}_L_check.png" "$relayFolder/common/raceserv/"
+        cp "$sourceFolder/${combinedID}_L_result.png" "$relayFolder/common/raceserv/"
+        cp "$sourceFolder/${combinedID}_R_check.png" "$relayFolder/common/raceserv/"
+        cp "$sourceFolder/${combinedID}_R_result.png" "$relayFolder/common/raceserv/"
+        rm "$sourceFolder/${combinedID}.png"
+        rm "$sourceFolder/${combinedID}_L_check.png"
+        rm "$sourceFolder/${combinedID}_L_result.png"
+        rm "$sourceFolder/${combinedID}_R_check.png"
+        rm "$sourceFolder/${combinedID}_R_result.png"
+    done
+
+    echo "copy files into results_org"
+    cp "$relayFolder/common/raceserv/results/"* "$relayFolder/common/raceserv/results_org/"
+
 fi

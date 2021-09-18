@@ -10,7 +10,7 @@
         "version":                  "2021.fp2.0",
         "matchMakerScreenWidth":    "1008",
         "matchMakerScreenHeight":   "750",
-        "matchMakerFrameRate":      "60",
+        "matchMakerFrameRate":      "30",
         "etrobosim": {
             "width":    "640",
             "height":   "400",
@@ -42,20 +42,29 @@
     "left": {
         "common": {
             "teamInfo": {
-                "width":    "504",
-                "height":   "90",
-                "x":        "0",
+                "width":    "500",
+                "height":   "45",
+                "x":        "4",
                 "y":        "82",
-                "toX":      "0",
+                "toX":      "4",
                 "toY":      "0",
                 "scale":    "1.0"
             },
+            "teamName": {
+                "width":    "400",
+                "height":   "45",
+                "x":        "10",
+                "y":        "128",
+                "toX":      "14",
+                "toY":      "45",
+                "scale":    "1.0"
+            },
             "teamID": {
-                "width":    "185",
+                "width":    "205",
                 "height":   "70",
-                "x":        "155",
+                "x":        "145",
                 "y":        "649",
-                "toX":      "504",
+                "toX":      "508",
                 "toY":      "0",  
                 "scale":    "0.5"
             },
@@ -97,6 +106,33 @@
             }
         },
         "entry": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "296",
+                "y":        "314",
+                "toX":      "10",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "126",
+                "y":        "314",
+                "toX":      "70",
+                "toY":      "110",  
+                "scale":    "1.0"
+            },
+            "bonus": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "16",
+                "y":        "391",
+                "toX":      "114",
+                "toY":      "280",  
+                "scale":    "1.0"
+            }
         },
         "primary": {
             "gate1": {
@@ -138,7 +174,7 @@
             "blockin": {
                 "width":    "150",
                 "height":   "34",
-                "x":        "660",
+                "x":        "186",
                 "y":        "551",
                 "toX":      "85",
                 "toY":      "180",  
@@ -147,7 +183,7 @@
             "garagein": {
                 "width":    "150",
                 "height":   "34",
-                "x":        "187",
+                "x":        "16",
                 "y":        "551",
                 "toX":      "85",
                 "toY":      "214",  
@@ -155,25 +191,79 @@
             }
         },
         "advanced": {
+            "move": {
+                "width":    "246",
+                "height":   "33",
+                "x":        "16",
+                "y":        "352",
+                "toX":      "10",
+                "toY":      "10",
+                "scale":    "1.0"
+            },
+            "movep": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "391",
+                "toX":      "10",
+                "toY":      "50",
+                "scale":    "1.0"
+            },
+            "movec": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "431",
+                "toX":      "10",
+                "toY":      "90",
+                "scale":    "1.0"
+            },
+            "bingo": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "16",
+                "y":        "471",
+                "toX":      "10",
+                "toY":      "130",
+                "scale":    "1.0"
+            },
+            "bingop": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "511",
+                "toX":      "10",
+                "toY":      "170",
+                "scale":    "1.0"
+            }
         }
     },
     "right": {
         "common": {
             "teamInfo": {
-                "width":    "504",
-                "height":   "90",
+                "width":    "500",
+                "height":   "45",
                 "x":        "504",
                 "y":        "82",
-                "toX":      "0",
+                "toX":      "4",
                 "toY":      "0",
                 "scale":    "1.0"
             },
+            "teamName": {
+                "width":    "400",
+                "height":   "45",
+                "x":        "598",
+                "y":        "127",
+                "toX":      "14",
+                "toY":      "45",
+                "scale":    "1.0"
+            },
             "teamID": {
-                "width":    "185",
+                "width":    "205",
                 "height":   "70",
-                "x":        "673",
+                "x":        "663",
                 "y":        "649",
-                "toX":      "504",
+                "toX":      "508",
                 "toY":      "0",  
                 "scale":    "0.5"
             },
@@ -215,6 +305,33 @@
             }
         },
         "entry": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "562",
+                "y":        "314",
+                "toX":      "480",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "732",
+                "y":        "314",
+                "toX":      "420",
+                "toY":      "110",  
+                "scale":    "1.0"
+            },
+            "bonus": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "812",
+                "y":        "391",
+                "toX":      "358",
+                "toY":      "280",  
+                "scale":    "1.0"
+            }
         },
         "primary": {
             "gate1": {
@@ -273,6 +390,51 @@
             }
         },
         "advanced": {
+            "move": {
+                "width":    "246",
+                "height":   "33",
+                "x":        "734",
+                "y":        "352",
+                "toX":      "384",
+                "toY":      "10",
+                "scale":    "1.0"
+            },
+            "movep": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "391",
+                "toX":      "384",
+                "toY":      "50",
+                "scale":    "1.0"
+            },
+            "movec": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "431",
+                "toX":      "384",
+                "toY":      "90",
+                "scale":    "1.0"
+            },
+            "bingo": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "830",
+                "y":        "471",
+                "toX":      "480",
+                "toY":      "130",
+                "scale":    "1.0"
+            },
+            "bingop": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "511",
+                "toX":      "384",
+                "toY":      "170",
+                "scale":    "1.0"
+            }
         }
     }
 }

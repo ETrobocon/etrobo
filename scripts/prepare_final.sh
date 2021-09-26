@@ -238,8 +238,8 @@ elif [ "$1" == "distribute" ]; then
         ls -1 "$common/matchmaker/results" \
         | while read combinedID; do
             class="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\1/'`"
-            teamID="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\2/'`"
-            divisionID="`echo $Teams | jq -cr ".[]|select(.ID==\"$teamID\")|.divisionID"`"
+            teamID="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\2/' | sed -E 's/^0*([1-9]{1}[0-9]*)$/\1/'`"
+            divisionID="`echo $Teams | jq -cr \".[]|select(.ID==\\\"$teamID\\\")|.divisionID\"`"
             groupID=$(printf "%02d" $(echo "$Divisions" | jq -cr ".[]|select(.ID==\"$divisionID\")|.groupID"))
             
             if [ ! -d "$tmpFolder/$groupID" ]; then
@@ -378,9 +378,12 @@ elif [ "$1" == "getNew" ]; then
 # update division name
 #
 elif [ "$1" == "updateDivisionName" ]; then
+    resultsPath="$relayFolder/common/matchmaker/results_org"
+#    ls -1 $relayFolder/common/raceserv/*.png | grep -E '.*\/[EP]{1}[0-9]{3}.*\.png$' \
 #    ls -1 $relayFolder/common/raceserv/results_org/*.png | grep -E '.*\/[EP]{1}[0-9]{3}\.png$' \
-    ls -1 $relayFolder/common/raceserv/*.png | grep -E '.*\/[EP]{1}[0-9]{3}.*\.png$' \
+    ls -1 $resultsPath | grep -E '[EP]{1}[0-9]{3}$' \
     | while read file; do
+        file="$resultsPath/$file/$(ls -1 $resultsPath/$file | grep "\.png$")"
         teamID=`echo "$file" | sed -E 's/.*\/[EP]{1}([0-9]{3}).*\.png$/\1/'`
         teamNo=`echo $teamID | sed -E 's/^00([1-9]{1})$/\1/' | sed -E 's/^0([1-9]{1}[0-9]{1})$/\1/'`
         divisionID=`echo "$Teams" | jq -r ".[]|select(.ID==\"$(awk "BEGIN { print $teamNo }")\")|.divisionID"`
@@ -416,7 +419,90 @@ elif [ "$1" == "rerun" ]; then
         rm "$sourceFolder/${combinedID}_R_result.png"
     done
 
-    echo "copy files into results_org"
-    cp "$relayFolder/common/raceserv/results/"* "$relayFolder/common/raceserv/results_org/"
+    echo "move files into results_org"
+    mv "$relayFolder/common/raceserv/results/"* "$relayFolder/common/raceserv/results_org/"
 
+#
+# replaceMovies [all|division|id] [id]
+#
+# replace to mmmuxed movies into result files which in 'Results_org' and store to Results folder
+#
+elif [ "$1" == "replaceMovies" ]; then
+    sourceFolder="$relayFolder/Results_org"
+    destinationFolder="$relayFolder/Results"
+
+    mode="all"
+    unset id
+    groups=(1 2 4 5 6 8 9 12 11 A B C)
+    unset teamID
+    unset divisionID
+    unset classLetter
+    unset targetID
+    if [ "$2" == "all" ] || [ "$2" == "division" ] || [ "$2" == "id" ]; then
+        mode="$2"
+        id="$3"
+        if [ "$mode" == "division" ]; then
+            groups=($id)
+        elif [ "$mode" == "id" ]; then
+            teamID="$id"
+            record=`echo $Teams | jq -cr ".[]|select(.ID==\"$teamID\")"`
+            divisionID=$(json record.divisionID)
+            classLetter=$(json record.classLetter)
+            record=`echo $Divisions | jq -cr ".[]|select(.ID==\"$divisionID\")"`
+            if [ "$classLetter" == "A" ]; then
+                targetID=$(json record.blockLetter)
+            else
+                targetID=$(json record.groupID)
+            fi
+        fi
+    fi
+
+    ls -1 "$sourceFolder" | sed -E 's/^[EAP]_(.*)\.zip/\1/' \
+    | while read requestID; do
+        skip="skip"
+        record=`echo $Requests | jq -cr ".[]|select(.ID==\"$requestID\")"`
+        if [ "$mode" == "id" ]; then
+            if [ "$teamID" == "$(json record.teamID)" ]; then
+                courseLetter=$(json record.courseLetter)
+                unset skip
+            fi
+        else
+            teamID=$(json record.teamID)
+            divisionID=$(json record.divisionID)
+            classLetter=$(json record.classLetter)
+            courseLetter=$(json record.courseLetter)
+            record=`echo $Divisions | jq -cr ".[]|select(.ID==\"$divisionID\")"`
+            if [ "$classLetter" == "A" ]; then
+                targetID=$(json record.blockLetter)
+            else
+                targetID=$(json record.groupID)
+            fi
+            for group in ${groups[@]}; do
+                if [ "$group" == "$targetID" ]; then
+#                    echo "divisionID: $divisionID  targetID=$targetID  group=$group"
+                    unset skip
+                fi
+            done
+        fi
+
+        if [ -z "$skip" ]; then
+            combinedID="${classLetter}$(printf "%03d" $teamID)"
+            raceID="${combinedID}_${courseLetter}"
+            target="${classLetter}_${requestID}.zip"
+
+            echo "$requestID -> $raceID @ $targetID"
+            mkdir -p "${destinationFolder}_${targetID}_${classLetter}"
+            cp "$sourceFolder/$target" "${destinationFolder}_${targetID}_${classLetter}/"
+            target="${destinationFolder}_${targetID}_${classLetter}/$target"
+            innerFolder=`unzip -Z1 "$target" | head -n 1 | sed -E 's/^(.*)\/$/\1/'`
+            cd "${destinationFolder}_${targetID}_${classLetter}"
+            mkdir "$innerFolder"
+            cp "$relayFolder/common/raceserv/results_org/$combinedID.png" "${innerFolder}/"
+            cp "$relayFolder/common/raceserv/results_org/$raceID.mp4" "${innerFolder}/"
+            cp "$relayFolder/common/matchmaker/csv/$raceID.csv" "${innerFolder}/"
+            zip "$target" -d $innerFolder/$innerFolder.csv $innerFolder/$innerFolder.mp4 $innerFolder/result.json
+            zip "$target" -r $innerFolder
+            rm -rf $innerFolder
+        fi
+    done
 fi

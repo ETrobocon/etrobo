@@ -454,22 +454,61 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 bitrate="$2"
                 shift 2
             fi
-            stretchFrames="$1"
+            stretchFrames=$(($1 + 1))   # magic number; please adjust if necessary
             source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
             destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            filepath=`dirname "$3"`
+            filename=`basename "$3"`
+            filebase=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\1/'`
+            fileext=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\2/'`
+            file_main="`getWinPath "$filepath/${filebase}_main.$fileext" $ETROBO_FFMPEG_OS`"
+            file_shutdown="`getWinPath "$filepath/${filebase}_shutdown.$fileext" $ETROBO_FFMPEG_OS`"
+
             loglevel_opt="-loglevel"
             loglevel="quiet"
             if [ -n "$4" ]; then
                 loglevel="$4"
             fi
+
+            # cut off "SHUTDOWN" animation and stretch the last frame
+            "$ETROBO_FFMPEG" -y \
+                -i "$source" \
+                -t 00:01:59.933 \
+                -c copy \
+                $loglevel_opt $loglevel \
+                -f nut - \
+            | "$ETROBO_FFMPEG" -y \
+                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                -f nut -i - \
+                -vf tpad=stop=${stretchFrames}:stop_mode=clone \
+                -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                $loglevel_opt $loglevel \
+                "$file_main"
+
+            # cut out "SHUTDOWN" animation
             "$ETROBO_FFMPEG" -y \
                 $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
                 $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                -ss 00:02:00.001 \
                 -i "$source" \
-                -vf tpad=stop=${stretchFrames}:stop_mode=clone \
-                -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
+                -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                $loglevel_opt $loglevel \
+                "$file_shutdown"
+            
+            # concat these files
+            "$ETROBO_FFMPEG" -y \
+                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                -i "$file_main" \
+                -i "$file_shutdown" \
+                -filter_complex '[0:v][1:v]concat' \
+                -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
                 "$destination"
+            
+            rm "$filepath/${filebase}_main.$fileext"
+            rm "$filepath/${filebase}_shutdown.$fileext"
         fi
         
         # MatchMaker multiplexer
@@ -478,6 +517,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             unset manual
             if [ "$1" == "manual" ]; then
                 manual="$1"
+                shift
             fi
             class="auto"
             if [ "$1" == "auto" ] || [ "$1" == "entry" ] || [ "$1" == "primary" ] || [ "$1" == "advanced" ]; then

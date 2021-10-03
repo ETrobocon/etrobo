@@ -12,7 +12,7 @@ PUT_INTERVAL=300 # sec.
 
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "usage:"
-    echo "  ETroboSimRunner.Relay.sh [serv|both|get|put|lookup] [/path/to/raceFolder] /path/to/relayFolder [<requestID>]"
+    echo "  ETroboSimRunner.Relay.sh [serv|both|get|put|lookup|return] [/path/to/raceFolder] /path/to/relayFolder [<requestID>]"
     echo "    ... 'lookup' option returns 'Team:<teamID>' or 'Error:<errorMessage>'"
     exit 0
 fi
@@ -33,7 +33,7 @@ if [ "$?" == "0" ]; then
     # 
     # task scheduler
     #
-    if [ "$mode" == "serv" ] || [ "$mode" == "lookup" ]; then
+    if [ "$mode" == "serv" ] || [ "$mode" == "lookup" ] || [ "$mode" == "return" ]; then
         # prepare simRunner
         simRunner=`cd "$relayFolder/../ETroboSimRunner.Relay" >/dev/null 2>&1; if [ "$?" == "0" ]; then pwd; fi`
         if [ -n "$simRunner" ]; then
@@ -100,6 +100,13 @@ if [ "$?" == "0" ]; then
         else
             echo "$result" | sed -E 's/[^0-9]//g'
         fi
+    fi
+
+    #
+    # return Results files immediately
+    # 
+    if [ "$mode" == "return" ]; then
+        cmd.exe /C "cd /D ${simRunner}&put.cmd" > /dev/null 2>&1
     fi
 else
     echo "$raceFolder: no such directory"

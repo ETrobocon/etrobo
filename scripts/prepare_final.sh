@@ -505,4 +505,79 @@ elif [ "$1" == "replaceMovies" ]; then
             rm -rf $innerFolder
         fi
     done
+
+#
+# catResults /path/to/Results_divisionID_[EP]
+#
+# show requestID and raceID
+#
+elif [ "$1" == "catResults" ]; then
+    sourceFolder="$2"
+
+    ls -1 "$sourceFolder" \
+    | while read requestFile; do
+        requestID=`echo $requestFile | sed -E 's/^[EAP]_(.*)\.zip/\1/'`
+        record=`echo $Requests | jq -cr ".[]|select(.ID==\"$requestID\")"`
+        teamID=$(json record.teamID)
+        classLetter=$(json record.classLetter)
+        courseLetter=$(json record.courseLetter)
+        combinedID="${classLetter}$(printf "%03d" $teamID)"
+        raceID="${combinedID}_${courseLetter}"
+        echo "$requestFile,$raceID"
+    done
+
+#
+# assignResults /path/to/Results_divisionID_[EP]
+#
+# assign a division's Results folder to half1 and half2
+# need hardcode combinedID array of half1 as H1
+#
+elif [ "$1" == "assignResults" ]; then
+    H1=(P079 P147 P098 P131 P082 P102 P048 P146 P052 P087 P092 P123 P046 P164 P112 P095 P091)
+    sourceFolder="$2"
+
+    mkdir -p "${sourceFolder}_H1"
+    mkdir -p "${sourceFolder}_H2"
+
+    prepare_final.sh catResults "$sourceFolder" \
+    | while read result; do
+        requestFile=`echo $result | sed -E 's/^(.*),([EP]{1}[0-9]{3})\_[LR]{1}$/\1/'`
+        combinedID=`echo $result | sed -E 's/^(.*),([EP]{1}[0-9]{3})\_[LR]{1}$/\2/'`
+        unset found
+        for attempt in ${H1[@]}; do
+            if [ "$combinedID" == "$attempt" ]; then
+                found="found"
+            fi
+        done
+        if [ $found ]; then
+            echo "$requestFile ($combinedID) -> H1"
+            cp "$sourceFolder/$requestFile" "${sourceFolder}_H1/"
+        else
+            echo "$requestFile ($combinedID) -> H2"
+            cp "$sourceFolder/$requestFile" "${sourceFolder}_H2/"
+        fi
+    done
+
+#
+# returnResults /path/to/Results_divisionID_[EPA] <teamID>
+#
+# return a teamID's Results file from /path/to/Results_divisionID_[EPA]
+# /path/to/Results_divisionID_[EPA] have to contain the actual relayFolder at sim/ope-vm
+#
+elif [ "$1" == "returnResults" ]; then
+    sourceFolder="$2"
+    teamID="$3"
+    echo $Requests | jq -cr ".[]|select(.teamID==\"$teamID\")" \
+    | while read record; do
+        classLetter=$(json record.classLetter)
+        courseLetter=$(json record.courseLetter)
+        requestID=$(json record.ID)
+        file="${classLetter}_${requestID}.zip"
+        if [ -f "$sourceFolder/$file" ]; then
+            echo "${classLetter}$(printf "%03d" $teamID)_$courseLetter = $file"
+            mv "$sourceFolder/$file" "$(dirname $sourceFolder)/Results/"
+        else
+            echo "${classLetter}$(printf "%03d" $teamID)_$courseLetter is already moved"
+        fi
+    done
 fi

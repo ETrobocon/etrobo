@@ -12,7 +12,7 @@
 # (please remember you also should run `ffutil install` first)
 
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "Usage: race [matchmaker] [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
+    echo "Usage: race [matchmaker|flying] [MODE] [CLASS] [COURSE] [</path/to/raceFolder>] [<projName>]"
     echo
     echo "The ET robocon race sequencer, file archiver (and uploader)"
     echo
@@ -37,8 +37,9 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "    fp0    ... run as Free Practice 0 daemon"
     echo "    fp1    ... run as Free Practice 1 daemon"
     echo "    fp2    ... run as Free Practice 2 daemon"
-    echo "    fp3    ... run as Free Practice 3 daemon"
-    echo "    final  ... run as Championship/Final daemon"
+    echo "    fpcs   ... run as Free Practice for Championship daemon"
+    echo "    finals ... run as Division Finals daemon"
+    echo "    csfinal... run as Championship/Final daemon"
     echo
     echo "  matchmaker Option: run with matchmaker on realtime"
     echo
@@ -114,16 +115,26 @@ fi
 #
 
 unset matchmaker
+restrict="restrict"
 if [ "$1" = "matchmaker" ]; then
     matchmaker="$1"
+    shift
+elif [ "$1" = "flying" ]; then
+    restrict="flying"
     shift
 fi
 
 mode="get"
 if [ "$1" = "get" ] || [ "$1" = "pop" ] || [ "$1" = "zip" ] || [ "$1" = "upload" ] \
-|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fp3" ] || [ "$1" = "final" ]; then
+|| [ "$1" = "fp0" ] || [ "$1" = "fp1" ] || [ "$1" = "fp2" ] || [ "$1" = "fpcs" ] || [ "$1" = "finals" ] || [ "$1" = "csfinal" ]; then
     mode="$1"
     shift
+fi
+
+if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+    if [ "$restrict" == "restrict" ]; then
+        unset restrict
+    fi
 fi
 
 class="auto"
@@ -361,7 +372,7 @@ else
         fi
         if [ "`(find __race -type f -exec md5sum -b {} \; && find __race) | env LC_ALL=C sort | md5sum -b`" != "$sum" ]; then
             echo "race sequencer: ERROR: mismatch md5sum"
-            if [ "$mode" != "final" ]; then
+            if [ "$mode" != "finals" ] && [ "$mode" != "csfinal" ]; then
                 exit $ERR_SEQ_MD5SUM_MISMATCH
             fi
         fi
@@ -425,7 +436,14 @@ echo "race: $class class is selected."
 # determine a course
 #
 if [ "$course" == "auto" ]; then
-    if [ "$RHackEV" == "1" ]; then
+    if [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ] && [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+        record=$(echo "$Requests" | jq -r ".[]|select(.ID==\"$requestID\")")
+        if [ "`json record.courseLetter`" == "R" ]; then
+            course="right"
+        else
+            course="left"
+        fi
+    elif [ "$RHackEV" == "1" ]; then
         course="right"
     else
         course="left"
@@ -441,6 +459,44 @@ else
     RHackEV="0"
 fi
 echo "race: $course course is selected."
+
+#
+# determine a banner
+#
+banner="dummy"
+unset divisionID
+unset teamID
+unset blockLetter
+unset groupID
+unset LSlalom
+if [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
+    if [ "$mode" == "fp1" ]; then
+        banner="FP1"
+    elif [ "$mode" == "fp2" ]; then
+        banner="FP2"
+    elif [ "$mode" == "fpcs" ]; then
+        banner="FPCS"
+    elif [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+        record=$(echo "$Requests" | jq -r ".[]|select(.ID==\"$requestID\")")
+        divisionID=`json record.divisionID`
+        teamID=`json record.teamID`
+        record=$(echo "$Divisions" | jq -r ".[]|select(.ID==\"$divisionID\")")
+        blockLetter=`json record.blockLetter`
+        groupID=$(printf "%02d" `json record.groupID`)
+        LSlalom=$(echo "$Teams" | jq -r ".[]|select(.ID==\"$teamID\")|.LSlalom")
+        combinedID=${classPrefix}$(printf "%03d" $teamID)
+        raceID="${combinedID}_${coursePrefix}"
+        if [ "$mode" == "csfinal" ]; then
+            banner="${classPrefix}CS"
+        else
+            if [ "$classPrefix" == "A" ]; then
+                banner="${classPrefix}${blockLetter}"
+            else
+                banner="${classPrefix}${groupID}"
+            fi
+        fi
+    fi
+fi
 
 #
 # determine a capture directory and its pathes
@@ -470,8 +526,8 @@ fi
 #
 # determine preferences for competition
 #
-if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fp3" ] || [ "$mode" == "final" ]; then
-    if [ "$mode" == "fp2" ] || [ "$1" = "fp3" ] || [ "$mode" == "final" ]; then
+if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+    if [ "$mode" == "fp2" ] || [ "$1" = "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
         LSpotLight=$d_LSpotLight
@@ -481,7 +537,7 @@ if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$m
         SponsorLogo_GroupC=$d_SponsorLogo_GroupC
         SponsorLogo_PhysicMaterial=$d_SponsorLogo_PhysicMaterial
     fi
-    if [ "$mode" == "final" ]; then
+    if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         initLBlockLayout=$d_initLBlockLayout
         initLNumberCase=$d_initLNumberCase
         initLNumberBlock=$d_initLNumberBlock
@@ -491,6 +547,14 @@ if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$m
         initLSlalom=$d_initLSlalom
         initRSlalom=$d_initRSlalom
         forceShutdown="0"
+        if [ -n "$BlockPattern" ] && [ "$classPrefix" == "A" ] && [ -n "$banner" ]; then
+            initLBlockLayout=`json BlockPattern.${banner}L`
+            initRBlockLayout=`json BlockPattern.${banner}R`
+        fi
+        if [ -n "$LSlalom" ] && [ "$classPrefix" == "P" ]; then
+            initLSlalom=$LSlalom
+            initRSlalom=$(($LSlalom % 2 + 1))
+        fi
     else
         forceShutdown="1"
     fi
@@ -575,7 +639,7 @@ else
 
     cd "$ETROBO_SIM_DIST/__race"
     if [ -n "$matchmaker" ]; then
-        sim $sim_ver restrict $course stdout btcat matchmaker launch __race > console.log
+        sim $restrict $course $sim_ver banner $banner stdout btcat matchmaker launch __race > console.log
         if [ "$?" != "0" ]; then
             echo "race sequencer: launcher error"
             touch "$raceFolder/ERROR"
@@ -605,7 +669,7 @@ else
             done
         fi
     else
-        sim $sim_ver restrict $course stdout btcat launch __race > console.log &
+        sim $restrict $course $sim_ver banner $banner stdout btcat launch __race > console.log &
         sim_pid=$!
         loop="loop"
         while [ -n "$sim_pid" ] && [ -n "`ps -fp $sim_pid | sed '1d'`" ] && [ -n "$loop" ]; do
@@ -626,10 +690,10 @@ else
 
     # force termination
     if [ -n "`asp check`" ]; then
-        asp stop
         if [ -z "$matchmaker" ]; then
             sim stop sim
         fi
+        asp stop
         wait $sim_pid
     fi
 
@@ -646,15 +710,32 @@ else
 
     # prepare result folder
     echo "race sequencer: prepare result folder"
+    resultTime="120.0"
     dest=$coursePrefix`date "+%Y%m%d-%H%M%S"`
     result="$raceFolder/$dest"
     mkdir "$result"
     src="$captDir_bashPath/$coursePrefix.csv"
     if [ -f "$src" ]; then
         cp "$src" "$result/$dest.csv"
-        if [ -d "$raceFolder/common/csv" ]; then
-            cp "$src" "$raceFolder/common/csv/$requestID.csv"
+        if [ -d "$raceFolder/common/json" ]; then
+            cp settings.json "$raceFolder/common/json/${classPrefix}_$requestID.json"
+            cp settings.json "$raceFolder/common/matchmaker/csv/$raceID.json"
         fi
+        if [ -d "$raceFolder/common/csv" ]; then
+            cp "$src" "$raceFolder/common/csv/${classPrefix}_$requestID.csv"
+            cp "$src" "$raceFolder/common/matchmaker/csv/$raceID.csv"
+        fi
+        
+        # calc preliminary result time
+        if [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fpcs" ]; then
+            resultTime="`calc_result ranking \"$raceFolder\" $class \"$raceFolder/common/csv/${classPrefix}_$requestID.csv\"`"
+        else
+            resultTime="`calc_result request $teamID \"$raceFolder\" $class \"$raceFolder/common/csv/${classPrefix}_$requestID.csv\"`"
+        fi
+    fi
+    echo "race sequencer: Preliminary Result Time: $resultTime secs." 
+    if [ "$mode" != "finals" ] && [ "$mode" != "csfinal" ]; then
+        echo "Preliminary Result Time: $resultTime secs." >> console.log
     fi
 
     # update result.json
@@ -753,7 +834,20 @@ else
             touch "$raceFolder/ERROR"
         fi
     elif [ -d "$raceFolder/common/raceserv" ]; then
-        cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$requestID.mp4"
+        if [ "$mode" == "finals" ] || [ "$mode" == "finals" ]; then
+            cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$raceID.mp4"
+            ffutil encode demultiplex $captureRate "$captDir_bashPath/${coursePrefix}_%08d.png" "$result/$dest.mp4" fatal
+            cp "$result/${dest}_1.mp4" "$raceFolder/common/raceserv/${raceID}_1.mp4"
+            cp "$result/${dest}_2.mp4" "$raceFolder/common/raceserv/${raceID}_2.mp4"
+            cp "$result/${dest}_3.mp4" "$raceFolder/common/raceserv/${raceID}_3.mp4"
+            cp "$result/${dest}_4.mp4" "$raceFolder/common/raceserv/${raceID}_4.mp4"
+            rm -f "$result/${dest}_1.mp4"
+            rm -f "$result/${dest}_2.mp4"
+            rm -f "$result/${dest}_3.mp4"
+            rm -f "$result/${dest}_4.mp4"
+        else
+            cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$requestID.mp4"
+        fi
     fi
 
     # add files from matchmaker

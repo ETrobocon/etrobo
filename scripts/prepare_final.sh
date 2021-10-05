@@ -299,7 +299,7 @@ elif [ "$1" == "getNew" ]; then
         if [ -n "$1" ]; then
             relayFolder="$1"
         else
-            echo "you should run `. preparefinal.sh /path/to/relayFolder` or specify relay folder."
+            echo 'you should run `. preparefinal.sh /path/to/relayFolder` or specify relay folder.'
             exit 1
         fi
     fi

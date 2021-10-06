@@ -39,6 +39,30 @@ status="$ETROBO_SIM_DIST/${app_select}.status"
 runner="$ETROBO_SIM_DIST/${app_select}.runner"
 projName=$(basename $(pwd))
 
+# IP address modification for WSL2
+if [ -f "${device_config_txt}.back" ]; then
+    cp -f "${device_config_txt}.back" "${device_config_txt}"
+    rm -f "${device_config_txt}.back"
+fi
+ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+    cp -f "${device_config_txt}" "${device_config_txt}.back"
+
+    ip_tx=`ip route | grep 'default via' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
+    ip_rx=`ip addr show eth0 | grep "inet\ " | awk '{print $2}' | sed -E 's/^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}).*$/\1/'`
+
+    if [ -z "`cat \"${device_config_txt}\" | grep DEBUG_FUNC_VDEV_RX_IPADDR`" ]; then
+        echo "DEBUG_FUNC_VDEV_RX_IPADDR   127.0.0.1" >> "${device_config_txt}"
+    fi
+
+    cat "${device_config_txt}" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR\ *(.*)$/DEBUG_FUNC_VDEV_TX_IPADDR\ \ \ $ip_tx/" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_RX_IPADDR\ *(.*)$/DEBUG_FUNC_VDEV_RX_IPADDR\ \ \ $ip_rx/" \
+    > "${device_config_txt}.tmp"
+    cp -f "${device_config_txt}.tmp" "${device_config_txt}"
+    rm -f "${device_config_txt}.tmp"
+fi
+
 # make trap
 loop="loop"
 unset athrill_pid

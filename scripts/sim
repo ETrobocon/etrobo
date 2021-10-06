@@ -88,6 +88,9 @@ else
     if [ -e "$ETROBO_ATHRILL_CONFIG" ]; then
         ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
     fi
+    if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+        ip=`ip route | grep 'default via' | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
+    fi
     if [ -z "$ip" ]; then
         ip="localhost"
     fi
@@ -117,6 +120,15 @@ else
         export ETROBO_LAUNCH_SIM="open -a \"$simLocation\""
     else
         unset ETROBO_LAUNCH_SIM
+    fi
+
+    # against VSCode bug
+    if [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+        for process in $(pstree -np -s $$ | grep -o -E '[0-9]+'); do
+            if [[ -e "/run/WSL/${process}_interop" ]]; then
+                export WSL_INTEROP=/run/WSL/${process}_interop
+            fi
+        done
     fi
 fi
 

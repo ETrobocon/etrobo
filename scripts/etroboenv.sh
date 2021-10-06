@@ -23,6 +23,7 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_ATHRILL_WORKSPACE
     unset ETROBO_SDCARD
     unset ETROBO_OS
+    unset ETROBO_OS_SUBSYSTEM
     unset ETROBO_KERNEL
     unset ETROBO_KERNEL_POSTFIX
     unset ETROBO_PLATFORM
@@ -53,14 +54,19 @@ else
         export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-1.0-release/sdcard"
 
         export ETROBO_PLATFORM="`uname -m`"
+        subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"
         if [ `uname` == "Darwin" ]; then
             export ETROBO_OS="mac"
             export ETROBO_KERNEL="darwin"
             export ETROBO_KERNEL_POSTFIX="mac"
             export ETROBO_USERPROFILE="$HOME_ORG"
             export ETROBO_EXE_POSTFIX=".app"
-        elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
+        elif [ "$subsystem" == "Microsoft" ] || [ "$subsystem" == "WSL2" ]; then
+            if [ "$subsystem" == "Microsoft" ]; then
+                subsystem="WSL1"
+            fi
             export ETROBO_OS="win"
+            export ETROBO_OS_SUBSYSTEM="$subsystem"
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
             comspec="`which cmd.exe`"

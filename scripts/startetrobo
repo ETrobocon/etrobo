@@ -37,6 +37,9 @@ else
 fi
 
 # platform detection
+unset host
+unset kernel
+unset guest
 if [ `uname` == "Darwin" ]; then
     host="mac"
     kernel="darwin"
@@ -52,12 +55,16 @@ if [ `uname` == "Darwin" ]; then
     fi
 elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
     host="win"
+    guest=" on WSL1"
+elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "WSL2" ]; then
+    host="win"
+    guest=" on WSL2"
 elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
     host="chrome"
 elif [ `uname` == "Linux" ]; then
     host="linux"
 else
-    echo unknown Host OS or not WSL on Windows 10.
+    echo unknown Host OS or not WSL/WSL2 on Windows 10/11.
     exit 1
 fi
 platform="`uname -m`"
@@ -73,7 +80,7 @@ if [ `uname` == "Linux" ]; then
         exit 1
     else
         kernel="debian"
-        guest=`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E "s/^PRETTY_NAME=\"(.*)\"/\1/"`
+        guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
     fi
 fi
 echo "detect platform: $host.$platform($guest)"

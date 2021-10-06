@@ -117,13 +117,17 @@ if [ "$1" = "--help" ]; then
 fi
 
 # `checkout [<branch name>]` option
-if [ "$1" = "checkout" ] && [ "$ETROBO_ENV" = "available" ]; then
+if [ "$1" = "checkout" ]; then
     shift
     if [ -n "$1" ]; then
         branch="$1"
         shift
     else
         branch="master"
+    fi
+    if [ -z "$ETROBO_ROOT" ]; then
+        echo "unable to checkout. you have to install the etrobo environment first."
+        exit 1
     fi
     cd "$ETROBO_ROOT"
     git checkout .

@@ -18,7 +18,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
 fi
 
 mode="both"
-if [ "$1" == "serv" ] || [ "$1" == "both" ] || [ "$1" == "get" ] || [ "$1" == "put" ] || [ "$1" == "lookup" ]; then
+if [ "$1" == "serv" ] || [ "$1" == "both" ] || [ "$1" == "get" ] || [ "$1" == "put" ] || [ "$1" == "lookup" ] || [ "$1" == "return" ]; then
     mode="$1"
     shift
 fi

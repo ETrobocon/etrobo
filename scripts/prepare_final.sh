@@ -580,4 +580,5 @@ elif [ "$1" == "returnResults" ]; then
             echo "${classLetter}$(printf "%03d" $teamID)_$courseLetter is already moved"
         fi
     done
+    ETroboSimRunner.Relay.sh return "$relayFolder"
 fi

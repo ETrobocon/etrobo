@@ -70,11 +70,25 @@ else
     export ETROBO_SIM_DIST="$ETROBO_HRP3_WORKSPACE/simdist"
     . "$ETROBO_SCRIPTS/asp" env
 
+    # determine URL of UIcomm and athrillHost
+    unset athrillHost
+    if [ -e "$ETROBO_ATHRILL_CONFIG" ]; then
+        ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+    fi
+    if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+        ip="$ETROBO_ATHRILL_TX"
+        athrillHost=",\"athrillHost\":\"$ETROBO_ATHRILL_RX\""
+    fi
+    if [ -z "$ip" ]; then
+        ip="localhost"
+    fi
+    export ETROBO_SIM_COMM="http://$ip:54000/"
+
     # course select
     app_prefix=""
     app_select="l_app"
     sim_select="left"
-    app_req='{"LHackEV":1,"RHackEV":0}'
+    app_req="{\"LHackEV\":1,\"RHackEV\":0$athrillHost}"
     if [ "$1" = "l" ] || [ "$1" = "left" ]; then
         app_prefix="l_"
         shift
@@ -82,19 +96,9 @@ else
         app_prefix="r_"
         app_select="r_app"
         sim_select="right"
-        app_req='{"LHackEV":0,"RHackEV":1}'
+        app_req="{\"LHackEV\":0,\"RHackEV\":1$athrillHost}"
         shift
     fi
-    if [ -e "$ETROBO_ATHRILL_CONFIG" ]; then
-        ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
-    fi
-    if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
-        ip=`ip route | grep 'default via' | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
-    fi
-    if [ -z "$ip" ]; then
-        ip="localhost"
-    fi
-    export ETROBO_SIM_COMM="http://$ip:54000/"
 
     #
     # `ver <version>` option selects version of UnityETroboSim
@@ -637,7 +641,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         start_time=`date "+%s"`
         while [ -n "$loop" ] && [ -n "`sim check sim`" ]; do
             sleep 0.1
-            json=`curl -s -X GET $ETROBO_SIM_COMM`
+            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
             if [ -n "$json" ]; then
                 if [ "`echo $json | jq -r .measurement.mode`" == "END" ] || [ "`\"$ETROBO_SCRIPTS/asp\" check`" == ":" ]; then
                     echo "[ launcher: end of this race ]" | tee $console

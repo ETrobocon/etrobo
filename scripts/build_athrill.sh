@@ -214,6 +214,18 @@ if [ "$GIT_AUTHOR" != "$CURRENT_AUTHOR" ]; then
     git clone https://github.com/${GIT_AUTHOR}/athrill.git
     git clone https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git
     git clone https://github.com/${GIT_AUTHOR}/ev3rt-athrill-v850e2m.git
+
+    #
+    # memory.txt hotfix
+    #
+    memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
+    if [ -d "$ETROBO_ATHRILL_SDK" ] && [ ! -f "${memory_txt}.org" ]; then
+        cp "$memory_txt" "${memory_txt}.org"
+        cat "$memory_txt" | sed -E 's/^(R[OA]M, 0x00[02]00000,) 512$/\1 2048/' > "${memory_txt}.tmp"
+        rm "$memory_txt"
+        cp "${memory_txt}.tmp" "$memory_txt"
+        rm "${memory_txt}.tmp"
+    fi
 fi
 
 #

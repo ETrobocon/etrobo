@@ -280,6 +280,8 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install ruby
         sudo apt -y install curl
         sudo apt -y install jq
+        sudo apt -y install zip
+        sudo apt -y install unzip
         sudo apt -y install bison
         sudo gem install shell -E
         #

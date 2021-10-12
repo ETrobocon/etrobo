@@ -137,7 +137,6 @@ if [ "$1" = "checkout" ]; then
             git checkout $branch
             echo
             echo "this environment is switched into $branch branch."
-            exit 0
         else
             echo
             echo 'an error occured during git clone. setup aborted.'
@@ -304,7 +303,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
     fi
 fi
 
-if [ "$install" = "install" ] || [ -z "$branch" ]; then
+if [ "$install" = "install" ] && [ -z "$branch" ]; then
     cd "`dirname $0`"
     echo
     echo 'Clone etrobo core package'

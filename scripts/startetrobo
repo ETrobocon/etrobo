@@ -125,10 +125,24 @@ if [ "$1" = "checkout" ]; then
     else
         branch="master"
     fi
-    if [ -z "$ETROBO_ROOT" ]; then
-        echo "unable to checkout. you have to install the etrobo environment first."
-        exit 1
+    # install with specified branch
+    if [ "$ETROBO_ENV" != "available" ]; then
+        cd "`dirname $0`"
+        echo
+        echo 'Clone etrobo core package'
+        git clone https://github.com/ETrobocon/etrobo.git
+        if [ $? -eq 0 ]; then
+            git checkout $branch
+            echo
+            echo "this environment is switched into $branch branch."
+            exit 0
+        else
+            echo
+            echo 'an error occured during git clone. setup aborted.'
+            exit 1
+        fi
     fi
+
     cd "$ETROBO_ROOT"
     git checkout .
     git checkout master

@@ -117,6 +117,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 # `checkout [<branch name>]` option
+unset branch
 if [ "$1" = "checkout" ]; then
     shift
     if [ -n "$1" ]; then
@@ -132,7 +133,7 @@ if [ "$1" = "checkout" ]; then
         echo 'Clone etrobo core package'
         git clone https://github.com/ETrobocon/etrobo.git
         if [ $? -eq 0 ]; then
-            cd etrobo
+            cd "$ETROBO_ROOT"
             git checkout $branch
             echo
             echo "this environment is switched into $branch branch."
@@ -159,7 +160,9 @@ if [ "$1" = "checkout" ]; then
         echo "startetrobo_mac.command is copied into `cd $ETROBO_ROOT/../..`"
     fi
     echo "this environment is switched into $branch branch."
-    exit 0
+    if [ "$ETROBO_ENV" = "available" ]; then
+        exit 0
+    fi
 fi
 
 # `unset` option
@@ -257,7 +260,7 @@ if [ "$1" = "repair" ]; then
 fi
 
 # platform update and git clone etrobo
-if [ ! -d "$ETROBO_ROOT" ]; then
+if [ ! -d "$ETROBO_ROOT" ] || [ -n "$branch" ]; then
     echo
     echo "Install etrobo Environment: start"
     echo
@@ -301,7 +304,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
     fi
 fi
 
-if [ "$install" = "install" ]; then
+if [ "$install" = "install" ] || [ -z "$branch" ]; then
     cd "`dirname $0`"
     echo
     echo 'Clone etrobo core package'

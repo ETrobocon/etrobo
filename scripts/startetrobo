@@ -139,7 +139,7 @@ if [ "$1" = "checkout" ]; then
             echo "this environment is switched into $branch branch."
         else
             echo
-            echo 'an error occured during git clone. setup aborted.'
+            echo 'an error occured duaring git clone. setup aborted.'
             exit 1
         fi
     fi

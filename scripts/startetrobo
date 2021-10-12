@@ -132,6 +132,7 @@ if [ "$1" = "checkout" ]; then
         echo 'Clone etrobo core package'
         git clone https://github.com/ETrobocon/etrobo.git
         if [ $? -eq 0 ]; then
+            cd etrobo
             git checkout $branch
             echo
             echo "this environment is switched into $branch branch."

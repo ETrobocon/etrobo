@@ -214,7 +214,7 @@ if [ "$1" = "clean" ]; then
             if [ -n "`echo $line | grep startetrobo`" ]; then
                 removeFlag="remove"
             else
-                echo $line >> $bashrc
+                echo "$line" >> $bashrc
             fi
         else
             if [ -n "`echo $line | grep startetrobo`" ]; then

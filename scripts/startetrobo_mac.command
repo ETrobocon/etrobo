@@ -56,7 +56,7 @@ if [ "$1" = "clean" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"
             else
-                echo $line >> $bashrc
+                echo "$line" >> $bashrc
             fi
         else
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
@@ -84,7 +84,7 @@ if [ "$1" = "clean" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"
             else
-                echo $line >> $bashrc
+                echo "$line" >> $bashrc
             fi
         else
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
@@ -109,7 +109,7 @@ if [ "$1" = "clean" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"
             else
-                echo $line >> $bashrc
+                echo "$line" >> $bashrc
             fi
         else
             if [ -n "`echo $line | grep jtBeerHall`" ]; then

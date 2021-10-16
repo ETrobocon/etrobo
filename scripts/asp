@@ -121,14 +121,18 @@ else
     export ETROBO_ATHRILL_CONFIG="$device_config_txt"
 
     # export UDP port numbers which use from Athrill
-    ip_tx=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+    unset ip_tx
+    unset ip_rx
+    if [ -f "$device_config_txt" ]; then
+        ip_tx=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+        ip_rx=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_RX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_RX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+    fi
     if [ -z "$ip_tx" ]; then
         ip_tx="127.0.0.1"
     fi
     if [ "$ip_tx" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
         ip_tx=`ip route | grep 'default via' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
     fi
-    ip_rx=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_RX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_RX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
     if [ -z "$ip_rx" ]; then
         ip_rx="127.0.0.1"
     fi

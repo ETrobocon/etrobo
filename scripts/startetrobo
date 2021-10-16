@@ -209,7 +209,7 @@ if [ "$1" = "clean" ]; then
     unset removeFlag
     bashrc=$(mktemp)
     cat ~/.bashrc | 
-    while read line; do
+    while IFS= read -r line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep startetrobo`" ]; then
                 removeFlag="remove"
@@ -282,6 +282,7 @@ if [ "$kernel" = "debian" ]; then
     echo "add etrobo environment vars exporter into ~/.bashrc"
     touch ~/.bashrc
     if [ -z "`cat ~/.bashrc 2>&1 | grep startetrobo`" ]; then
+        echo | sudo tee -a ~/.bashrc
         echo '# ----- this section was added by startetrobo -----' | sudo tee -a ~/.bashrc
         echo 'if [ -n "$ETROBO_ROOT" ]; then' | sudo tee -a ~/.bashrc
         echo '    . "$ETROBO_ROOT/scripts/etroboenv.sh"' | sudo tee -a ~/.bashrc

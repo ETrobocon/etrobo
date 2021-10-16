@@ -51,7 +51,7 @@ if [ "$1" = "clean" ]; then
     unset removeFlag
     bashrc=$(mktemp)
     cat $targetFile | 
-    while read line; do
+    while IFS= read -r line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"
@@ -79,7 +79,7 @@ if [ "$1" = "clean" ]; then
     unset removeFlag
     bashrc=$(mktemp)
     cat "$targetFile" | 
-    while read line; do
+    while IFS= read -r line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"
@@ -104,7 +104,7 @@ if [ "$1" = "clean" ]; then
     unset removeFlag
     bashrc=$(mktemp)
     cat "$targetFile" | 
-    while read line; do
+    while IFS= read -r line; do
         if [ -z "$removeFlag" ]; then
             if [ -n "`echo $line | grep jtBeerHall`" ]; then
                 removeFlag="remove"

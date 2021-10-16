@@ -91,7 +91,7 @@ if [ -z "$ETROBO_ROOT" ]; then
 fi
 
 # cancel etrobo environment disabler
-rm -f "$ETROBO/disable"
+rm -f "$ETROBO_ROOT/disable"
 
 # usage
 if [ "$1" = "--help" ]; then
@@ -188,7 +188,7 @@ fi
 if [ "$1" = "clean" ]; then
     echo
     echo 'NOTICE:'
-    echo '  run `update dist` on the etrobo terminal'
+    echo '  run `update` on the etrobo terminal'
     echo '  before this `clean` process to update startetrobo.'
     echo
     echo 'WARNING:'
@@ -203,6 +203,33 @@ if [ "$1" = "clean" ]; then
     sudo rm -f "$BeerHall/etc/profile.d/etrobo.sh"
     cd "$ETROBO_ROOT/.."
     rm -rf etrobo
+
+    # remove exporter from .bashrc
+    touch ~/.bashrc
+    unset removeFlag
+    bashrc=$(mktemp)
+    cat ~/.bashrc | 
+    while read line; do
+        if [ -z "$removeFlag" ]; then
+            if [ -n "`echo $line | grep startetrobo`" ]; then
+                removeFlag="remove"
+            else
+                echo $line >> $bashrc
+            fi
+        else
+            if [ -n "`echo $line | grep startetrobo`" ]; then
+                unset removeFlag
+            fi
+        fi
+    done
+    rm -f ~/.bashrc
+    if [ -s $bashrc ]; then
+        sudo mv -f $bashrc ~/.bashrc
+    else
+        rm $bashrc
+    fi
+
+    # deep clean
     if [ -n "$deepFlag" ]; then
         if [ "$kernel" = "debian" ]; then
             echo "remove /etc/profile.d/ev3rt.sh"
@@ -248,6 +275,20 @@ if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
     echo "export ETROBO_ROOT=\"$ETROBO_ROOT\"" > tmpFile
     echo "source \"$ETROBO_ROOT/scripts/etroboenv.sh\"" >> tmpFile
     sudo mv tmpFile "$BeerHall/etc/profile.d/etrobo.sh"
+fi
+
+# append .bashrc
+if [ "$kernel" = "debian" ]; then
+    echo "add etrobo environment vars exporter into ~/.bashrc"
+    touch ~/.bashrc
+    if [ -z "`cat ~/.bashrc 2>&1 | grep startetrobo`" ]; then
+        echo '# ----- this section was added by startetrobo -----' | sudo tee -a ~/.bashrc
+        echo 'if [ -n "$ETROBO_ROOT" ]; then' | sudo tee -a ~/.bashrc
+        echo '    . "$ETROBO_ROOT/scripts/etroboenv.sh' | sudo tee -a ~/.bashrc
+        echo 'fi' | sudo tee -a ~/.bashrc
+        echo "# ------------------------------- startetrobo end -" | sudo tee -a ~/.bashrc
+    fi
+    echo
 fi
 
 # repair mode

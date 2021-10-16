@@ -125,15 +125,6 @@ else
     else
         unset ETROBO_LAUNCH_SIM
     fi
-
-    # against VSCode bug
-    if [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
-        for process in $(pstree -np -s $$ | grep -o -E '[0-9]+'); do
-            if [[ -e "/run/WSL/${process}_interop" ]]; then
-                export WSL_INTEROP=/run/WSL/${process}_interop
-            fi
-        done
-    fi
 fi
 
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then

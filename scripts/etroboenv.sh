@@ -69,17 +69,31 @@ else
             export ETROBO_OS_SUBSYSTEM="$subsystem"
             export ETROBO_KERNEL="debian"
             export ETROBO_KERNEL_POSTFIX="linux"
+
+            echo
+            echo "WSL2 debug: etroboenv.sh $quit"
+            echo "WSL2 debug: detected OS=$ETROBO_OS($ETROBO_OS_SUBSYSTEM) KERNEL=$ETROBO_KERNEL/$ETROBO_KERNEL_POSTFIX "
+
             comspec="`which cmd.exe`"
+            echo "WSL2 debug: COMSPEC detector 1st path: $comspec"
             if [ -z "$comspec" ]; then
                 comspec="/mnt/c/Windows/System32/cmd.exe"
                 export ETROBO_MODE_CUI="true"
             fi
+            echo "WSL2 debug: COMSPEC detector 2nd path: $comspec"
+            echo "WSL2 debug: USERPROFILE detector 1st path: $($comspec /c echo %USERPROFILE%)"
             mntc="/mnt/$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -E 's/.*/\L&/' | sed -E 's/^(.{1}).*$/\1/')"
+            echo "WSL2 debug: USERPROFILE drive detector: $mntc"
             uppath="$($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):(.*)$/\2/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+            echo "WSL2 debug: USERPROFILE parser: $($comspec /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):(.*)$/\2/')"
+            echo "WSL2 debug: USERPROFILE detector 2nd path: $uppath"
+
             export ETROBO_USERPROFILE="$mntc$uppath"
             if [ -z "$uppath" ]; then
+                echo "WSL2 debug: USERPROFILE detector: fallback to using whoami"
                 export ETROBO_USERPROFILE="/mnt/c/Users/`whoami`"
             fi
+            echo "WSL2 debug: USERPROFILE detector 3rd path: $ETROBO_USERPROFILE"
             #export ETROBO_LAUNCH_SIM='cmd.exe /c "%USERPROFILE%\\etrobosim${ETROBO_SIM_VER}_${ETROBO_OS}\\${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
             export ETROBO_EXE_POSTFIX=".exe"
         elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then

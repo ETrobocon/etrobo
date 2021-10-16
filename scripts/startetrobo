@@ -284,7 +284,7 @@ if [ "$kernel" = "debian" ]; then
     if [ -z "`cat ~/.bashrc 2>&1 | grep startetrobo`" ]; then
         echo '# ----- this section was added by startetrobo -----' | sudo tee -a ~/.bashrc
         echo 'if [ -n "$ETROBO_ROOT" ]; then' | sudo tee -a ~/.bashrc
-        echo '    . "$ETROBO_ROOT/scripts/etroboenv.sh' | sudo tee -a ~/.bashrc
+        echo '    . "$ETROBO_ROOT/scripts/etroboenv.sh"' | sudo tee -a ~/.bashrc
         echo 'fi' | sudo tee -a ~/.bashrc
         echo "# ------------------------------- startetrobo end -" | sudo tee -a ~/.bashrc
     fi

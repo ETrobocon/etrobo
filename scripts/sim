@@ -170,7 +170,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # `sim status` shows status
     #
     if [ "$1" = "status" ]; then
-        json=`curl -s -X GET $ETROBO_SIM_COMM 2>&1`
+        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM 2>&1`
         if [ "$?" == "0" ];then
             echo "$json" | jq .
         fi
@@ -185,12 +185,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         if [ -z "$2" ] || [ "$2" == "sim" ]; then
             shift
 
-            json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END`
+            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END`
             sleep 1     # @ToDo: its magic number
             counter=0
             while [ -n "`echo $json | jq -r .measurement.mode`" ] && [ "`echo $json | jq -r .measurement.mode`" != "END" ]; do
                 sleep 0.1
-                json=`curl -s -X GET $ETROBO_SIM_COMM`
+                json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
                 counter=$(( $counter + 1 ))
                 if [ $counter -ge 50 ]; then
                     unset json
@@ -406,7 +406,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             # wait for starting up UIcomm
             counter=0
             if [ "$comm_ready" == "init" ]; then
-                response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                 json=`echo "$response" | sed '$d'`
                 code=`echo "$response" | tail -n 1`
                 while [ "$code" != "200" ] && [ -n "$loop" ]; do
@@ -417,7 +417,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         unset comm_ready
                     fi
                     sleep 0.1
-                    response=`curl -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                    response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
                     json=`echo "$response" | sed '$d'`
                     code=`echo "$response" | tail -n 1`
                 done
@@ -435,7 +435,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             # return or export prefs
             if [ -n "$prefs" ] && [ "$comm_ready" == "ready" ]; then
-                invoker="curl -s -X GET ${ETROBO_SIM_COMM}?GET=PREFS | jq -M ."
+                invoker="curl -m 1 -s -X GET ${ETROBO_SIM_COMM}?GET=PREFS | jq -M ."
                 if [ "$prefs" == "export" ] || [ "$prefs" == "import" ]; then
                     eval "$invoker" > settings.json
                     rm -f "$ETROBO_SIM_DIST/$projName/settings.json"
@@ -453,7 +453,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -n "$load_prefs" ] && [ -f "$ETROBO_SIM_DIST/$projName/settings.json" ] && [ "$comm_ready" == "ready" ]; then
                 req="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\" | jq -M -c .`"
                 if [ -n "$req" ]; then
-                    curl -s -X POST -d $req $ETROBO_SIM_COMM > /dev/null
+                    curl -m 1 -s -X POST -d $req $ETROBO_SIM_COMM > /dev/null
                     sleep 1     # @ToDo: its magic number
                 else
                     echo "[ launcher: WARNING: illegal settings.json ]" | tee $console
@@ -462,10 +462,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             # sim controller
             if [ "$ctl_command" == "get" ]; then
-                curl -s -X GET $ETROBO_SIM_COMM
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "set" ]; then
-                curl -s -X POST -d "$ctl_params" $ETROBO_SIM_COMM
+                curl -m 1 -s -X POST -d "$ctl_params" $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "pos" ] || [ "$ctl_command" == "initpos" ]; then
                 initpos="initL"
@@ -493,16 +493,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     params=($x $y $z $rot)
                 fi
                 json="{\"LHackEV\":$l,\"RHackEV\":$r,\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
-                curl -s -X POST -d "$json" $ETROBO_SIM_COMM
+                curl -m 1 -s -X POST -d "$json" $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "prepare" ]; then
-                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE
                 echo
             elif [ "$ctl_command" == "go" ]; then
-                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO
                 echo
             elif [ "$ctl_command" == "end" ]; then
-                curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END
                 echo
             fi
 
@@ -519,7 +519,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 rm -f result.json
                 # put HackEV onto specified course and wait connected
                 if [ "$sim_opt" != "matchmaker" ]; then
-                    curl -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+                    curl -m 1 -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
                     sleep 1     # @ToDo: its magic number
                 fi
 
@@ -546,7 +546,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
 
                 counter=0
-                response=`curl -s -X GET $ETROBO_SIM_COMM`
+                response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
                 while [ -z "`echo "$response" | jq -r .$sim_select.mode | grep CONNECTING`" ] && [ -n "$loop" ]; do
                     sleep 0.1
                     counter=$(( $counter + 1 ))
@@ -559,7 +559,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         unset loop
                         unset comm_ready
                     fi
-                    response=`curl -s -X GET $ETROBO_SIM_COMM`
+                    response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
                 done
 
                 if [ -z `sim check sim` ]; then
@@ -573,7 +573,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     if [ -n "$loop" ]; then
                         # request PREPARE and wait CALIBRATING
                         echo "[ launcher: waiting for calibration ]" | tee $console
-                        json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
+                        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
                         sleep 1     # @ToDo: its magic number
                         counter=0
                         while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
@@ -588,7 +588,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                                 unset loop
                                 unset comm_ready
                             fi
-                            json=`curl -s -X GET $ETROBO_SIM_COMM`
+                            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
                         done
                         # auto start
                         echo "[ launcher: Go to the start, Ready? ]" | tee $console
@@ -599,7 +599,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                             sleep 1
                             echo -n "1..." | tee $console
                             sleep 1
-                            json=`curl -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
+                            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
                             echo " ]" | tee $console
                             echo "[ launcher: Go!!!!!!!! ]" | tee $console
                         elif [ "$sim_opt" == "matchmaker" ]; then

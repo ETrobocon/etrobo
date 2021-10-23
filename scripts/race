@@ -834,7 +834,7 @@ else
             touch "$raceFolder/ERROR"
         fi
     elif [ -d "$raceFolder/common/raceserv" ]; then
-        if [ "$mode" == "finals" ] || [ "$mode" == "finals" ]; then
+        if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
             cp "$result/$dest.mp4" "$raceFolder/common/raceserv/$raceID.mp4"
             ffutil encode demultiplex $captureRate "$captDir_bashPath/${coursePrefix}_%08d.png" "$result/$dest.mp4" fatal
             cp "$result/${dest}_1.mp4" "$raceFolder/common/raceserv/${raceID}_1.mp4"

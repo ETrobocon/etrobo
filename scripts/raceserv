@@ -9,7 +9,7 @@
 # fp0 ... 2021/07/17 13:00～2021/07/17 16:00
 # fp1 ... 2021/07/26 09:30～2021/08/01 20:00
 # fp2 ... 2021/08/29 09:30～2021/09/08 20:00
-# fp3 ... 2021/10/30 09:30～2021/11/05 20:00
+# fpcs... 2021/10/30 10:00～2021/11/05 20:00
 #
 
 # ToDo:
@@ -70,7 +70,7 @@ if [ "$1" == "matchmaker" ] || [ "$1" == "flying" ]; then
     shift
 fi
 
-if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fp3" ] || [ "$1" == "finals" ] || [ "$1" == "csfinal" ];then
+if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fpcs" ] || [ "$1" == "finals" ] || [ "$1" == "csfinal" ];then
     # prepare race folder
     mode="$1"
     raceFolder="$2"
@@ -196,5 +196,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
         rm -f "$raceFolder/"*.manifest
     done
 else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] fp1|fp2|fp3|finals|csfinal /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] fp1|fp2|fpcs|finals|csfinal /path/to/raceFolder [/path/to/relayFolder]" 
 fi

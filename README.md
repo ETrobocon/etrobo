@@ -61,6 +61,7 @@ Copyright(C) 2020-2021 ETロボコン実行委員会, All rights reserved.
         - MacBook Pro (Retina, Mid 2012) / macOS Mojave 10.14.6 / Xcode 11.0
         - MacBook Air (M1, 2020) 8GB-7GPU / macOS Big Sur 11.2.3
 - macOS Mojave(10.14)以降
+    - macOS Montereyでの動作は検証されていません。対応予定はありますが、今のところetrobo環境を使用する方のアップデートはお控えください。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
 - Xcode(Command Line Tools)のインストール

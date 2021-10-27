@@ -720,10 +720,12 @@ else
         if [ -d "$raceFolder/common/json" ]; then
             cp settings.json "$raceFolder/common/json/${classPrefix}_$requestID.json"
             cp settings.json "$raceFolder/common/matchmaker/csv/$raceID.json"
+#            cp settings.json "$raceFolder/common/progress/csv/$raceID.json"
         fi
         if [ -d "$raceFolder/common/csv" ]; then
             cp "$src" "$raceFolder/common/csv/${classPrefix}_$requestID.csv"
             cp "$src" "$raceFolder/common/matchmaker/csv/$raceID.csv"
+#            cp "$src" "$raceFolder/common/progress/csv/$raceID.csv"
         fi
         
         # calc preliminary result time

@@ -238,8 +238,8 @@ elif [ "$1" == "distribute" ]; then
         ls -1 "$common/matchmaker/results" \
         | while read combinedID; do
             class="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\1/'`"
-            teamID="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\2/'`"
-            divisionID="`echo $Teams | jq -cr ".[]|select(.ID==\"$teamID\")|.divisionID"`"
+            teamID="`echo $combinedID | sed -E 's/^([EPA]{1})([0-9]{3})$/\2/' | sed -E 's/^0*([1-9]{1}[0-9]*)$/\1/'`"
+            divisionID="`echo $Teams | jq -cr \".[]|select(.ID==\\\"$teamID\\\")|.divisionID\"`"
             groupID=$(printf "%02d" $(echo "$Divisions" | jq -cr ".[]|select(.ID==\"$divisionID\")|.groupID"))
             
             if [ ! -d "$tmpFolder/$groupID" ]; then
@@ -299,7 +299,7 @@ elif [ "$1" == "getNew" ]; then
         if [ -n "$1" ]; then
             relayFolder="$1"
         else
-            echo "you should run `. preparefinal.sh /path/to/relayFolder` or specify relay folder."
+            echo 'you should run `. preparefinal.sh /path/to/relayFolder` or specify relay folder.'
             exit 1
         fi
     fi
@@ -378,9 +378,12 @@ elif [ "$1" == "getNew" ]; then
 # update division name
 #
 elif [ "$1" == "updateDivisionName" ]; then
+    resultsPath="$relayFolder/common/matchmaker/results_org"
+#    ls -1 $relayFolder/common/raceserv/*.png | grep -E '.*\/[EP]{1}[0-9]{3}.*\.png$' \
 #    ls -1 $relayFolder/common/raceserv/results_org/*.png | grep -E '.*\/[EP]{1}[0-9]{3}\.png$' \
-    ls -1 $relayFolder/common/raceserv/*.png | grep -E '.*\/[EP]{1}[0-9]{3}.*\.png$' \
+    ls -1 $resultsPath | grep -E '[EP]{1}[0-9]{3}$' \
     | while read file; do
+        file="$resultsPath/$file/$(ls -1 $resultsPath/$file | grep "\.png$")"
         teamID=`echo "$file" | sed -E 's/.*\/[EP]{1}([0-9]{3}).*\.png$/\1/'`
         teamNo=`echo $teamID | sed -E 's/^00([1-9]{1})$/\1/' | sed -E 's/^0([1-9]{1}[0-9]{1})$/\1/'`
         divisionID=`echo "$Teams" | jq -r ".[]|select(.ID==\"$(awk "BEGIN { print $teamNo }")\")|.divisionID"`
@@ -416,7 +419,166 @@ elif [ "$1" == "rerun" ]; then
         rm "$sourceFolder/${combinedID}_R_result.png"
     done
 
-    echo "copy files into results_org"
-    cp "$relayFolder/common/raceserv/results/"* "$relayFolder/common/raceserv/results_org/"
+    echo "move files into results_org"
+    mv "$relayFolder/common/raceserv/results/"* "$relayFolder/common/raceserv/results_org/"
 
+#
+# replaceMovies [all|division|id] [id]
+#
+# replace to mmmuxed movies into result files which in 'Results_org' and store to Results folder
+#
+elif [ "$1" == "replaceMovies" ]; then
+    sourceFolder="$relayFolder/Results_org"
+    destinationFolder="$relayFolder/Results"
+
+    mode="all"
+    unset id
+    groups=(1 2 4 5 6 8 9 12 11 A B C)
+    unset teamID
+    unset divisionID
+    unset classLetter
+    unset targetID
+    if [ "$2" == "all" ] || [ "$2" == "division" ] || [ "$2" == "id" ]; then
+        mode="$2"
+        id="$3"
+        if [ "$mode" == "division" ]; then
+            groups=($id)
+        elif [ "$mode" == "id" ]; then
+            teamID="$id"
+            record=`echo $Teams | jq -cr ".[]|select(.ID==\"$teamID\")"`
+            divisionID=$(json record.divisionID)
+            classLetter=$(json record.classLetter)
+            record=`echo $Divisions | jq -cr ".[]|select(.ID==\"$divisionID\")"`
+            if [ "$classLetter" == "A" ]; then
+                targetID=$(json record.blockLetter)
+            else
+                targetID=$(json record.groupID)
+            fi
+        fi
+    fi
+
+    ls -1 "$sourceFolder" | sed -E 's/^[EAP]_(.*)\.zip/\1/' \
+    | while read requestID; do
+        skip="skip"
+        record=`echo $Requests | jq -cr ".[]|select(.ID==\"$requestID\")"`
+        if [ "$mode" == "id" ]; then
+            if [ "$teamID" == "$(json record.teamID)" ]; then
+                courseLetter=$(json record.courseLetter)
+                unset skip
+            fi
+        else
+            teamID=$(json record.teamID)
+            divisionID=$(json record.divisionID)
+            classLetter=$(json record.classLetter)
+            courseLetter=$(json record.courseLetter)
+            record=`echo $Divisions | jq -cr ".[]|select(.ID==\"$divisionID\")"`
+            if [ "$classLetter" == "A" ]; then
+                targetID=$(json record.blockLetter)
+            else
+                targetID=$(json record.groupID)
+            fi
+            for group in ${groups[@]}; do
+                if [ "$group" == "$targetID" ]; then
+#                    echo "divisionID: $divisionID  targetID=$targetID  group=$group"
+                    unset skip
+                fi
+            done
+        fi
+
+        if [ -z "$skip" ]; then
+            combinedID="${classLetter}$(printf "%03d" $teamID)"
+            raceID="${combinedID}_${courseLetter}"
+            target="${classLetter}_${requestID}.zip"
+
+            echo "$requestID -> $raceID @ $targetID"
+            mkdir -p "${destinationFolder}_${targetID}_${classLetter}"
+            cp "$sourceFolder/$target" "${destinationFolder}_${targetID}_${classLetter}/"
+            target="${destinationFolder}_${targetID}_${classLetter}/$target"
+            innerFolder=`unzip -Z1 "$target" | head -n 1 | sed -E 's/^(.*)\/$/\1/'`
+            cd "${destinationFolder}_${targetID}_${classLetter}"
+            mkdir "$innerFolder"
+            cp "$relayFolder/common/raceserv/results_org/$combinedID.png" "${innerFolder}/"
+            cp "$relayFolder/common/raceserv/results_org/$raceID.mp4" "${innerFolder}/"
+            cp "$relayFolder/common/matchmaker/csv/$raceID.csv" "${innerFolder}/"
+            zip "$target" -d $innerFolder/$innerFolder.csv $innerFolder/$innerFolder.mp4 $innerFolder/result.json
+            zip "$target" -r $innerFolder
+            rm -rf $innerFolder
+        fi
+    done
+
+#
+# catResults /path/to/Results_divisionID_[EP]
+#
+# show requestID and raceID
+#
+elif [ "$1" == "catResults" ]; then
+    sourceFolder="$2"
+
+    ls -1 "$sourceFolder" \
+    | while read requestFile; do
+        requestID=`echo $requestFile | sed -E 's/^[EAP]_(.*)\.zip/\1/'`
+        record=`echo $Requests | jq -cr ".[]|select(.ID==\"$requestID\")"`
+        teamID=$(json record.teamID)
+        classLetter=$(json record.classLetter)
+        courseLetter=$(json record.courseLetter)
+        combinedID="${classLetter}$(printf "%03d" $teamID)"
+        raceID="${combinedID}_${courseLetter}"
+        echo "$requestFile,$raceID"
+    done
+
+#
+# assignResults /path/to/Results_divisionID_[EP]
+#
+# assign a division's Results folder to half1 and half2
+# need hardcode combinedID array of half1 as H1
+#
+elif [ "$1" == "assignResults" ]; then
+    H1=(P079 P147 P098 P131 P082 P102 P048 P146 P052 P087 P092 P123 P046 P164 P112 P095 P091)
+    sourceFolder="$2"
+
+    mkdir -p "${sourceFolder}_H1"
+    mkdir -p "${sourceFolder}_H2"
+
+    prepare_final.sh catResults "$sourceFolder" \
+    | while read result; do
+        requestFile=`echo $result | sed -E 's/^(.*),([EP]{1}[0-9]{3})\_[LR]{1}$/\1/'`
+        combinedID=`echo $result | sed -E 's/^(.*),([EP]{1}[0-9]{3})\_[LR]{1}$/\2/'`
+        unset found
+        for attempt in ${H1[@]}; do
+            if [ "$combinedID" == "$attempt" ]; then
+                found="found"
+            fi
+        done
+        if [ $found ]; then
+            echo "$requestFile ($combinedID) -> H1"
+            cp "$sourceFolder/$requestFile" "${sourceFolder}_H1/"
+        else
+            echo "$requestFile ($combinedID) -> H2"
+            cp "$sourceFolder/$requestFile" "${sourceFolder}_H2/"
+        fi
+    done
+
+#
+# returnResults /path/to/Results_divisionID_[EPA] <teamID>
+#
+# return a teamID's Results file from /path/to/Results_divisionID_[EPA]
+# /path/to/Results_divisionID_[EPA] have to contain the actual relayFolder at sim/ope-vm
+#
+elif [ "$1" == "returnResults" ]; then
+    sourceFolder="$2"
+    teamID="$3"
+    echo $Requests | jq -cr ".[]|select(.teamID==\"$teamID\")" \
+    | while read record; do
+        classLetter=$(json record.classLetter)
+        courseLetter=$(json record.courseLetter)
+        requestID=$(json record.ID)
+        file="${classLetter}_${requestID}.zip"
+        if [ -f "$sourceFolder/$file" ]; then
+            echo "${classLetter}$(printf "%03d" $teamID)_$courseLetter = $file"
+            mv "$sourceFolder/$file" "$(dirname $sourceFolder)/Results/"
+        else
+            echo "${classLetter}$(printf "%03d" $teamID)_$courseLetter is already moved"
+        fi
+    done
+    ETroboSimRunner.Relay.sh return "$relayFolder"
 fi

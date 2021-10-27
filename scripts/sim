@@ -362,7 +362,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 if [ -e "$topcenter" ]; then
                     rm -rf "$topcenter"
                 fi
-                if [ -n "$banner" ]; then
+                if [ -n "$banner" ] && [ -e "$ETROBO_ROOT/dist/topcenter/$banner" ]; then
                     cp -f "$ETROBO_ROOT/dist/topcenter/$banner" "$topcenter"
                 fi
                 eval "$ETROBO_LAUNCH_SIM"

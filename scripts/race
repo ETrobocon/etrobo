@@ -527,7 +527,7 @@ fi
 # determine preferences for competition
 #
 if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
-    if [ "$mode" == "fp2" ] || [ "$1" = "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+    if [ "$mode" == "fp2" ] || [ "$mode" = "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
         LSpotLight=$d_LSpotLight

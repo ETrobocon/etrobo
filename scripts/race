@@ -475,7 +475,7 @@ elif [ "$mode" == "fp2" ]; then
     banner="FP2"
 elif [ "$mode" == "fpcs" ]; then
     banner="FPCS"
-if [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
+elif [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
     if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         record=$(echo "$Requests" | jq -r ".[]|select(.ID==\"$requestID\")")
         divisionID=`json record.divisionID`

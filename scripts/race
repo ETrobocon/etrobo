@@ -469,14 +469,14 @@ unset teamID
 unset blockLetter
 unset groupID
 unset LSlalom
-if [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
-    if [ "$mode" == "fp1" ]; then
-        banner="FP1"
-    elif [ "$mode" == "fp2" ]; then
-        banner="FP2"
-    elif [ "$mode" == "fpcs" ]; then
-        banner="FPCS"
-    elif [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+if [ "$mode" == "fp1" ]; then
+    banner="FP1"
+elif [ "$mode" == "fp2" ]; then
+    banner="FP2"
+elif [ "$mode" == "fpcs" ]; then
+    banner="FPCS"
+elif [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
+    if [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         record=$(echo "$Requests" | jq -r ".[]|select(.ID==\"$requestID\")")
         divisionID=`json record.divisionID`
         teamID=`json record.teamID`
@@ -527,7 +527,7 @@ fi
 # determine preferences for competition
 #
 if [ "$mode" == "fp0" ] || [ "$mode" == "fp1" ] || [ "$mode" == "fp2" ] || [ "$mode" == "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
-    if [ "$mode" == "fp2" ] || [ "$1" = "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
+    if [ "$mode" == "fp2" ] || [ "$mode" = "fpcs" ] || [ "$mode" == "finals" ] || [ "$mode" == "csfinal" ]; then
         EnvLightIntensityLevel=$d_EnvLightIntensityLevel
         EnvLightRotation=$d_EnvLightRotation
         LSpotLight=$d_LSpotLight
@@ -720,10 +720,12 @@ else
         if [ -d "$raceFolder/common/json" ]; then
             cp settings.json "$raceFolder/common/json/${classPrefix}_$requestID.json"
             cp settings.json "$raceFolder/common/matchmaker/csv/$raceID.json"
+#            cp settings.json "$raceFolder/common/progress/csv/$raceID.json"
         fi
         if [ -d "$raceFolder/common/csv" ]; then
             cp "$src" "$raceFolder/common/csv/${classPrefix}_$requestID.csv"
             cp "$src" "$raceFolder/common/matchmaker/csv/$raceID.csv"
+#            cp "$src" "$raceFolder/common/progress/csv/$raceID.csv"
         fi
         
         # calc preliminary result time

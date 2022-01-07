@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2021.10.30a"
+    export ETROBO_MANIFEST_VER="2022.01.08a"
     export ETROBO_PUBLIC_VER="2021_4.47-public"
     export ETROBO_COMPETITION_VER="2021_5.4.2"
 
@@ -74,9 +74,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
     #
     pkgs+=("ev3rt")
-    urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip")
-    vers+=("2020.06.29a")
-    sizes+=("13774129")
+    urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.1-release.zip")
+    vers+=("2022.01.08a")
+    sizes+=("14084448")
 
     #
     # EV3RT requirement from:

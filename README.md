@@ -24,7 +24,6 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 - USB接続のEV3RT App Loader向けユーティリティを搭載、ビルド時に自動でプロジェクト名をファイル名として転送可能
 - ビルドからシミュレータの実行まで１コマンドで自動処理
 - サンプルコースとサンプルコードを同梱
-- Coming soon（シミュレータ向けアプリの実行時にシミュレータの設定を変更可能）
 
  注：**ここに同梱されているシミュレータは、一般配布用の評価版です**。大会で実際に使用するコースデータやシミュレータには、参加者限定で配布されるものを使用し開発してください。シミュレータの性能や走行体の挙動が異なります。
 
@@ -37,31 +36,30 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020-2021 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
 ### Windows
 
 - x86-64アーキテクチャのCPU
-- Windows 10 version 1709 (Fall Creators Update)以降
-    - これより前のWindows 10や、Windows 7などでは動作しません。
-- Windows Services for Linux (WSL1)のインストール
+- Windows 11、またはWindows 10 version 2004以降、またはWindows 10 Enterprise LTSC 2019
+    - version 1709未満のWindows 10や、Windows 7などでは動作しません。
+    - version 1903/1909のWindows 10でもWSL2で動作しますが、サポート対象外です。
+    - version 1809(LTSC 2019)はWSL1でのみ動作します。
+- Virtual Machine Platform (WSL2)のインストール
     - インストールにWindowsの管理者権限が必要です。
-    - Virtual Machine Platform (WSL2)には近日中に対応します。
-- WSL向けUbuntu 20.04（または18.04）のインストール
+    - Windows Services for Linux (WSL1)のサポートも引き続き行いますが、LTSC 2019に限ります。
+- WSL向けUbuntu 20.04のインストール
     - 環境の利用にはsudoers権限が必要です。
-    - 16.04でも動作する可能性はありますが、未検証です。
-    - 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
 - Visual Studio Code(「Remote - WSL」拡張機能）のインストール
 
 ### Mac
 - x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
         - MacBook Pro (Retina, Mid 2012) / macOS Mojave 10.14.6 / Xcode 11.0
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Big Sur 11.2.3
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Monterey 12.1.0
 - macOS Mojave(10.14)以降
-    - macOS Montereyでの動作は検証されていません。対応予定はありますが、今のところetrobo環境を使用する方のアップデートはお控えください。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
 - Xcode(Command Line Tools)のインストール

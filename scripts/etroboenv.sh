@@ -109,7 +109,6 @@ else
 
             . "$ETROBO_SCRIPTS/etrobopath.sh" unset
             export ETROBO_ENV_VER=`cd "$ETROBO_ROOT"; git show -s --date=short --format="%cd.%h"`
-            . "$ETROBO_SCRIPTS/etrobopath.sh"
 
             # import module envs
             . "$ETROBO_SCRIPTS/sim" env
@@ -131,6 +130,9 @@ else
             echo
         fi
     elif [ -z "$quit" ]; then
+        if [ "$PATH" == "$ETROBO_PATH_ORG" ]; then
+            . "$ETROBO_SCRIPTS/etrobopath.sh"
+        fi
         echo "etrobo environment: Ready. (Ver.$ETROBO_ENV_VER)"
     fi
 fi

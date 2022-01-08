@@ -52,6 +52,7 @@ else
             export ETROBO_ENV="available"
             export ETROBO_SCRIPTS="$ETROBO_ROOT/scripts"
             export ETROBO_ATHRILL_GCC="$ETROBO_ROOT/athrill-gcc-package/usr/local/athrill-gcc"
+            export ETROBO_EV3RT_VER=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | tail -n 1 | sed -E "s/^ev3rt-([0-9]*.[0-9]*)-release$/\1/"`
             export ETROBO_HRP3_SDK="$ETROBO_ROOT/hrp3/sdk"
             export ETROBO_HRP3_WORKSPACE="$ETROBO_HRP3_SDK/workspace"
             export ETROBO_ATHRILL_EV3RT="$ETROBO_ROOT/ev3rt-athrill-v850e2m"
@@ -61,7 +62,7 @@ else
             export ETROBO_MRUBY_VER="2.0.1"
             export ETROBO_MRUBY_ROOT="$ETROBO_ATHRILL_WORKSPACE/mruby-$ETROBO_MRUBY_VER"
             export ETROBO_MRUBY_LIB="$ETROBO_MRUBY_ROOT/build/EV3RT-sim/lib/libmruby.a"
-            export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-1.0-release/sdcard"
+            export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-$ETROBO_EV3RT_VER-release/sdcard"
 
             export ETROBO_PLATFORM="`uname -m`"
             subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"

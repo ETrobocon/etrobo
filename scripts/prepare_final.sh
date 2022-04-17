@@ -18,7 +18,7 @@ json () {
     envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
     key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
     if [ -z "$op" ]; then
-        eval "echo \$$envvar | jq -r $key"
+        eval "echo \$$envvar | jq -r $key | grep -v ^null$"
     elif [ "$op" == "=" ]; then
         eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
     fi
@@ -38,7 +38,7 @@ commonFolder="$relayFolder/common"
 #
 if [ "$1" == "stringifyMasters" ]; then
     # Teams
-    fields=(ID classLetter divisionID LSlalom)
+    fields=(ID classLetter divisionID LSlalom isCS)
     mapper=""
     for ((i=0; i<${#fields[@]}; i++)); do
         if [ -n "$mapper" ];then
@@ -433,7 +433,7 @@ elif [ "$1" == "replaceMovies" ]; then
 
     mode="all"
     unset id
-    groups=(1 2 4 5 6 8 9 12 11 A B C)
+    groups=(1 2 4 5 6 8 9 12 11 14 A B C CS)
     unset teamID
     unset divisionID
     unset classLetter

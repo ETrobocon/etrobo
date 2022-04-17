@@ -343,8 +343,8 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     if [ "`uname -m`" = "arm64" ]; then
         packages="gmp mpfr libmpc isl cloog"
         for package in $packages; do
+            brew install $package
             if [ ! -e "/opt/homebrew/opt/$package/lib" ]; then
-                brew install $package
                 sudo mkdir -p /opt/homebrew/opt/$package
                 echo "make symbolic link from /opt/homebrew/opt/$package/lib to \$HOMEBREW_PREFIX/lib"
                 sudo ln -s "$HOMEBREW_PREFIX/lib" /opt/homebrew/opt/$package/lib

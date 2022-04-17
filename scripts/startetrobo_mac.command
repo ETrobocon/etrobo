@@ -264,9 +264,9 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     # tcl-tk (for python)
     brew install tcl-tk
     brew link tcl-tk --force
-    # python@3.9 (for scons)
-    brew install python@3.9
-    brew link python@3.9 --force
+    # python@3.10 (for scons)
+    brew install python@3.10
+    brew link python@3.10 --force
     # scons (for subversion)
     brew install scons
     # pcre (for subversion)

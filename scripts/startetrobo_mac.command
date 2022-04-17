@@ -319,6 +319,8 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install jemalloc
     # libev (for curl)
     brew install libev
+    # libnghttp2 (for nghttp2)
+    brew install libnghttp2
     # nghttp2 (for curl)
     brew install nghttp2
     # openldap (for curl)

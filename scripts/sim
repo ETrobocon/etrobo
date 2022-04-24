@@ -506,6 +506,15 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
             fi
 
+            # put HackEV onto specified course and wait for connecting with athrillHost
+            if [ "$comm_ready" == "ready" ]; then
+                rm -f result.json
+                if [ "$sim_opt" != "matchmaker" ]; then
+                    curl -m 1 -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+                    sleep 1     # @ToDo: its magic number
+                fi
+            fi
+
             # exit if no launch
             if [ "$sim_opt" == "skipASP" ]; then
                 if [ -z "$loop" ]; then
@@ -516,13 +525,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             if [ "$comm_ready" == "ready" ]; then
-                rm -f result.json
-                # put HackEV onto specified course and wait connected
-                if [ "$sim_opt" != "matchmaker" ]; then
-                    curl -m 1 -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
-                    sleep 1     # @ToDo: its magic number
-                fi
-
                 # wait for EV3RT is ready
                 counter=0
                 status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"

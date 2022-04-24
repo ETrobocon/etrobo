@@ -67,7 +67,7 @@ if [ -n "$update" ]; then
             done
         fi
     fi
-    etrobopkg
+    etrobopkg $sim_public
     . "$scripts/sim" env
 fi
 

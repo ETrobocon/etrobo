@@ -262,7 +262,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     7 ) echo "Protocol error:";;
                     8 ) echo "Server error: something is wrong with this file server";;
                 esac
-            else
+            elif [ -z "$sim_public" ]; then
                 query_d=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\1/'`
                 query_a=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\2/'`
                 query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`

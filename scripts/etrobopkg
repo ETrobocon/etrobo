@@ -153,7 +153,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         size=42498543
     fi    
     pkgs+=("etrobosim")
-    urls+=("https://etrobocon.github.io/etroboEV3/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
+    urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
     vers+=("2022.04.25a")
     sizes+=("$size")
 

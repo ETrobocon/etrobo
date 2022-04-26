@@ -15,10 +15,10 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2021.07.31a
-ATHRILL_OFFICIAL_COMMIT="64641d258e6791596f9dcffe4e135cf21dd95d1d"
-TARGET_OFFICIAL_COMMIT="84e8586336b7a1514fa152a4c0091bb13533b323"
-SAMPLE_OFFICIAL_COMMIT="26983b25742c01b65dfba9b23325fce7cb22da50"
+# the ETrobo official certified commit: Ver.2022.04.26a
+ATHRILL_OFFICIAL_COMMIT="ed8cb27b93d2ed6e111036b9ccdc7d385b0f89d1"
+TARGET_OFFICIAL_COMMIT="8b9f3acba3293755d8bf551b91c524c9d1046364"
+SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
 
 # mruby environment for UnityETroboSim
 # Powered by mruby Forum
@@ -27,7 +27,7 @@ SAMPLE_OFFICIAL_COMMIT="26983b25742c01b65dfba9b23325fce7cb22da50"
 # See commits histories:
 # https://github.com/mruby-Forum/mruby-ev3rt/commits/master
 #
-MRUBY_OFFICIAL_COMMIT="4e7f8c2185d6224cfe24f70f250ae0ae34821a01"
+MRUBY_OFFICIAL_COMMIT="b0b3102f74ef1c57e0d99b9c056a6a9479d26226"
 
 #
 # the Athrill2 default repository
@@ -212,7 +212,7 @@ if [ "$GIT_AUTHOR" != "$CURRENT_AUTHOR" ]; then
     rm -rf "$ETROBO_ATHRILL_TARGET_ROOT"
     rm -rf "$ETROBO_ATHRILL_EV3RT"
     git clone https://github.com/${GIT_AUTHOR}/athrill.git
-    git clone https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git
+    git clone --recursive https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git
     git clone https://github.com/${GIT_AUTHOR}/ev3rt-athrill-v850e2m.git
 
     #
@@ -265,28 +265,29 @@ if [ -n "$1" ]; then
     git checkout .
     git checkout master
     git pull
-    if [ "$1" = "official" ]; then
+    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $ATHRILL_OFFICIAL_COMMIT
     fi
     cd ../athrill-target-v850e2m
     git checkout .
     git checkout master
     git pull
-    if [ "$1" = "official" ]; then
+    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $TARGET_OFFICIAL_COMMIT
+        git submodule update --init --recursive
     fi
     cd ../ev3rt-athrill-v850e2m
     git checkout .
     git checkout master
     git pull
-    if [ "$1" = "official" ]; then
+    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $SAMPLE_OFFICIAL_COMMIT
     fi
     cd sdk/workspace/mruby-ev3rt
     git checkout .
     git checkout master
     git pull
-    if [ "$1" = "official" ]; then
+    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $MRUBY_OFFICIAL_COMMIT
     fi
 fi

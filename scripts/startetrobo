@@ -325,6 +325,8 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install curl
         sudo apt -y install jq
         sudo apt -y install bison
+        sudo apt -y install psmisc
+        sudo apt -y install net-tools
         sudo gem install shell -E
         #
         # EV3RT requirement from:

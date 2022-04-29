@@ -249,7 +249,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             echo "download from $url"
             rm -f "$distManifest"
             if [ -z `echo $url | grep ^kintone://` ]; then
-                wget "$url" -O "$file"
+                wget --no-check-certificate "$url" -O "$file"
                 error=$?
                 case $error in
                     0 ) unset error;;

@@ -43,15 +43,15 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 ### Windows
 
 - x86-64アーキテクチャのCPU
-- Windows 11、またはWindows 10 version 2004以降、またはWindows 10 Enterprise LTSC 2019
+- Windows 11、またはWindows 10 version 2004以降、またはWindows 10 Enterprise LTSC 2021
+    - version 21H2以降の利用を推奨します。 
     - version 1709未満のWindows 10や、Windows 7などでは動作しません。
     - version 1903/1909のWindows 10でもWSL2で動作しますが、サポート対象外です。
     - version 1809(LTSC 2019)はWSL1でのみ動作します。
-- Virtual Machine Platform (WSL2)のインストール
+- `wsl --install`によりインストールされたUbuntuまたはUbuntu-20.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
+    - Ubuntu-18.04、Ubuntu-16.04、Debianでも動作するようですが、サポート対象外です。
     - Windows Services for Linux (WSL1)のサポートも引き続き行いますが、LTSC 2019に限ります。
-- WSL向けUbuntu 20.04のインストール
-    - 環境の利用にはsudoers権限が必要です。
 - Visual Studio Code(「Remote - WSL」拡張機能）のインストール
 
 ### Mac
@@ -69,7 +69,7 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 - x86-64アーキテクチャのCPU
 - Debian GNU/Linux 10 または Ubuntu 20.04（または18.04）
     - 環境のインストールにsudoers権限が必要です。
-    - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、未検証です。
+    - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、サポート対象外です。
     - Ubuntu 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
 - Visual Studio Codeのインストール
 

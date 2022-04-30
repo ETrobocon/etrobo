@@ -3,7 +3,7 @@ echo '-------------'
 echo ' startetrobo - etrobo all-in-one package installer/invoker'
 echo '-------------'
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -279,9 +279,9 @@ fi
 
 # append .bashrc
 if [ "$kernel" = "debian" ]; then
-    echo "add etrobo environment vars exporter into ~/.bashrc"
     touch ~/.bashrc
     if [ -z "`cat ~/.bashrc 2>&1 | grep startetrobo`" ]; then
+        echo "add etrobo environment vars exporter into ~/.bashrc"
         echo | sudo tee -a ~/.bashrc
         echo '# ----- this section was added by startetrobo -----' | sudo tee -a ~/.bashrc
         echo 'if [ -n "$ETROBO_ROOT" ]; then' | sudo tee -a ~/.bashrc
@@ -322,12 +322,19 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install build-essential
         sudo apt -y install git
         sudo apt -y install ruby
+        sudo gem install shell -E
         sudo apt -y install curl
         sudo apt -y install jq
         sudo apt -y install bison
         sudo apt -y install psmisc
         sudo apt -y install net-tools
-        sudo gem install shell -E
+        if [ -n "`echo \"$guest\" | grep \"Ubuntu 20.04\"`" ]; then
+            sudo apt install gcc-10 g++-10
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 10
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
+        fi
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh

@@ -15,9 +15,9 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2022.04.26a
-ATHRILL_OFFICIAL_COMMIT="ed8cb27b93d2ed6e111036b9ccdc7d385b0f89d1"
-TARGET_OFFICIAL_COMMIT="8b9f3acba3293755d8bf551b91c524c9d1046364"
+# the ETrobo official certified commit: Ver.2022.05.21a
+ATHRILL_OFFICIAL_COMMIT="056a7aa761ef48f67f2c1f6effef104c66fa3b8c"
+TARGET_OFFICIAL_COMMIT="2e0f02df5d0f55fc8ffff8f98cdc34f2f7db257e"
 SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
 
 # mruby environment for UnityETroboSim
@@ -143,9 +143,9 @@ if [ "$1" = "show" ]; then
         echo "       athrill: $ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH"
         echo "athrill-target: $TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH"
         echo " ev3rt-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
-        if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
-        && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ] \
-        && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:7}/$ATHRILL_BRANCH" ]; then
+        if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:${#ATH2_COMMIT}}/$ATHRILL_BRANCH" ] \
+        && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:${#TARGET_COMMIT}}/$ATHRILL_BRANCH" ] \
+        && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:${#CURRENT_COMMIT}}/$ATHRILL_BRANCH" ]; then
             official_athrill="official"
         else
             unset official_athrill
@@ -153,7 +153,7 @@ if [ "$1" = "show" ]; then
     fi
     if [ -n "$show_mruby" ]; then
         echo "   mruby-ev3rt: $MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH"
-        if [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${MRUBY_OFFICIAL_COMMIT:0:7}/master" ]; then
+        if [ "$MRUBY_AUTHOR/$MRUBY_COMMIT/$MRUBY_BRANCH" = "mruby-Forum/${MRUBY_OFFICIAL_COMMIT:0:${#MRUBY_COMMIT}}/master" ]; then
             official_mruby="official"
         else
             unset official_mruby

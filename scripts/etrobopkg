@@ -419,10 +419,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "tecsgen" ) 
                 echo
                 echo "Distribute tecsgen:"
-                cd "$ETROBO_ATHRILL_SDK/../"
-                cp "$file" ./
-                rm -rf "tecsgen-1.8.0"
-                tar xvf "tecsgen-1.8.0.tgz" > /dev/null
+                cp "$file" "$ETROBO_ROOT/dist/"
                 ;;
             "etrobosim" ) 
                 echo

@@ -313,6 +313,12 @@ if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
     cat "$target.backup" \
     | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
 fi
+if [ -f "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ]; then
+    cd "$ETROBO_ATHRILL_SDK/../"
+    cp "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ./
+    rm -rf "tecsgen-1.8.0"
+    tar xvf "tecsgen-1.8.0.tgz" > /dev/null
+fi
 if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
     rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
     cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"

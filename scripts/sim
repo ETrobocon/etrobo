@@ -143,6 +143,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$1" = "show" ]; then
         shift
         echo $(eval echo "$ETROBO_LAUNCH_SIM")
+        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS 2>&1`
+        if [ "$?" == "0" ];then
+            echo "$json" | jq .
+        fi
+        exit 0
     fi
 
     #

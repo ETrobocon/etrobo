@@ -283,14 +283,41 @@ if [ -n "$1" ]; then
     if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $SAMPLE_OFFICIAL_COMMIT
     fi
-    cd sdk/workspace/mruby-ev3rt
-    git checkout .
-    git checkout master
-    git pull
-    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
-        git checkout $MRUBY_OFFICIAL_COMMIT
+    if [ -d sdk/workspace/mruby-ev3rt ]; then
+        cd sdk/workspace/mruby-ev3rt
+        git checkout .
+        git checkout master
+        git pull
+        if [ "$1" = "official" ] || [ "$1" = "init" ]; then
+            git checkout $MRUBY_OFFICIAL_COMMIT
+        fi
     fi
 fi
+
+#########################
+#   for 2022            #
+#     Ruby 3.x hotfix   #
+#########################
+# -------------------------------------------------------------------------------------
+target="$ETROBO_HRP3_SDK/../cfg/pass1.rb"
+if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
+    cp -f "$target" "$target.backup"
+    rm -f "$target"
+    cat "$target.backup" \
+    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
+fi
+target="$ETROBO_ATHRILL_SDK/../cfg/pass1.rb"
+if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
+    cp -f "$target" "$target.backup"
+    rm -f "$target"
+    cat "$target.backup" \
+    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
+fi
+if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
+    rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
+    cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"
+fi
+# -------------------------------------------------------------------------------------
 
 #
 # modify Makefile.inc for mruby

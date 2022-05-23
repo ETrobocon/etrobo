@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.05.02b"
+    export ETROBO_MANIFEST_VER="2022.05.24a"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
     export ETROBO_COMPETITION_VER="2022_5.5.3"
 
@@ -136,6 +136,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     urls+=("https://github.com/mruby/mruby/archive/2.0.1.tar.gz")
     vers+=("2021.03.21a")
     sizes+=("517932")
+
+    #
+    # tecsgen
+    # https://www.toppers.jp/tecs.html#d-package
+    pkgs+=("tecsgen")
+    urls+=("https://www.toppers.jp/download.cgi/tecsgen-1.8.0.tgz")
+    vers+=("2022.05.24a")
+    sizes+=("2317758")
 
     #
     # UnityETroboSim public version
@@ -407,6 +415,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
                 echo "Distribute mruby:"
                 cp "$file" "$ETROBO_ROOT/dist/"
+                ;;
+            "tecsgen" ) 
+                echo
+                echo "Distribute tecsgen:"
+                cd "$ETROBO_ATHRILL_SDK/../"
+                cp "$file" ./
+                rm -rf "tecsgen-1.8.0"
+                tar xvf "tecsgen-1.8.0.tgz" > /dev/null
                 ;;
             "etrobosim" ) 
                 echo

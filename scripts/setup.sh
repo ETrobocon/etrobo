@@ -71,27 +71,6 @@ if [ -n "$update" ]; then
     . "$scripts/sim" env
 fi
 
-#########################
-#   for 2022            #
-#     pass1.rb hotfix   #
-#########################
-# -------------------------------------------------------------------------------------
-target="hrp3/cfg/pass1.rb"
-if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
-    cp -f "$target" "$target.backup"
-    rm -f "$target"
-    cat "$target.backup" \
-    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
-fi
-target="ev3rt-athrill-v850e2m/cfg/pass1.rb"
-if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
-    cp -f "$target" "$target.backup"
-    rm -f "$target"
-    cat "$target.backup" \
-    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
-fi
-# -------------------------------------------------------------------------------------
-
 if [ "$update" = "repair" ] && [ "$option" = "mruby" ]; then
     echo "repair mruby installation"
     "$ETROBO_SCRIPTS/build_athrill.sh" official

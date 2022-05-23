@@ -333,7 +333,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "usage: sim ctl [COMMAND] [PARAMS...]"
                 echo "  COMMAND  (default:get)"
                 echo "    get ... get JSON status from etrobosim"
-                echo "    set ... set preferences into etrobosim by JSON in PARAMS"
+                echo "    get status <key> ... get value of <key> in etrobosim status"
+                echo "    get <key> ... get value of <key> in preferences"
+                echo "    set <JSON> ... set preferences into etrobosim by JSON"
+                echo "    set <key> <value> ... set <key> preference to <value>"
                 echo "    pos ... move HackEV to 'X Y Z ROT' position in PARAMS"
                 echo "    initpos ... move HackEV to default position that is defined in settings.json"
                 echo "    prepare ... make etrobosim into PREPARE mode"
@@ -342,6 +345,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 exit 0
             fi
             shift
+            ctl_key="$1"
+            ctl_val="$2"
             ctl_params=$@
         fi
     fi
@@ -467,9 +472,21 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             # sim controller
             if [ "$ctl_command" == "get" ]; then
-                curl -m 1 -s -X GET $ETROBO_SIM_COMM
-                echo
+                if [ "$ctl_key" == "status" ] || [ -z "$ctl_key" ]; then
+                    json="`curl -m 1 -s -X GET $ETROBO_SIM_COMM`"
+                    ctl_key=$ctl_val
+                else
+                    json="`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS`"
+                fi
+                if [ -z "$ctl_key" ]; then
+                    echo "$json" | jq .
+                else
+                    echo "$json" | jq -r ".$ctl_key"
+                fi
             elif [ "$ctl_command" == "set" ]; then
+                if [ -n "$ctl_val" ]; then
+                    ctl_params="{\"$ctl_key\":\"$ctl_val\"}"
+                fi
                 curl -m 1 -s -X POST -d "$ctl_params" $ETROBO_SIM_COMM
                 echo
             elif [ "$ctl_command" == "pos" ] || [ "$ctl_command" == "initpos" ]; then

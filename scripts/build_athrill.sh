@@ -65,7 +65,7 @@ fi
 if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     cd "$ETROBO_ATHRILL_EV3RT"
     CURRENT_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-    CURRENT_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+    CURRENT_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
     if [ "$CURRENT_BRANCH" = "master" ]; then
         CURRENT_COMMIT="HEAD"
     else
@@ -75,7 +75,7 @@ if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     if [ -d "$ETROBO_MRUBY_EV3RT" ]; then
         cd "$ETROBO_MRUBY_EV3RT"
         MRUBY_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-        MRUBY_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+        MRUBY_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
         if [ "$MRUBY_BRANCH" = "master" ]; then
             MRUBY_COMMIT="HEAD"
         else
@@ -100,7 +100,7 @@ fi
 if [ -d "$ETROBO_ATHRILL_TARGET_ROOT" ]; then
     cd "$ETROBO_ATHRILL_TARGET/.."
     TARGET_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-    TARGET_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+    TARGET_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
     if [ "$TARGET_BRANCH" = "master" ]; then
         TARGET_COMMIT="HEAD"
     else
@@ -114,7 +114,7 @@ fi
 if [ -d "$ETROBO_ROOT/athrill" ]; then
     cd "$ETROBO_ROOT/athrill"
     ATH2_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-    ATH2_BRANCH=`git branch | grep ^* | sed -E 's/^\*\s(.*)$/\1/'`
+    ATH2_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
     if [ "$ATH2_BRANCH" = "master" ]; then
         ATH2_COMMIT="HEAD"
     else

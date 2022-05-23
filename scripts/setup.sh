@@ -77,18 +77,18 @@ fi
 #########################
 # -------------------------------------------------------------------------------------
 target="hrp3/cfg/pass1.rb"
-if [ ! -f "$target.backup" ]; then
+if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
     cp -f "$target" "$target.backup"
     rm -f "$target"
     cat "$target.backup" \
-    | sed -E "s/\{\s(skip_blanks:\strue,\sskip_lines:\s\/\^\#\/\s)\}/\1/" > "$target"
+    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
 fi
 target="ev3rt-athrill-v850e2m/cfg/pass1.rb"
-if [ ! -f "$target.backup" ]; then
+if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
     cp -f "$target" "$target.backup"
     rm -f "$target"
     cat "$target.backup" \
-    | sed -E "s/\{\s(skip_blanks:\strue,\sskip_lines:\s\/\^\#\/\s)\}/\1/" > "$target"
+    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
 fi
 # -------------------------------------------------------------------------------------
 

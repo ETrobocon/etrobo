@@ -261,12 +261,11 @@ if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
     rm -rf build
     MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
     if [ "$?" != "0" ]; then
-        #rm -rf "$ETROBO_MRUBY_EV3RT"
-        #rm -rf "$ETROBO_MRUBY_ROOT"
+        rm -rf "$ETROBO_MRUBY_EV3RT"
+        rm -rf "$ETROBO_MRUBY_ROOT"
         echo
         echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
         echo
-        exit 0
     fi
 fi
 

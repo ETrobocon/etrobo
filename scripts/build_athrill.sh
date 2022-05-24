@@ -237,6 +237,17 @@ if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     rm -rf "$ETROBO_MRUBY_ROOT"
     cp -f "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
     tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
+
+    ##############
+    # 2022 hofix #
+    ##############
+    #------------------------------------------------------------
+    target="$ETROBO_MRUBY_ROOT/Rakefile"
+    rm -f "$target.backup"
+    cp -f "$target" "$target.backup"
+    rm -f "$target"
+    cat "$target.backup" | sed -E "s/^(  FileUtils.*)opts$/\1\*\*opts/" > "$target"
+    #------------------------------------------------------------
 fi
 
 if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
@@ -250,11 +261,12 @@ if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
     rm -rf build
     MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
     if [ "$?" != "0" ]; then
-        rm -rf "$ETROBO_MRUBY_EV3RT"
-        rm -rf "$ETROBO_MRUBY_ROOT"
+        #rm -rf "$ETROBO_MRUBY_EV3RT"
+        #rm -rf "$ETROBO_MRUBY_ROOT"
         echo
         echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
         echo
+        exit 0
     fi
 fi
 

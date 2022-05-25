@@ -51,7 +51,7 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 - `wsl --install`によりインストールされたUbuntuまたはUbuntu-20.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
     - Ubuntu-22.04でも動くようになった、はずです。トラブルありましたらご連絡ください。
-    - Ubuntu-18.04、Ubuntu-16.04、Debianでも動作するようですが、サポート対象外です。
+    - Ubuntu-18.04、Ubuntu-16.04、Debian(9/10/11)でも動作するようですが、サポート対象外です。
     - Windows Services for Linux (WSL1)のサポートも引き続き行いますが、LTSC 2019に限ります。
 - Visual Studio Code(「Remote - WSL」拡張機能）のインストール
 
@@ -70,7 +70,8 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 - x86-64アーキテクチャのCPU
 - Debian GNU/Linux 10 または Ubuntu 20.04（または18.04）
     - 環境のインストールにsudoers権限が必要です。
-    - Ubuntu 22.04でも動くようになった、はずです。トラブルありましたらご連絡ください。
+    - Debian 11/Ubuntu 22.04でも動くようになった、はずです。トラブルありましたらご連絡ください。
+        - Debian 11にインストールする場合は、wgetが必要です `sudo apt -y install wget`
     - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、サポート対象外です。
     - Ubuntu 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
 - Visual Studio Codeのインストール

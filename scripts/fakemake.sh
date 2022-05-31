@@ -9,6 +9,12 @@
 
 cd "$ETROBO_HRP3_WORKSPACE"
 
+# no-fake invoke on `make upload`
+if [ "$1" = "upload" ]; then
+    make $@
+    exit $?
+fi
+
 # `make skiphrp3` skips building for HRP3
 unset skiphrp3
 if [ "$1" = "skiphrp3" ]; then

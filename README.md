@@ -80,18 +80,21 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 - x86-64アーキテクチャのCPU
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
-        - Chrome OS 84.0.4147.110 (Official Build)
+        - Chrome OS 102.0.5005.75 (Official Build)
+        - Debian GNU/Linux 11 (bullseye)
     - Chromium OSでの動作確認は以下の環境で行っています：
         - ASUS TAICHI21
         - CloudReady:Home Edition 80.4.1 Stableチャンネル
 - Chrome/Chromium OS 80以降
     - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。
     - 78以前では、localhostのポート制限により動作しない可能性が高いものと認識していますが、未確認です。
-- Linux(ベータ版)のインストール
+- 「Linux開発環境」のインストール
     - etroboパッケージのインストール手順等はLinux版をご覧ください。
 - Visual Studio Codeのインストール
     - ダウンロードファイルを2本指タップし、「Linux(ベータ版)でのインストール」を選択します。
-- 制限事項：`Crostini GPU Support`有効の状態ではETロボコンシミュレータが起動しないため、実用的なパフォーマンスはでません。
+- 制限事項：ChromeOS 101以前のDebian 10向けLinuxコンテナにて、
+`Crostini GPU Support`有効の状態ではETロボコンシミュレータが起動しません。
+ChromeOS 102以降のDebian 11向けLinuxコンテナでは有効にできますが、それでも実用的なパフォーマンスは期待できません。
 EV3実機向けの開発環境としては充分です。
 
 ## 動作確認＆主なコマンドの説明

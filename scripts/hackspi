@@ -120,10 +120,16 @@ if [ -n "$install" ]; then
     # modify firstrun.sh
     tmpFile=$(mktemp)
     cat "$file" | sed -E "s/^exit 0$//" > $tmpFile
+    echo 'user="`getent passwd 1000 | cut -d: -f1`"' >> $tmpFile
     echo 'userhome="`getent passwd 1000 | cut -d: -f6`"' >> $tmpFile
     echo 'cp -f /boot/hackspi "$userhome/"' >> $tmpFile
+    echo 'chown $user:$user "$userhome/hackspi"' >> $tmpFile
+    echo 'chmod +x "$userhome/hackspi"' >> $tmpFile
     echo '"$userhome/hackspi" firstrun' >> $tmpFile
     echo 'exit 0' >> $tmpFile
+    rm -f "$file"
+    cp -f $tmpFile "$file"
+    rm -f $tmpFile
 
     # macOS >=Monterey notice
     if [ "$ETROBO_OS" == "mac" ] && [ `sw_vers | grep ProductVersion \
@@ -137,9 +143,15 @@ if [ -n "$install" ]; then
     echo "finish install"
     echo "put this SD card into your HackSPi and power on."
     echo "your HackSPi will continue to install and reboot herself."
-    echo 'after that, you can do pairing by `./hackspi pairing` on HackSPi'
-    echo "via Wi-Fi or so on, and connect as Bluetooth PAN from this host PC."
+    echo 'after about 2 mins, run `./hackspi pairing` on HackSPi'
+    echo "via Wi-Fi or so on."
+    echo "when 'Default agent requested' is indicated (after about 15 mins),"
+    echo "you can connect to HackSPi's Bluetooth PAN from this host PC."
+    echo "when you are asked (yes/no)?, answer 'yes' on HackSpi first."
+    echo "you can stop by [Ctrl]+[C] after success to pairing."
     echo
+
+    exit 0
 fi
 
 # boot config
@@ -329,12 +341,12 @@ if [ -z "$firstrun" ]; then
         sudo systemctl enable systemd-networkd
         sudo systemctl enable bt-agent
         sudo systemctl enable bt-network
-        sudo systemctl start systemd-networkd
-        sudo systemctl start bt-agent
-        sudo systemctl start bt-network
     fi
 
     # wait until activated
+    sudo systemctl start systemd-networkd
+    sudo systemctl start bt-agent
+    sudo systemctl start bt-network
     unset loop
     counter=0
     isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
@@ -347,9 +359,9 @@ if [ -z "$firstrun" ]; then
     # attempt to pairing
     if [ "$setup" == "pairing" ]; then
         echo "start pairing..."
-        sudo bluetoothctl default-agent
         sudo bluetoothctl pairable on
         sudo bluetoothctl discoverable on
+        sudo bt-agent
     fi
 
     if [ -f ~/launch ] && [ ! -f /tmp/launched ]; then

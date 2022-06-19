@@ -1,0 +1,369 @@
+#!/usr/bin/env bash
+echo '---------'
+echo ' hackspi - HackSPi installer/standalone runner'
+echo '---------'
+# Author: jtFuruhata
+# Copyright (c) 2022 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+# raspi-config
+# please change these settings if you don't like
+do_camera="1"           # 0=Disable Legacy Camera 1=Enable Legacy Camera
+do_vnc="1"              # 0=Disable VNC 1=Enable VNC
+do_boot_behaviour="B3"  # B1=Console B2=Console Autologin B3=Desktop B4=Desktop Autologin
+do_vnc_resolution="1024x768"    # specify VNC resolution
+
+# Bluetooth PAN-NAP DHCP Address
+# please change this setting if you don't like
+dhcpAddress="172.16.16.1/24"
+
+# force reboot flag
+unset reboot
+
+# usage
+if [ "$1" == "--help" ]; then
+    echo "usage: ./hackspi [install|firstrun|pairing|update|remove]"
+    exit 0
+fi
+
+# recognize options
+unset install
+unset firstrun
+unset setup
+if [ "$1" == "install" ]; then
+    install="$1"
+    shift 1
+elif [ "$1" == "firstrun" ]; then
+    firstrun="$1"
+    shift 1
+elif [ "$1" == "pairing" ] || [ "$1" == "update" ] || [ "$1" == "remove" ]; then
+    setup="$1"
+    shift 1
+fi
+
+#
+# `hackspi install` installs HackSPi capability
+#  into "first run image" SD card of the Rasberry Pi OS
+#  from host pc
+#
+if [ -n "$install" ]; then
+    # mount "boot" volume (from mount.sh)
+    unset ready
+    unset physicalDrive
+    unset volumeName
+
+    if [ "$ETROBO_OS" = "win" ]; then
+        mountPath="/mnt/hackspi"
+        Caption=""
+        VolumeName=""
+        tmpFile=$(mktemp)
+
+        wmic.exe LogicalDisk get Caption,VolumeName > $tmpFile
+        while read line; do
+            if [ ${line:1:1} = ":"  ]; then
+                if [ "${line:9:4}" = "boot" ]; then
+                    Caption="${line:0:2}"
+                    physicalDrive=${Caption:0:1}
+                    volumeName=`echo ${line:9:-2}`
+                fi
+            fi
+        done < $tmpFile
+        rm $tmpFile
+
+        if [ $Caption ]; then
+            if [ -z "$1" ]; then
+                echo "HackSPi auto mounter needs permission as sudoers."
+                echo "Please enter your login password if [sudo] ask you."
+            fi
+            if [ ! -d "$mountPath" ]; then
+                sudo mkdir "$mountPath" 2> /dev/null
+            fi
+            sudo mount -t drvfs $Caption "$mountPath"
+            if [ "$?" -eq 0 ]; then
+                ready="ready"
+            fi
+        fi
+    else
+        if [ "$ETROBO_OS" = "raspi" ]; then
+            physicalDrive="/boot"
+        elif [ "$ETROBO_OS" = "mac" ]; then
+            physicalDrive="/Volumes"
+        elif [ "$ETROBO_OS" = "chrome" ]; then
+            physicalDrive="/mnt/chromeos/removable"
+        elif [ "$ETROBO_KERNEL" = "debian" ]; then
+            physicalDrive="/media/$(basename $ETROBO_USERPROFILE)"
+        else
+            physicalDrive="/mnt"
+        fi
+        volumeName=`ls -1 "$physicalDrive" | grep ^boot | head -n 1`
+        if [ -n "$volumeName" ]; then
+            mountPath="$physicalDrive/$volumeName"
+            ready="ready"
+        fi
+    fi
+
+    if [ -z "$ready" ]; then
+        echo 'Raspberry Pi OS "boot" SD card is not found.'
+        exit 1
+    fi
+
+    # copy hackspi into /boot if it's firstrun
+    echo "found: $physicalDrive $volumeName -> $mountPath"
+    file="$mountPath/firstrun.sh"
+    if [ ! -f "$file" ]; then
+        echo "firstrun.sh not found."
+        exit 1
+    fi
+    cp -f "$ETROBO_SCRIPTS/hackspi" "$mountPath/"
+
+    # modify firstrun.sh
+    tmpFile=$(mktemp)
+    cat "$file" | sed -E "s/^exit 0$//" > $tmpFile
+    echo 'userhome="`getent passwd 1000 | cut -d: -f6`"' >> $tmpFile
+    echo 'cp -f /boot/hackspi "$userhome/"' >> $tmpFile
+    echo '"$userhome/hackspi" firstrun' >> $tmpFile
+    echo 'exit 0' >> $tmpFile
+
+    # macOS >=Monterey notice
+    if [ "$ETROBO_OS" == "mac" ] && [ `sw_vers | grep ProductVersion \
+     | sed -E "s/^ProductVersion:\t([0-9]*)\..*$/\1/"` -ge 12 ]; then
+        echo "*** notice for users using macOS Monterey or later ***"
+        echo "Bluetooth PAN is NOT available on Monterey or later."
+        echo "You have to use Wi-Fi connection to control your HackSPi."
+    fi
+
+    echo
+    echo "finish install"
+    echo "put this SD card into your HackSPi and power on."
+    echo "your HackSPi will continue to install and reboot herself."
+    echo 'after that, you can do pairing by `./hackspi pairing` on HackSPi'
+    echo "via Wi-Fi or so on, and connect as Bluetooth PAN from this host PC."
+    echo
+fi
+
+# boot config
+echo "checking raspi-config..."
+if [ "`sudo raspi-config nonint get_camera`" != "$do_camera" ]; then
+    echo "change: Legacy Camera Support -> $do_camera"
+    sudo raspi-config nonint do_camera $do_camera
+    reboot="force"
+fi
+if [ "`sudo raspi-config nonint get_vnc`" != "$do_vnc" ]; then
+    echo "change: Enable RealVNC Server -> $do_vnc"
+    sudo raspi-config nonint do_vnc $do_vnc
+    reboot="force"
+fi
+if [ "$setup" == "update" ] || [ -n "$reboot" ]; then
+    echo "change: Boot Behaviour -> $do_boot_behaviour"
+    sudo raspi-config nonint do_boot_behaviour $do_boot_behaviour
+fi
+if [ "`sudo raspi-config nonint get_vnc_resolution`" != "$do_vnc_resolution" ]; then
+    echo "change: VNC Resolution -> $do_vnc_resolution"
+    sudo raspi-config nonint do_vnc_resolution $do_vnc_resolution
+    reboot="force"
+fi
+echo "checking /boot/config.txt..."
+file="/boot/config.txt"
+if [ -z "`cat $file | grep dtoverlay=uart5`" ] || [ "$setup" == "update" ]; then
+    echo "modifing config.txt"
+    if [ ! -f $file.org ]; then
+        sudo cp -f $file $file.org
+        sudo rm -f $file
+    fi
+    tmpFile=$(mktemp)
+    cat $file.org | sed -E "s/^#(hdmi_force_hotplug=1)$/\1/" > $tmpFile
+    echo "dtoverlay=uart5" >> $tmpFile
+    sudo cp -f $tmpFile $file
+    rm -f $tmpFile
+    reboot="force"
+fi
+
+if [ -z "$firstrun" ]; then
+    # install bluez-tools if neccessary
+    echo "checking bluez-tools installation..."
+    if [ `bt-network > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+        sudo apt update
+        sudo apt -y upgrade
+        sudo apt -y install bluez-tools
+    fi
+
+    # install ruby if neccessary
+    echo "checking ruby installation..."
+    if [ `ruby -v > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+        sudo apt -y install ruby
+        sudo -E gem install shell
+    fi
+
+    # install RasPike environment
+    echo "checking RasPike environment installation..."
+    cd ~
+    if [ ! -d "work" ] || [ "$setup" == "update" ]; then
+        if [ ! -d "work" ]; then
+            mkdir work
+        fi
+        cd work
+        if [ ! -d "RasPike" ]; then
+            git clone https://github.com/ETrobocon/RasPike.git
+        else
+            cd RasPike
+            git pull --ff-only
+        fi
+    fi
+fi
+
+# setting autostart feature
+echo "checking autostart feature..."
+cd ~
+file=".bashrc"
+if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
+    if [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
+        # remove standalone runner from .bashrc
+        echo "remove autostart feature from .bashrc"
+        touch $file
+        unset removeFlag
+        tmpFile=$(mktemp)
+        cat $file | 
+        while IFS= read -r line; do
+            if [ -z "$removeFlag" ]; then
+                if [ -n "`echo $line | grep HackSPi`" ]; then
+                    removeFlag="remove"
+                else
+                    echo "$line" >> $tmpFile
+                fi
+            else
+                if [ -n "`echo $line | grep HackSPi`" ]; then
+                    unset removeFlag
+                fi
+            fi
+        done
+        rm -f $file
+        if [ -s $tmpFile ]; then
+            sudo mv -f $tmpFile $file
+        else
+            rm $tmpFile
+        fi
+    fi
+    echo "add autostart feature into .bashrc"
+    echo '#--- begin autostart feature for HackSPi/RasPike -------' >> $file
+    echo 'if [ -f ~/autostart.log.2 ]; then' >> $file
+    echo '    mv -f ~/autostart.log.2 ~/autostart.log.3' >> $file
+    echo 'fi' >> $file
+    echo 'if [ -f ~/autostart.log.1 ]; then' >> $file
+    echo '    mv -f ~/autostart.log.1 ~/autostart.log.2' >> $file
+    echo 'fi' >> $file
+    echo 'if [ -f ~/autostart.log ]; then' >> $file
+    echo '    mv -f ~/autostart.log ~/autostart.log.1' >> $file
+    echo 'fi' >> $file
+    echo '~/hackspi | tee ~/autostart.log' >> $file
+    echo '#--------- autostart feature for HackSPi/RasPike end ---' >> $file
+fi
+
+# create files for pan0 if neccessary
+#
+# instruction from:
+# https://raspberrypi.stackexchange.com/questions/29504/how-can-i-set-up-a-bluetooth-pan-connection-with-a-raspberry-pi-and-an-ipod#71587
+echo "checking system files for pan0..."
+file="/etc/systemd/network/pan0.netdev"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[NetDev]' > $tmpFile
+    echo 'Name=pan0' >> $tmpFile
+    echo 'Kind=bridge' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/network/pan0.network"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Match]' > $tmpFile
+    echo 'Name=pan0' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Network]' >> $tmpFile
+    echo "Address=$dhcpAddress" >> $tmpFile
+    echo 'DHCPServer=yes' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/system/bt-agent.service"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Unit]' > $tmpFile
+    echo 'Description=Bluetooth Auth Agent' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Service]' >> $tmpFile
+    echo 'ExecStart=/usr/bin/bt-agent -c NoInputNoOutput' >> $tmpFile
+    echo 'Type=simple' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Install]' >> $tmpFile
+    echo 'WantedBy=multi-user.target' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/system/bt-network.service"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Unit]' > $tmpFile
+    echo 'Description=Bluetooth NEP PAN' >> $tmpFile
+    echo 'After=pan0.network' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Service]' >> $tmpFile
+    echo 'ExecStart=/usr/bin/bt-network -s nap pan0' >> $tmpFile
+    echo 'Type=simple' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Install]' >> $tmpFile
+    echo 'WantedBy=multi-user.target' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+
+if [ -z "$firstrun" ]; then
+    # launch network services
+    echo "checking network services..."
+    if [ -z "`sudo systemctl is-enabled bt-network`" ] || [ "$setup" == "update" ]; then
+        echo "starting network services"
+        sudo systemctl enable systemd-networkd
+        sudo systemctl enable bt-agent
+        sudo systemctl enable bt-network
+        sudo systemctl start systemd-networkd
+        sudo systemctl start bt-agent
+        sudo systemctl start bt-network
+    fi
+
+    # wait until activated
+    unset loop
+    counter=0
+    isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
+    while [ -z "$isActive" ] && [ $counter -lt 30 ]; do
+        sleep 0.1
+        counter=$(( $counter + 1 ))
+        isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
+    done
+
+    # attempt to pairing
+    if [ "$setup" == "pairing" ]; then
+        echo "start pairing..."
+        sudo bluetoothctl default-agent
+        sudo bluetoothctl pairable on
+        sudo bluetoothctl discoverable on
+    fi
+
+    if [ -f ~/launch ] && [ ! -f /tmp/launched ]; then
+        touch /tmp/launched
+        cd ~/work/RasPike/sdk/workspace
+        echo "invoke make start"
+        make start
+    fi
+    echo "done."
+
+    if [ -n "$reboot" ]; then
+        echo "reboot here."
+        sudo reboot
+    fi
+else
+    exit 0
+fi

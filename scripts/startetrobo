@@ -40,6 +40,7 @@ fi
 unset host
 unset kernel
 unset guest
+unset raspi
 if [ `uname` == "Darwin" ]; then
     host="mac"
     kernel="darwin"
@@ -67,20 +68,25 @@ else
     echo unknown Host OS or not WSL/WSL2 on Windows 10/11.
     exit 1
 fi
-platform="`uname -m`"
-if [ "$platform" != "x86_64" ]; then
-    if [ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]; then
-        echo this environment is available for x86_64 and Apple Silicon.
-        exit 1
-    fi
-fi
 if [ `uname` == "Linux" ]; then
-    if [ "`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/" | tail -n 1`" != "debian" ]; then
+    id="`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/"`"
+    if [ "`echo \"$id\" | grep debian`" != "debian" ]; then
         echo this environment is available for Debian GNU/Linux variants.
         exit 1
     else
         kernel="debian"
         guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
+        raspi="`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`"
+    fi
+fi
+platform="`uname -m`"
+if [ "$platform" != "x86_64" ]; then
+    if [ -n "$raspi" ]; then
+        host="raspi"
+        guest="$guest on $raspi"
+    elif [ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]; then
+        echo this environment is available for x86_64, Apple Silicon and Raspberry Pi.
+        exit 1
     fi
 fi
 echo "detect platform: $host.$platform($guest)"
@@ -320,6 +326,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y update
         sudo apt -y upgrade
         sudo apt -y install build-essential
+        sudo apt -y install sshpass
         sudo apt -y install git
         sudo apt -y install ruby
         sudo -E gem install shell

@@ -1,11 +1,11 @@
 #!/bin/bash
-export BEERHALL_VER="5.24a.210725"
+export BEERHALL_VER="5.25a.220617"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
 echo "------------"
 echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
-# Copyright (c) 2020-2021 jtLab, Hokkaido Information University
+# Copyright (c) 2020-2022 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
@@ -334,6 +334,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     # install BeerHall (for etrobo) formulae
 
     brew install bash-completion coreutils findutils wget git ruby@2.7 flex make jq curl
+    brew install esolitos/ipa/sshpass
     brew link ruby@2.7 --force
     brew link flex --force
     brew link curl --force

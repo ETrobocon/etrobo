@@ -2,7 +2,7 @@
 # etrobo all-in-one package downloader
 #   etrobopkg
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -60,13 +60,20 @@ else
     export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
 fi
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
-    pkgs=("gcc-arm")
-    urls=("$ETROBO_HRP3_GCC_URL")
-    vers=("2020.06.29a")
-    if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
-        sizes=("104170189")
-    else
-        sizes=("100247592")
+    pkgs=()
+    urls=()
+    vers=()
+    sizes=()
+
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("gcc-arm")
+        urls+=("$ETROBO_HRP3_GCC_URL")
+        vers+=("2020.06.29a")
+        if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
+            sizes+=("104170189")
+        else
+            sizes+=("100247592")
+        fi
     fi
 
     #
@@ -104,7 +111,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             vers+=("2021.03.08a")
             sizes+=("32950726")
         fi
-    else
+    elif [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("gcc-athrill")
         urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")
         vers+=("2020.06.29a")
@@ -118,7 +125,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
         size="4330401"
-    else
+    elif [ "$ETROBO_OS" != "raspi" ]; then
         clikintone="linux"
         size="4466006"
     fi
@@ -148,9 +155,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     # UnityETroboSim public version
     #
+    unset target
     if [ "$ETROBO_OS" = "chrome" ]; then
         target="linux"
-    else
+    elif [ "$ETROBO_OS" != "raspi" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
@@ -168,9 +176,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     # UnityETroboSim via Kintone
     #
+    unset target
     if [ "$ETROBO_OS" = "chrome" ]; then
         target="linux"
-    else
+    elif [ "$ETROBO_OS" != "raspi" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then

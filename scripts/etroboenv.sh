@@ -2,7 +2,7 @@
 # etrobo environment core
 #   etroboenv.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -104,6 +104,9 @@ else
                 export ETROBO_KERNEL_POSTFIX="linux"
                 export ETROBO_USERPROFILE="$HOME"
                 export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
+                if [ -n "`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`" ]; then
+                    export ETROBO_OS="raspi"
+                fi
             fi
 
             export ETROBO_ATHRILL_TARGET="$ETROBO_ROOT/athrill-target-v850e2m/build_${ETROBO_KERNEL_POSTFIX}"

@@ -61,6 +61,15 @@ if [ "$1" = "--help" ]; then
 fi
 
 #
+# ignore to use athrill on raspi
+if [ ! "$ETROBO_ENV" = "available" ]; then
+    . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
+fi
+if [ "$ETROBO_OS" = "raspi" ]; then
+    exit 0
+fi
+
+#
 # change repositories and check installation
 if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
     cd "$ETROBO_ATHRILL_EV3RT"

@@ -125,15 +125,17 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
         size="4330401"
-    elif [ "$ETROBO_OS" != "raspi" ]; then
+    else
         clikintone="linux"
         size="4466006"
     fi
-    if [ -n "$clikintone" ]; then
-        pkgs+=("cli-kintone")
-        urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.12.0/${clikintone}-x64.zip")
-        vers+=("2021.03.08a")
-        sizes+=("$size")
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        if [ -n "$clikintone" ]; then
+            pkgs+=("cli-kintone")
+            urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.12.0/${clikintone}-x64.zip")
+            vers+=("2021.03.08a")
+            sizes+=("$size")
+        fi
     fi
 
     #
@@ -158,7 +160,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     unset target
     if [ "$ETROBO_OS" = "chrome" ]; then
         target="linux"
-    elif [ "$ETROBO_OS" != "raspi" ]; then
+    else
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
@@ -168,10 +170,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     elif [ "$target" = "linux" ]; then
         size=42547597
     fi    
-    pkgs+=("etrobosim")
-    urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-    vers+=("2022.05.02a")
-    sizes+=("$size")
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("etrobosim")
+        urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
+        vers+=("2022.05.02a")
+        sizes+=("$size")
+    fi
 
     #
     # UnityETroboSim via Kintone
@@ -179,7 +183,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     unset target
     if [ "$ETROBO_OS" = "chrome" ]; then
         target="linux"
-    elif [ "$ETROBO_OS" != "raspi" ]; then
+    else
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
@@ -189,10 +193,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     elif [ "$target" = "linux" ]; then
         size=47994493
     fi
-    pkgs+=("etrobosim")
-    urls+=("kintone://etrobocon/30/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-    vers+=("2022.05.02b")
-    sizes+=("$size")
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("etrobosim")
+        urls+=("kintone://etrobocon/30/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+        vers+=("2022.05.02b")
+        sizes+=("$size")
+    fi
 
     #
     # start downloading

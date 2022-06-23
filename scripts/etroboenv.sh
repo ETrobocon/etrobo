@@ -104,7 +104,7 @@ else
                 export ETROBO_KERNEL_POSTFIX="linux"
                 export ETROBO_USERPROFILE="$HOME"
                 export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
-                if [ -n "`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`" ]; then
+                if [ -n "`cat /proc/device-tree/model 2>&1 | tr -d '\000' | grep Raspberry`" ]; then
                     export ETROBO_OS="raspi"
                 fi
             fi

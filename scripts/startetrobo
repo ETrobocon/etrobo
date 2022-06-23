@@ -399,7 +399,7 @@ if [ "$ETROBO_ENV" = "available" ]; then
         . ffutil env
     fi
 
-    if [ "$1" = "shell" ]; then
+    if [ "$1" = "shell" ] || [ -z "`which code`" ]; then
         bash -l
     else
         code .

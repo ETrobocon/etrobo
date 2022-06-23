@@ -23,8 +23,22 @@ unset reboot
 
 # usage
 if [ "$1" == "--help" ]; then
-    echo "usage: ./hackspi [install|firstrun|pairing|update|remove]"
+    echo "usage: ./hackspi [make|run|install|firstrun|pairing|update|remove]"
     exit 0
+fi
+
+# `./hackspi make <projName>` builds app
+if [ "$1" == "make" ]; then
+    cd ~/work/RasPike/sdk/workspace
+    make img=$2
+    exit $?
+fi
+
+# `./hackspi run`` starts app
+if [ "$1" == "run" ]; then
+    cd ~/work/RasPike/sdk/workspace
+    make start
+    exit $?
 fi
 
 # recognize options
@@ -136,6 +150,11 @@ if [ -n "$install" ]; then
      | sed -E "s/^ProductVersion:\t([0-9]*)\..*$/\1/"` -ge 12 ]; then
         echo "*** notice for users using macOS Monterey or later ***"
         echo "Bluetooth PAN is NOT available on Monterey or later."
+        echo "You have to use Wi-Fi connection to control your HackSPi."
+    # chromeOS notice
+    elif [ "$ETROBO_OS" == "chrome" ]; then
+        echo "*** notice for users using chromeOS ***"
+        echo "Bluetooth PAN is NOT available on chromeOS."
         echo "You have to use Wi-Fi connection to control your HackSPi."
     fi
 
@@ -335,18 +354,15 @@ fi
 
 if [ -z "$firstrun" ]; then
     # launch network services
-    echo "checking network services..."
-    if [ -z "`sudo systemctl is-enabled bt-network`" ] || [ "$setup" == "update" ]; then
-        echo "starting network services"
-        sudo systemctl enable systemd-networkd
-        sudo systemctl enable bt-agent
-        sudo systemctl enable bt-network
-    fi
-
-    # wait until activated
+    echo "starting network services"
+    sudo systemctl enable systemd-networkd
+    sudo systemctl enable bt-agent
+    sudo systemctl enable bt-network
     sudo systemctl start systemd-networkd
     sudo systemctl start bt-agent
     sudo systemctl start bt-network
+
+    # wait until activated
     unset loop
     counter=0
     isActive="`sudo systemctl status bt-network | grep 'Active: active'`"

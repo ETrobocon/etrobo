@@ -49,6 +49,8 @@ if [ -n "$update" ]; then
     cp -f scripts/startetrobo ~/
     if [ "$ETROBO_OS" = "mac" ]; then
         cp -f scripts/startetrobo_mac.command "$BEERHALL/../"
+    elif [ "$ETROBO_OS" = "raspi" ]; then
+        cp -f scripts/hackspi ~
     fi
     scripts="$ETROBO_SCRIPTS"
     . "$scripts/etroboenv.sh" unset

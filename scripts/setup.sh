@@ -88,7 +88,7 @@ else
     fi
 fi
 
-if [ "$option" = "athrill" ]; then
+if [ "$option" = "athrill" ] && [ ! "$ETROBO_OS" != "raspi" ]; then
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official
@@ -128,37 +128,39 @@ fi
 
 #
 # distribute UnityETroboSim
-cd "$ETROBO_ROOT/dist"
-. sim env
-echo "Bundled Simulator: $ETROBO_SIM_VER"
-if [ "$ETROBO_OS" = "chrome" ]; then
-    os="linux"
-else
-    os="$ETROBO_OS"
-fi
-targetName="etrobosim${ETROBO_SIM_VER}_${os}"
-if [ "$ETROBO_KERNEL" = "darwin" ]; then
-    targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
-    targetDist="/Applications/etrobosim"
-else
-    targetSrc="${targetName}"
-    targetDist="$ETROBO_USERPROFILE/etrobosim"
-fi
-
-if [ ! -d "$targetDist/$targetSrc" ]; then
-    installProcess="${installProcess}sim "
-    echo
-    echo "Install ETrobocon Simulator"
-    if [ ! -d "$targetDist" ]; then
-        mkdir "$targetDist"
+if [ ! "$ETROBO_OS" != "raspi" ]; then
+    cd "$ETROBO_ROOT/dist"
+    . sim env
+    echo "Bundled Simulator: $ETROBO_SIM_VER"
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        os="linux"
+    else
+        os="$ETROBO_OS"
+    fi
+    targetName="etrobosim${ETROBO_SIM_VER}_${os}"
+    if [ "$ETROBO_KERNEL" = "darwin" ]; then
+        targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
+        targetDist="/Applications/etrobosim"
+    else
+        targetSrc="${targetName}"
+        targetDist="$ETROBO_USERPROFILE/etrobosim"
     fi
 
-    tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
-        mv -f "$targetSrc" "$targetDist/"
-    else
-        echo "unpacking error: ${targetName}.tar.gz"
-        exit 1
+    if [ ! -d "$targetDist/$targetSrc" ]; then
+        installProcess="${installProcess}sim "
+        echo
+        echo "Install ETrobocon Simulator"
+        if [ ! -d "$targetDist" ]; then
+            mkdir "$targetDist"
+        fi
+
+        tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
+        if [ "$?" = "0" ]; then
+            mv -f "$targetSrc" "$targetDist/"
+        else
+            echo "unpacking error: ${targetName}.tar.gz"
+            exit 1
+        fi
     fi
 fi
 

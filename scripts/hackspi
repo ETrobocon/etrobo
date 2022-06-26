@@ -21,10 +21,13 @@ dhcpAddress="172.16.16.1/24"
 # force reboot flag
 unset reboot
 
+# Utility commands
+
 # usage
 if [ "$1" == "--help" ]; then
-    echo "usage: ./hackspi [make|run|install|firstrun|pairing|update|remove]"
+    echo "usage: ./hackspi [make|run|firstrun|pairing|update|remove]"
     echo "       ./hackspi hub [restart|shutdown]"
+    echo "       hackspi [install|resetSSH <IPaddr>]"
     exit 0
 fi
 
@@ -65,6 +68,15 @@ if [ "$1" == "hub" ]; then
         exit 1
     fi
 fi
+
+# `hackspi resetSSH <IPaddr>` deletes old records from known_hosts
+if [ "$1" == "resetSSH" ]; then
+    cd ~/.ssh
+    ssh-keygen -f known_hosts -R "$2"
+    exit $?
+fi
+
+# setup commands
 
 # recognize options
 unset install

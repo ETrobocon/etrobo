@@ -26,7 +26,7 @@ unset reboot
 # usage
 if [ "$1" == "--help" ]; then
     echo "usage: ./hackspi [make|run|firstrun|pairing|update|remove]"
-    echo "       ./hackspi hub [restart|shutdown]"
+    echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]]"
     echo "       hackspi [install|resetSSH <IPaddr>]"
     exit 0
 fi
@@ -53,14 +53,34 @@ if [ "$1" == "hub" ]; then
 
     # check connection
     if [ `ls $tty > /dev/null 2>&1; echo $?` -eq 0 ]; then
+        # while read -t 0.1 line < $tty; do echo $line; done
         # raise KeyboradInterupt to switch into REPL
-        echo -e "¥x03" > $tty
+        echo -e "\x03" > $tty
+        # while read -t 0.1 line < $tty; do echo $line; done
         if [ "$command" == "restart" ]; then
+            ./hackspi hub showclock > /dev/null
             echo "hub.repl_restart(True)" > $tty
+            # while read -t 0.1 line < $tty; do echo $line; done
             echo "restart requested."
-        elif [ "$commend" == "shutdown" ]; then
+        elif [ "$command" == "shutdown" ]; then
             echo "hub.power_off()" > $tty
             echo "shutdown requested."
+        elif [ "$command" == "showclock" ]; then
+            echo "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)" > $tty
+        elif [ "$command" == "showip" ]; then
+            interface="wlan0"
+            if [ -n "$1" ]; then
+                interface="$1"
+            fi
+            ip=`ip addr show $interface | grep "inet " | sed -E "s/\s*inet ([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})\/.*/\1/"`
+            if [ -n "$ip" ]; then
+                ip="$interface: $ip"
+                echo "$ip"
+                echo "hub.display.show('$ip ', loop=True)" > $tty
+            else
+                echo "$interface: disconnected."
+                echo "hub.display.show('?')" > $tty
+            fi
         fi
         exit 0
     else
@@ -86,6 +106,7 @@ if [ "$1" == "install" ]; then
     install="$1"
     shift 1
 elif [ "$1" == "firstrun" ]; then
+    ./hackspi hub showclock > /dev/null
     firstrun="$1"
     shift 1
 elif [ "$1" == "pairing" ] || [ "$1" == "update" ] || [ "$1" == "remove" ]; then
@@ -284,6 +305,8 @@ fi
 # echo "checking autostart feature..."
 cd ~
 file=".bashrc"
+log_dir="~/.hackspi"
+log_file="autostart.log"
 if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
     if [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
         # remove standalone runner from .bashrc
@@ -306,6 +329,7 @@ if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || 
             fi
         done
         rm -f $file
+        rm -rf $log_dir
         if [ -s $tmpFile ]; then
             sudo mv -f $tmpFile $file
         else
@@ -314,16 +338,16 @@ if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || 
     fi
     echo "add autostart feature into .bashrc"
     echo '#--- begin autostart feature for HackSPi/RasPike -------' >> $file
-    echo 'if [ -f ~/autostart.log.2 ]; then' >> $file
-    echo '    mv -f ~/autostart.log.2 ~/autostart.log.3' >> $file
+    echo "if [ -f $log_dir/$log_file.2 ]; then" >> $file
+    echo "    mv -f $log_dir/$log_file.2 $log_dir/$log_file.3" >> $file
     echo 'fi' >> $file
-    echo 'if [ -f ~/autostart.log.1 ]; then' >> $file
-    echo '    mv -f ~/autostart.log.1 ~/autostart.log.2' >> $file
+    echo "if [ -f $log_dir/$log_file.1 ]; then" >> $file
+    echo "    mv -f $log_dir/$log_file.1 $log_dir/$log_file.2" >> $file
     echo 'fi' >> $file
-    echo 'if [ -f ~/autostart.log ]; then' >> $file
-    echo '    mv -f ~/autostart.log ~/autostart.log.1' >> $file
+    echo "if [ -f $log_dir/$log_file ]; then" >> $file
+    echo "    mv -f $log_dir/$log_file $log_dir/$log_file.1" >> $file
     echo 'fi' >> $file
-    echo '~/hackspi | tee ~/autostart.log' >> $file
+    echo "~/hackspi | tee $log_dir/$log_file" >> $file
     echo '#--------- autostart feature for HackSPi/RasPike end ---' >> $file
 fi
 
@@ -389,26 +413,26 @@ if [ ! -f $file ] || [ "$setup" == "update" ]; then
     sudo mv -f $tmpFile $file
 fi
 
-if [ -z "$firstrun" ]; then
-    # launch network services
-    echo "starting network services"
-    sudo systemctl enable systemd-networkd
-    sudo systemctl enable bt-agent
-    sudo systemctl enable bt-network
-    sudo systemctl start systemd-networkd
-    sudo systemctl start bt-agent
-    sudo systemctl start bt-network
+# launch network services
+echo "starting network services"
+sudo systemctl enable systemd-networkd
+sudo systemctl enable bt-agent
+sudo systemctl enable bt-network
+sudo systemctl start systemd-networkd
+sudo systemctl start bt-agent
+sudo systemctl start bt-network
 
-    # wait until activated
-    unset loop
-    counter=0
+# wait until activated
+unset loop
+counter=0
+isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
+while [ -z "$isActive" ] && [ $counter -lt 30 ]; do
+    sleep 0.1
+    counter=$(( $counter + 1 ))
     isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
-    while [ -z "$isActive" ] && [ $counter -lt 30 ]; do
-        sleep 0.1
-        counter=$(( $counter + 1 ))
-        isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
-    done
+done
 
+if [ -z "$firstrun" ]; then
     # attempt to pairing
     if [ "$setup" == "pairing" ]; then
         echo "start pairing..."
@@ -430,5 +454,6 @@ if [ -z "$firstrun" ]; then
         sudo reboot
     fi
 else
+    ./hackspi hub showip > /dev/null
     exit 0
 fi

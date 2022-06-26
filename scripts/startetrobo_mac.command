@@ -334,7 +334,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     # install BeerHall (for etrobo) formulae
 
     brew install bash-completion coreutils findutils wget git ruby@2.7 flex make jq curl
-    brew install esolitos/ipa/sshpass
+    brew install esolitos/ipa/sshpass iproute2mac
     brew link ruby@2.7 --force
     brew link flex --force
     brew link curl --force

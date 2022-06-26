@@ -24,6 +24,7 @@ unset reboot
 # usage
 if [ "$1" == "--help" ]; then
     echo "usage: ./hackspi [make|run|install|firstrun|pairing|update|remove]"
+    echo "       ./hackspi hub [restart|shutdown]"
     exit 0
 fi
 
@@ -34,11 +35,35 @@ if [ "$1" == "make" ]; then
     exit $?
 fi
 
-# `./hackspi run`` starts app
+# `./hackspi run` starts app
 if [ "$1" == "run" ]; then
     cd ~/work/RasPike/sdk/workspace
     make start
     exit $?
+fi
+
+# `./hackspi hub` controls Spike Hub via REPL
+if [ "$1" == "hub" ]; then
+    command="$2"
+    shift 2
+    tty="/dev/ttyACM0"  # USB connection to Spike Hub
+
+    # check connection
+    if [ `ls $tty > /dev/null 2>&1; echo $?` -eq 0 ]; then
+        # raise KeyboradInterupt to switch into REPL
+        echo -e "¥x03" > $tty
+        if [ "$command" == "restart" ]; then
+            echo "hub.repl_restart(True)" > $tty
+            echo "restart requested."
+        elif [ "$commend" == "shutdown" ]; then
+            echo "hub.power_off()" > $tty
+            echo "shutdown requested."
+        fi
+        exit 0
+    else
+        echo "Error: Spike Hub isn't connected."
+        exit 1
+    fi
 fi
 
 # recognize options
@@ -174,7 +199,7 @@ if [ -n "$install" ]; then
 fi
 
 # boot config
-echo "checking raspi-config..."
+# echo "checking raspi-config..."
 if [ "`sudo raspi-config nonint get_camera`" != "$do_camera" ]; then
     echo "change: Legacy Camera Support -> $do_camera"
     sudo raspi-config nonint do_camera $do_camera
@@ -194,10 +219,10 @@ if [ "`sudo raspi-config nonint get_vnc_resolution`" != "$do_vnc_resolution" ]; 
     sudo raspi-config nonint do_vnc_resolution $do_vnc_resolution
     reboot="force"
 fi
-echo "checking /boot/config.txt..."
+# echo "checking /boot/config.txt..."
 file="/boot/config.txt"
 if [ -z "`cat $file | grep dtoverlay=uart5`" ] || [ "$setup" == "update" ]; then
-    echo "modifing config.txt"
+    echo "modifing $file"
     if [ ! -f $file.org ]; then
         sudo cp -f $file $file.org
         sudo rm -f $file
@@ -211,23 +236,23 @@ if [ -z "`cat $file | grep dtoverlay=uart5`" ] || [ "$setup" == "update" ]; then
 fi
 
 if [ -z "$firstrun" ]; then
-    # install bluez-tools if neccessary
-    echo "checking bluez-tools installation..."
+    # install bluez-tools and screen if neccessary
+    # echo "checking network tools installation..."
     if [ `bt-network > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
         sudo apt update
         sudo apt -y upgrade
-        sudo apt -y install bluez-tools
+        sudo apt -y install bluez-tools screen
     fi
 
     # install ruby if neccessary
-    echo "checking ruby installation..."
+    # echo "checking ruby installation..."
     if [ `ruby -v > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
         sudo apt -y install ruby
         sudo -E gem install shell
     fi
 
     # install RasPike environment
-    echo "checking RasPike environment installation..."
+    # echo "checking RasPike environment installation..."
     cd ~
     if [ ! -d "work" ] || [ "$setup" == "update" ]; then
         if [ ! -d "work" ]; then
@@ -244,7 +269,7 @@ if [ -z "$firstrun" ]; then
 fi
 
 # setting autostart feature
-echo "checking autostart feature..."
+# echo "checking autostart feature..."
 cd ~
 file=".bashrc"
 if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
@@ -294,7 +319,7 @@ fi
 #
 # instruction from:
 # https://raspberrypi.stackexchange.com/questions/29504/how-can-i-set-up-a-bluetooth-pan-connection-with-a-raspberry-pi-and-an-ipod#71587
-echo "checking system files for pan0..."
+# echo "checking system files for pan0..."
 file="/etc/systemd/network/pan0.netdev"
 if [ ! -f $file ] || [ "$setup" == "update" ]; then
     echo "create $file"

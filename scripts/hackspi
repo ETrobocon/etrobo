@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-echo '---------'
-echo ' hackspi - HackSPi installer/standalone runner'
-echo '---------'
+# '---------'
+# ' hackspi - HackSPi installer/headless runner'
+# '---------'
 # Author: jtFuruhata
 # Copyright (c) 2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
+#
+# this script requires `./repl_client.py` to be executed.
 #
 
 # raspi-config
@@ -26,7 +28,9 @@ unset reboot
 # usage
 if [ "$1" == "--help" ]; then
     echo "usage: ./hackspi [make|run|firstrun|pairing|update|remove]"
-    echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]]"
+    echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname]"
+    echo "       ./hackspi hubfs [ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat]"
+    echo "       ./hackspi mainpy [repair|upload [<nameOnLocal>] [<nameOnHubfs>]]"
     echo "       hackspi [install|resetSSH <IPaddr>]"
     exit 0
 fi
@@ -45,28 +49,27 @@ if [ "$1" == "run" ]; then
     exit $?
 fi
 
-# `./hackspi hub` controls Spike Hub via REPL
-if [ "$1" == "hub" ]; then
+# `./hackspi hub|hubfs|mainpy` controls Spike Hub via REPL
+if [ "$1" == "hub" ] || [ "$1" == "hubfs" ] || [ "$1" == "mainpy" ]; then
     command="$2"
     shift 2
-    tty="/dev/ttyACM0"  # USB connection to Spike Hub
+    tty="/dev/`ls -1 /dev | grep ACM | head -n 1`"  # USB connection to Spike Hub
 
-    # check connection
+    # check the USB connection
     if [ `ls $tty > /dev/null 2>&1; echo $?` -eq 0 ]; then
-        # while read -t 0.1 line < $tty; do echo $line; done
         # raise KeyboradInterupt to switch into REPL
-        echo -e "\x03" > $tty
-        # while read -t 0.1 line < $tty; do echo $line; done
+        ./repl_client.py $tty ">>> REPL" > /dev/null
+
+        # start to do command
         if [ "$command" == "restart" ]; then
-            ./hackspi hub showclock > /dev/null
-            echo "hub.repl_restart(True)" > $tty
-            # while read -t 0.1 line < $tty; do echo $line; done
+            ./repl_client.py $tty "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+            ./repl_client.py $tty "hub.repl_restart(True)"
+            ./repl_client.py $tty "=== EXEC" -1 > /dev/null 2>&1
             echo "restart requested."
         elif [ "$command" == "shutdown" ]; then
-            echo "hub.power_off()" > $tty
+            ./repl_client.py $tty "hub.power_off()"
+            ./repl_client.py $tty "=== EXEC" -1 > /dev/null 2>&1
             echo "shutdown requested."
-        elif [ "$command" == "showclock" ]; then
-            echo "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)" > $tty
         elif [ "$command" == "showip" ]; then
             interface="wlan0"
             if [ -n "$1" ]; then
@@ -76,11 +79,94 @@ if [ "$1" == "hub" ]; then
             if [ -n "$ip" ]; then
                 ip="$interface: $ip"
                 echo "$ip"
-                echo "hub.display.show('$ip ', loop=True)" > $tty
+                ./repl_client.py $tty "hub.display.show('$ip ', loop=True)"
             else
                 echo "$interface: disconnected."
-                echo "hub.display.show('?')" > $tty
+                ./repl_client.py $tty "hub.display.show('?')"
             fi
+            ./repl_client.py $tty "=== EXEC" > /dev/null
+        elif [ "$command" == "showclock" ]; then
+            ./repl_client.py $tty "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+            ./repl_client.py $tty "=== EXEC" > /dev/null
+        elif [ "$command" == "uname" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.uname()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mem_info" ]; then
+            ./repl_client.py $tty "import micropython"
+            ./repl_client.py $tty "micropython.mem_info()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "ls" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.listdir()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "cat" ]; then
+            ./repl_client.py $tty "with open('$1') as f:"
+            ./repl_client.py $tty "    print(f.read())"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "rm" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.remove('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mv" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.rename('$1', '$2')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "cd" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.chdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "pwd" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.getcwd()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mkdir" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.mkdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "rmdir" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.rmdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "stat" ]; then
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.stat('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "repair" ]; then
+            tmpFile=$(mktemp)
+            cat << EOF > $tmpFile
+import gc
+import micropython
+
+import hub_runtime
+
+micropython.alloc_emergency_exception_buf(256)
+
+hub_runtime.start()
+EOF
+            ./hackspi mainpy upload $tmpFile main.py #> /dev/null
+            rm -f $tmpFile
+            echo "main.py is repaired to the factory default."
+
+        elif [ "$command" == "upload" ]; then
+            fileName="work/RasPike/spike/raspike_etrobo.py"
+            targetName="main.py"
+            if [ -n "$1" ]; then
+                fileName="$1"
+            fi
+            if [ -n "$2" ]; then
+                targetName="$2"
+            fi
+            if [ ! -f "$fileName" ]; then
+                echo "file not found: $fileName"
+                exit 1
+            fi
+            
+            # run mpremote
+            # to access to Spike Hub by REPL
+            .local/bin/mpremote cp "$fileName" :$targetName
+            ./hackspi hub restart
+            echo "$fileName is uploaded as $targetName"
         fi
         exit 0
     else
@@ -97,6 +183,9 @@ if [ "$1" == "resetSSH" ]; then
 fi
 
 # setup commands
+echo '---------'
+echo ' hackspi - HackSPi installer/headless runner'
+echo '---------'
 
 # recognize options
 unset install
@@ -188,6 +277,7 @@ if [ -n "$install" ]; then
         exit 1
     fi
     cp -f "$ETROBO_SCRIPTS/hackspi" "$mountPath/"
+    cp -f "$ETROBO_SCRIPTS/repl_client.py" "$mountPath/"
 
     # modify firstrun.sh
     tmpFile=$(mktemp)
@@ -195,8 +285,11 @@ if [ -n "$install" ]; then
     echo 'user="`getent passwd 1000 | cut -d: -f1`"' >> $tmpFile
     echo 'userhome="`getent passwd 1000 | cut -d: -f6`"' >> $tmpFile
     echo 'cp -f /boot/hackspi "$userhome/"' >> $tmpFile
+    echo 'cp -f /boot/repl_client.py "$userhome/"' >> $tmpFile
     echo 'chown $user:$user "$userhome/hackspi"' >> $tmpFile
+    echo 'chown $user:$user "$userhome/repl_client.py"' >> $tmpFile
     echo 'chmod +x "$userhome/hackspi"' >> $tmpFile
+    echo 'chmod +x "$userhome/repl_client.py"' >> $tmpFile
     echo '"$userhome/hackspi" firstrun' >> $tmpFile
     echo 'exit 0' >> $tmpFile
     rm -f "$file"
@@ -268,37 +361,37 @@ if [ -z "`cat $file | grep dtoverlay=uart5`" ] || [ "$setup" == "update" ]; then
     reboot="force"
 fi
 
-if [ -z "$firstrun" ]; then
-    # install bluez-tools and screen if neccessary
-    # echo "checking network tools installation..."
-    if [ `bt-network > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
-        sudo apt update
-        sudo apt -y upgrade
-        sudo apt -y install bluez-tools screen
-    fi
+# install bluez-tools if neccessary
+# echo "checking network tools installation..."
+if [ `bt-network > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+    sudo apt update
+    sudo apt -y upgrade
+    sudo apt -y install bluez-tools
+    pip install mpremote
+fi
 
-    # install ruby if neccessary
-    # echo "checking ruby installation..."
-    if [ `ruby -v > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
-        sudo apt -y install ruby
-        sudo -E gem install shell
-    fi
+# install ruby if neccessary
+# echo "checking ruby installation..."
+if [ `ruby -v > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+    sudo apt -y install ruby
+    sudo -E gem install shell
+fi
 
-    # install RasPike environment
-    # echo "checking RasPike environment installation..."
-    cd ~
-    if [ ! -d "work" ] || [ "$setup" == "update" ]; then
-        if [ ! -d "work" ]; then
-            mkdir work
-        fi
-        cd work
-        if [ ! -d "RasPike" ]; then
-            git clone https://github.com/ETrobocon/RasPike.git
-        else
-            cd RasPike
-            git pull --ff-only
-        fi
+# install RasPike environment
+# echo "checking RasPike environment installation..."
+cd ~
+if [ ! -d "work" ] || [ "$setup" == "update" ]; then
+    if [ ! -d "work" ]; then
+        mkdir work
     fi
+    cd work
+    if [ ! -d "RasPike" ]; then
+        git clone https://github.com/ETrobocon/RasPike.git
+    else
+        cd RasPike
+        git pull --ff-only
+    fi
+    ./hackspi mainpy upload
 fi
 
 # setting autostart feature

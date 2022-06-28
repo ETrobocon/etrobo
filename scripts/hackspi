@@ -27,11 +27,23 @@ unset reboot
 
 # usage
 if [ "$1" == "--help" ]; then
-    echo "usage: ./hackspi [make|run|firstrun|pairing|update|remove]"
+    echo "usage: ./hackspi [make|run|repl|firstrun|pairing|update|remove]"
     echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname]"
     echo "       ./hackspi hubfs [ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat]"
     echo "       ./hackspi mainpy [repair|upload [<nameOnLocal>] [<nameOnHubfs>]]"
     echo "       hackspi [install|resetSSH <IPaddr>]"
+    exit 0
+fi
+
+# do a REPL command on Spike Hub immediately
+function REPL() {
+    echo -e "\x03$@\r" > /dev/`ls -1 /dev | grep ACM | head -n 1`
+}
+# `./hackspi repl <command>` invoke command on REPL
+# remember that once in REPL mode,
+# the 10-minutes auto power-off is enabled until restart.
+if [ "$1" == "repl" ]; then
+    REPL "$2"
     exit 0
 fi
 
@@ -57,18 +69,14 @@ if [ "$1" == "hub" ] || [ "$1" == "hubfs" ] || [ "$1" == "mainpy" ]; then
 
     # check the USB connection
     if [ `ls $tty > /dev/null 2>&1; echo $?` -eq 0 ]; then
-        # raise KeyboradInterupt to switch into REPL
-        ./repl_client.py $tty ">>> REPL" > /dev/null
-
         # start to do command
+        # no return value commands are able to execute immediately using by REPL()
         if [ "$command" == "restart" ]; then
-            ./repl_client.py $tty "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
-            ./repl_client.py $tty "hub.repl_restart(True)"
-            ./repl_client.py $tty "=== EXEC" -1 > /dev/null 2>&1
+            REPL "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+            REPL "hub.repl_restart(True)"
             echo "restart requested."
         elif [ "$command" == "shutdown" ]; then
-            ./repl_client.py $tty "hub.power_off()"
-            ./repl_client.py $tty "=== EXEC" -1 > /dev/null 2>&1
+            REPL "hub.power_off()"
             echo "shutdown requested."
         elif [ "$command" == "showip" ]; then
             interface="wlan0"
@@ -79,56 +87,67 @@ if [ "$1" == "hub" ] || [ "$1" == "hubfs" ] || [ "$1" == "mainpy" ]; then
             if [ -n "$ip" ]; then
                 ip="$interface: $ip"
                 echo "$ip"
-                ./repl_client.py $tty "hub.display.show('$ip ', loop=True)"
+                REPL "hub.display.show('$ip ', loop=True)"
             else
                 echo "$interface: disconnected."
-                ./repl_client.py $tty "hub.display.show('?')"
+                REPL "hub.display.show('?')"
             fi
-            ./repl_client.py $tty "=== EXEC" > /dev/null
         elif [ "$command" == "showclock" ]; then
-            ./repl_client.py $tty "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
-            ./repl_client.py $tty "=== EXEC" > /dev/null
+            REPL "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+        # these commands executes using by `repl_client.py`,
+        # due to `mpremote` is unstable.
         elif [ "$command" == "uname" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.uname()"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "mem_info" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import micropython"
             ./repl_client.py $tty "micropython.mem_info()"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "ls" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.listdir()"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "cat" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "with open('$1') as f:"
             ./repl_client.py $tty "    print(f.read())"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "rm" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.remove('$1')"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "mv" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.rename('$1', '$2')"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "cd" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.chdir('$1')"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "pwd" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.getcwd()"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "mkdir" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.mkdir('$1')"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "rmdir" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.rmdir('$1')"
             ./repl_client.py $tty "=== EXEC"
         elif [ "$command" == "stat" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
             ./repl_client.py $tty "import os"
             ./repl_client.py $tty "os.stat('$1')"
             ./repl_client.py $tty "=== EXEC"
@@ -148,6 +167,7 @@ EOF
             rm -f $tmpFile
             echo "main.py is repaired to the factory default."
 
+        # only use `mpremote` for file transfers, no choice due to out of memory
         elif [ "$command" == "upload" ]; then
             fileName="work/RasPike/spike/raspike_etrobo.py"
             targetName="main.py"
@@ -164,7 +184,7 @@ EOF
             
             # run mpremote
             # to access to Spike Hub by REPL
-            .local/bin/mpremote cp "$fileName" :$targetName
+            .local/bin/mpremote connect $tty cp "$fileName" :$targetName
             ./hackspi hub restart
             echo "$fileName is uploaded as $targetName"
         fi
@@ -195,7 +215,6 @@ if [ "$1" == "install" ]; then
     install="$1"
     shift 1
 elif [ "$1" == "firstrun" ]; then
-    ./hackspi hub showclock > /dev/null
     firstrun="$1"
     shift 1
 elif [ "$1" == "pairing" ] || [ "$1" == "update" ] || [ "$1" == "remove" ]; then
@@ -313,9 +332,11 @@ if [ -n "$install" ]; then
     echo "finish install"
     echo "put this SD card into your HackSPi and power on."
     echo "your HackSPi will continue to install and reboot herself."
-    echo 'after about 2 mins, run `./hackspi pairing` on HackSPi'
-    echo "via Wi-Fi or so on."
-    echo "when 'Default agent requested' is indicated (after about 15 mins),"
+    echo 'after about 20 mins, your HackSPi will *sound* and display'
+    echo "her IP address of Wi-Fi; ex)'wlan0:192.168.0.2'."
+    echo 'you should connect to above address from SSH'
+    echo 'and run `./hackspi pairing`.'
+    echo "when 'Default agent requested' is indicated,"
     echo "you can connect to HackSPi's Bluetooth PAN from this host PC."
     echo "when you are asked (yes/no)?, answer 'yes' on HackSpi first."
     echo "you can stop by [Ctrl]+[C] after success to pairing."
@@ -391,6 +412,7 @@ if [ ! -d "work" ] || [ "$setup" == "update" ]; then
         cd RasPike
         git pull --ff-only
     fi
+    cd ~
     ./hackspi mainpy upload
 fi
 
@@ -429,6 +451,7 @@ if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || 
             rm $tmpFile
         fi
     fi
+    mkdir $log_dir
     echo "add autostart feature into .bashrc"
     echo '#--- begin autostart feature for HackSPi/RasPike -------' >> $file
     echo "if [ -f $log_dir/$log_file.2 ]; then" >> $file
@@ -547,6 +570,7 @@ if [ -z "$firstrun" ]; then
         sudo reboot
     fi
 else
+    REPL "hub.sound.play('sounds/startup')"
     ./hackspi hub showip > /dev/null
     exit 0
 fi

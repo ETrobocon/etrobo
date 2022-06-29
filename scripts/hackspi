@@ -14,7 +14,7 @@
 do_camera="0"           # 0=Enable Legacy Camera 1=Disable Legacy Camera
 do_vnc="1"              # 0=Enable VNC 1=Disable VNC
 do_ssh="0"              # 0=Enable SSH 1=Disable SSH
-do_serial="0"           # 0=Enable both port and console 1=Disable Both 2=Enbale port only
+do_serial="1"           # 0=Enable Serial Console 1=Disable Serial Console
 do_boot_behaviour="B2"  # B1=Console B2=Console Autologin B3=Desktop B4=Desktop Autologin
 do_vnc_resolution="1024x768"    # specify VNC resolution
 
@@ -30,7 +30,7 @@ unset reboot
 # usage
 if [ "$1" == "--help" ]; then
     echo "usage: ./hackspi [make|run|repl|firstrun|pairing|update|remove]"
-    echo "       ./hackspi autorun [on|off]"
+    echo "       ./hackspi autorun [once|on|off]"
     echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname]"
     echo "       ./hackspi hubfs [ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat]"
     echo "       ./hackspi mainpy [repair|upload [<nameOnLocal>] [<nameOnHubfs>]]"
@@ -79,6 +79,7 @@ if [ "$1" == "autorun" ]; then
     else
         echo "$autorun" > ~/launch
     fi
+    exit 0
 fi
 
 # `./hackspi hub|hubfs|mainpy` controls Spike Hub via REPL
@@ -303,28 +304,12 @@ if [ -n "$firstrun" ]; then
         # restart Spike Hub to against auto power-off
         "$userhome/hackspi" hub restart
 
-    # pass3: run by `/etc/rc.local`, show IP address
+    # pass3: run by `/etc/rc.local`, enable external login console
     elif [ -f "$log_dir/pass2" ]; then
+        rm -f "$log_dir/pass2"
         firstrun="pass3"
-        # waiting for link up wlan0
-        echo "waiting for link up wlan0"
-        counter=60
-        while [ $counter -gt 0 ]; do
-            if [ -n "`ip address show wlan0 | grep 'inet ' | grep -v ' 169\.154\.'`" ]; then
-                counter=-$counter
-            else
-                counter=$(($counter - 1))
-                sleep 1
-            fi
-        done
-        if [ counter == 0 ]; then
-            echo "timeout: unable to connect on wlan0"
-        else
-            echo "wlan0 is linked up: $(($counter + 60)) secs."
-        fi
-        # show IP address on Hub display
-        REPL "hub.sound.play('sounds/startup')"
-        "$userhome/hackspi" hub showip
+        touch "$log_dir/pass3"
+        chmod 666 "$log_dir/pass3"
         # repair /etc/rc.local
         target="/etc/rc.local"
         if [ ! -f $target.org ]; then
@@ -334,7 +319,6 @@ if [ -n "$firstrun" ]; then
             rm -f $target
             mv -f $target.org $target
             echo "firstrun:pass3 on $userhome: finished."
-            rm -f "$log_dir/pass2"
         fi
     fi
 else
@@ -342,6 +326,30 @@ else
         echo "now running firstrun."
         exit 1
     fi
+fi
+
+# pass4: run by `.bashrc`, show IP address
+if [ -f "$log_dir/pass3" ] || [ -f "$userhome/showip" ]; then
+    # waiting for link up wlan0
+    echo "waiting for link up wlan0"
+    counter=60
+    while [ $counter -gt 0 ]; do
+        if [ -n "`ip address show wlan0 | grep 'inet ' | grep -v ' 169\.154\.'`" ]; then
+            counter=-$counter
+        else
+            counter=$(($counter - 1))
+            sleep 1
+        fi
+    done
+    if [ counter == 0 ]; then
+        echo "timeout: unable to connect on wlan0"
+    else
+        echo "wlan0 is linked up: $(($counter + 60)) secs."
+    fi
+    # show IP address on Hub display
+    REPL "hub.sound.play('sounds/startup')"
+    "$userhome/hackspi" hub showip
+    rm -f "$log_dir/pass3"
 fi
 
 #
@@ -706,6 +714,7 @@ fi
 
 # autorun launcher
 if [ -f ~/launch ] && [ ! -f /tmp/launched ]; then
+    ./hackspi hub restart
     if [ -n "`cat ~/launch | grep once`" ]; then
         rm -f ~/launch
     fi

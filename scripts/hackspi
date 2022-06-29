@@ -59,6 +59,8 @@ fi
 
 # `./hackspi run` starts app
 if [ "$1" == "run" ]; then
+    ./hackspi hub restart
+    touch /tmp/launched
     cd ~/work/RasPike/sdk/workspace
     make start
     exit $?

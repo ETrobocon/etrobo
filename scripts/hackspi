@@ -31,10 +31,10 @@ unset reboot
 if [ "$1" == "--help" ]; then
     echo "usage: ./hackspi [make|run|repl|firstrun|pairing|update|remove]"
     echo "       ./hackspi autorun [once|on|off]"
-    echo "       ./hackspi hub [restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname]"
-    echo "       ./hackspi hubfs [ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat]"
-    echo "       ./hackspi mainpy [repair|upload [<nameOnLocal>] [<nameOnHubfs>]]"
-    echo "       hackspi [install|resetSSH <IPaddr>]"
+    echo "       ./hackspi hub restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname"
+    echo "       ./hackspi hubfs ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat"
+    echo "       ./hackspi mainpy repair|upload [<nameOnLocal> [<nameOnHubfs>]]"
+    echo "       hackspi install|resetSSH <IPaddr>"
     exit 0
 fi
 
@@ -42,7 +42,7 @@ fi
 function REPL() {
     echo -e "\x03$@\r" > /dev/`ls -1 /dev | grep ACM | head -n 1`
 }
-# `./hackspi repl <command>` invoke command on REPL
+# `./hackspi repl <command>` invokes command on REPL
 # remember that once in REPL mode,
 # auto power-off is enabled until restart.
 if [ "$1" == "repl" ]; then

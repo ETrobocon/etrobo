@@ -45,9 +45,9 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.07.02a"
+    export ETROBO_MANIFEST_VER="2022.07.02b"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
-    export ETROBO_COMPETITION_VER="2022_5.5.4"
+    export ETROBO_COMPETITION_VER="2022_5.5.5"
 
     #
     # GNU Arm Embedded Toolchain
@@ -187,16 +187,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=36412083
+        size=35879927
     elif [ "$target" = "mac" ]; then
-        size=41980570
+        size=41439545
     elif [ "$target" = "linux" ]; then
-        size=48018452
+        size=47487745
     fi
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("kintone://etrobocon/30/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-        vers+=("2022.07.01b")
+        vers+=("2022.07.02b")
         sizes+=("$size")
     fi
 

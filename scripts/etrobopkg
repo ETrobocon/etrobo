@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.07.01a"
+    export ETROBO_MANIFEST_VER="2022.07.02a"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
     export ETROBO_COMPETITION_VER="2022_5.5.4"
 
@@ -124,16 +124,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
-        size="4330401"
+        size="4326886"
     else
         clikintone="linux"
-        size="4466006"
+        size="4462320"
     fi
     if [ "$ETROBO_OS" != "raspi" ]; then
         if [ -n "$clikintone" ]; then
             pkgs+=("cli-kintone")
-            urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.12.0/${clikintone}-x64.zip")
-            vers+=("2021.03.08a")
+            urls+=("https://github.com/kintone-labs/cli-kintone/releases/download/v0.13.1/${clikintone}-x64.zip")
+            vers+=("2022.07.02a")
             sizes+=("$size")
         fi
     fi

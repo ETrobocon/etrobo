@@ -31,8 +31,8 @@ if [ "$1" == "prepare" ]; then
     fi
     echo "create $target"
     echo "export ETROBO_RACEMODE=\"$2\"" | tee "$target"
-    echo "export ETROBO_RACE=\"/mnt/$4/_race\"" | tee "$target"
-    echo "export ETROBO_RELAY=\"/mnt/$5/$3\"" | tee "$target"
+    echo "export ETROBO_RACE=\"/mnt/$4/_race\"" | tee -a "$target"
+    echo "export ETROBO_RELAY=\"/mnt/$5/$3\"" | tee -a "$target"
     chmod +x "$target"
 fi
 
@@ -85,12 +85,6 @@ if [ "$1" == "matchmaker" ] || [ "$1" == "flying" ]; then
     shift
 fi
 
-# begin to start raceserv
-echo "----------"
-echo " raceserv  - on $ETROBO_BASECAMP"
-echo "----------"
-echo "Notice: don't worry evenif you see 'Operation not permitted'"
-
 # prepare race and relay folder
 mode="$ETROBO_RACEMODE"
 raceFolder="$ETROBO_RACE"
@@ -128,6 +122,8 @@ if [ "$raceFolder" != "$relayFolder" ]; then
     if [ `ls "$relayFolder" >/dev/null 2>&1; echo $?` -ne 0 ]; then
         sudo mount -t drvfs $relayDriveLetter $relayMount
         mkdir -p "$relayFolder"
+        mkdir -p "$relayFolder/Requests"
+        mkdir -p "$relayFolder/Results"
     fi
 
     if [ ! -L "$raceFolder/Requests" ]; then
@@ -143,7 +139,16 @@ if [ "$raceFolder" != "$relayFolder" ]; then
         mkdir -p "$relayFolder/common/matchmaker"
         ln -s "$relayFolder/common" "$raceFolder/common"
     fi
+else
+    mkdir -p "$raceFolder/Requests"
+    mkdir -p "$raceFolder/Results"
 fi
+
+# begin to start raceserv
+echo "----------"
+echo " raceserv  - on $basecampName"
+echo "----------"
+echo "initializing... "
 
 rm -f "$raceFolder/"*.manifest
 cd "$raceFolder"

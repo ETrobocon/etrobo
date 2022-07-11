@@ -3,15 +3,35 @@
 # raceserv, ET robocon race server
 #   raceserv 
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-# fp0 ... 2021/07/17 13:00～2021/07/17 16:00
-# fp1 ... 2021/07/26 09:30～2021/08/01 20:00
-# fp2 ... 2021/08/29 09:30～2021/09/08 20:00
-# fpcs... 2021/10/30 10:00～2021/11/05 20:00
+# fp0 ... 2022/07/17 13:00～2022/07/17 16:00
+# fp1 ... 2022/07/25 10:00～2022/07/31 20:00
+# fp2 ... 2022/08/29 10:00～2022/09/08 20:00
 #
 
+#
+# prepare simvm : create 'simvm.sh' into 'dist/'
+# Usage: raceserv <basecampName> /path/to/raceFolder [/path/to/relayFolder]
+# run before starting the simvm for each free practices or competitions
+#
+if [ "$1" == "prepare" ]; then
+    target="$ETROBO_ROOT/dist/simvm.sh"
+    if [ -f "$target" ]; then
+        rm -f "$target"
+    fi
+    echo "create $target"
+    echo "export ETROBO_BASECAMP=\"$2\"" | tee "$target"
+    echo "export ETROBO_RACE=\"$3\"" | tee "$target"
+    echo "export ETROBO_RELAY=\"$3\"" | tee "$target"
+    echo "if [ -n \"$4\" ]; then" | tee "$target"
+    echo "    export ETROBO_RELLAY=\"$4\"" | tee "$target"
+    echo "fi" | tee "$target"
+fi
+
+if [ -n "$dummy" ];
+fi
 # ToDo:
 #   You should make symbolick link to relayFolder/Requests and relayFolder/Results from raceFolder.
 #       sudo mount -t drvfs <WindowsDriveLetter>: "$mountPath"
@@ -197,4 +217,5 @@ if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] ||
     done
 else
     echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] fp1|fp2|fpcs|finals|csfinal /path/to/raceFolder [/path/to/relayFolder]" 
+    echo "       raceserv prepare <basecampName> /path/to/raceFolder [/path/to/relayFolder]"
 fi

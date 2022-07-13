@@ -701,7 +701,7 @@ while [ -z "$isActive" ] && [ $counter -lt 30 ]; do
 done
 
 # finish firstrun:pass2
-if [ "firstrun" == "pass2" ]; then
+if [ "$firstrun" == "pass2" ]; then
     echo "firstrun:pass2 on $userhome: finished."
     sudo reboot
 fi

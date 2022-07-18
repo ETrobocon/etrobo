@@ -413,20 +413,18 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
                 # build configurator
                 if [ "$ETROBO_EV3RT_KERNEL" == "hrp2" ]; then
-                    if [ "$ETROBO_OS" == "mac" ]; then
+                    if [ "$ETROBO_OS" == "win" ]; then
+                        mv hrp2/cfg/cfg/cfg.exe hrp2/cfg/cfg/cfg
+                    else
                         echo
                         echo "CAUTION: you have to install cfg manually, see"
                         echo "https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac"
                         echo
-                    elif [ "$ETROBO_OS" == "linux" ]; then
-                        cd hrp2/cfg
-                        make
-                        cd "$ETROBO_ROOT"
                     fi
                 fi
 
-                if [ -z "`cat $ETROBO_EV3RT_KERNEL/sdk/workspace | grep fakemake`" ]; then
-                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >>                     echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile
+                if [ -z "`cat $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile
                 fi
                 ;;
             "mkimage" )

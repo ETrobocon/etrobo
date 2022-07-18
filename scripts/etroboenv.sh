@@ -23,6 +23,9 @@ file="$ETROBO_ROOT/select_kernel_version"
 if [ -f "$file" ]; then
     ver=`cat "$file"`
 fi
+if [ -z "$ver" ]; then
+    ver="1.1"
+fi
 kernel="hrp3"
 if [ -n "`echo $ver | grep beta`" ]; then
     kernel="hrp2"

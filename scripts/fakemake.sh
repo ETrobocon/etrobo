@@ -174,11 +174,11 @@ if [ -z "$skiphrp3" ]; then
     makeResult=$?
     cp -f "${incFile}.org" "$incFile"
     if [ $makeResult -eq 0 ]; then
-        echo fakemake on HRP3: build succeed: ${app_prefix}${proj}
+        echo fakemake on `echo "$ETROBO_EV3RT_KERNEL" | sed -E "s/(.*)/\U\1/"`: build succeed: ${app_prefix}${proj}
         currentapp=`head -n 1 currentapp`
         simopt=`tail -n 1 currentapp`
     else
-        echo fakemake on HRP3: make failed ... `cat currentapp`
+        echo fakemake on `echo "$ETROBO_EV3RT_KERNEL" | sed -E "s/(.*)/\U\1/"`: make failed ... `cat currentapp`
         cd "$ETROBO_HRP3_WORKSPACE"
         rm -f "${incFile}.org"
         rm -f "${incFile}.base"

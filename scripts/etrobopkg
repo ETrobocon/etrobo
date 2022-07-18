@@ -411,7 +411,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 tar xvf $kernel.tar.xz > /dev/null 2>&1
                 rm $kernel.tar.xz
 
-                rm -f $kernel/sdk/workspace workspace
+                rm -f workspace
                 ln -s $kernel/sdk/workspace workspace
 
                 # build configurator

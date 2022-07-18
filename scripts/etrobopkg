@@ -400,18 +400,22 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
 
                 ev3rt=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
+                kernel="hrp3"
+                if [ -n "`echo $ev3rt | grep beta`" ]; then
+                    kernel="hrp2"
+                fi
                 rm -rf $ev3rt
-                rm -rf $ETROBO_EV3RT_KERNEL
+                rm -rf $kernel
                 unzip "$file" > /dev/null
-                cp $ev3rt/$ETROBO_EV3RT_KERNEL.tar.xz ./
-                tar xvf $ETROBO_EV3RT_KERNEL.tar.xz > /dev/null 2>&1
-                rm $ETROBO_EV3RT_KERNEL.tar.xz
+                cp $ev3rt/$kernel.tar.xz ./
+                tar xvf $kernel.tar.xz > /dev/null 2>&1
+                rm $kernel.tar.xz
 
-                rm -f $ETROBO_EV3RT_KERNEL/sdk/workspace workspace
-                ln -s $ETROBO_EV3RT_KERNEL/sdk/workspace workspace
+                rm -f $kernel/sdk/workspace workspace
+                ln -s $kernel/sdk/workspace workspace
 
                 # build configurator
-                if [ "$ETROBO_EV3RT_KERNEL" == "hrp2" ]; then
+                if [ "$kernel" == "hrp2" ]; then
                     if [ "$ETROBO_OS" == "win" ]; then
                         mv hrp2/cfg/cfg/cfg.exe hrp2/cfg/cfg/cfg
                     else
@@ -422,8 +426,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     fi
                 fi
 
-                if [ -z "`cat $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile | grep fakemake`" ]; then
-                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile
+                if [ -z "`cat $kernel/sdk/workspace/Makefile | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $kernel/sdk/workspace/Makefile
                 fi
                 ;;
             "mkimage" )

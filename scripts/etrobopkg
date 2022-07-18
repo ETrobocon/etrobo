@@ -45,7 +45,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.07.15b"
+    export ETROBO_MANIFEST_VER="2022.07.18a"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
     export ETROBO_COMPETITION_VER="2022_5.6.1"
 
@@ -81,9 +81,26 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
     #
     pkgs+=("ev3rt")
-    urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.1-release.zip")
-    vers+=("2022.01.08a")
-    sizes+=("14084448")
+    urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
+    vers+=("2022.07.18a")
+    case $ETROBO_EV3RT_VER in
+    "1.1" )
+        vers+=("2022.01.08a")
+        sizes+=("14084448")
+        ;;
+    "1.0" )
+        vers+=("2020.06.29a")
+        sizes+=("13774129")
+        ;;
+    "beta7-3" )
+        vers+=("2022.07.18a")
+        sizes+=("17413112")
+        ;;
+    * )
+        vers+=("2022.01.08a")
+        sizes+=("99999999")
+        ;;
+    esac
 
     #
     # EV3RT requirement from:
@@ -375,7 +392,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "Install TOPPERS/EV3RT:"
                 if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
                     rm -rf "$ETROBO_ROOT/workspace_autobackup"
-                    mv -f "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    rm -rf "$ETROBO_HRP3_WORKSPACE"
                     echo "********"
                     echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."
@@ -384,17 +402,31 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
                 ev3rt=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
                 rm -rf $ev3rt
-                rm -rf hrp3
+                rm -rf $ETROBO_EV3RT_KERNEL
                 unzip "$file" > /dev/null
-                cp $ev3rt/hrp3.tar.xz ./
-                tar xvf hrp3.tar.xz > /dev/null 2>&1
-                rm hrp3.tar.xz
+                cp $ev3rt/$ETROBO_EV3RT_KERNEL.tar.xz ./
+                tar xvf $ETROBO_EV3RT_KERNEL.tar.xz > /dev/null 2>&1
+                rm $ETROBO_EV3RT_KERNEL.tar.xz
 
-                if [ ! -d workspace ]; then
-                    ln -s hrp3/sdk/workspace workspace
+                rm -f $ETROBO_EV3RT_KERNEL/sdk/workspace workspace
+                ln -s $ETROBO_EV3RT_KERNEL/sdk/workspace workspace
+
+                # build configurator
+                if [ "$ETROBO_EV3RT_KERNEL" == "hrp2" ]; then
+                    if [ "$ETROBO_OS" == "mac" ]; then
+                        echo
+                        echo "CAUTION: you have to install cfg manually, see"
+                        echo "https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac"
+                        echo
+                    elif [ "$ETROBO_OS" == "linux" ]; then
+                        cd hrp2/cfg
+                        make
+                        cd "$ETROBO_ROOT"
+                    fi
                 fi
-                if [ -z "`cat workspace/Makefile | grep fakemake`" ]; then
-                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> workspace/Makefile
+
+                if [ -z "`cat $ETROBO_EV3RT_KERNEL/sdk/workspace | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >>                     echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $ETROBO_EV3RT_KERNEL/sdk/workspace/Makefile
                 fi
                 ;;
             "mkimage" )

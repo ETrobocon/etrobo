@@ -82,7 +82,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     pkgs+=("ev3rt")
     urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
-    vers+=("2022.07.18a")
     case $ETROBO_EV3RT_VER in
     "1.1" )
         vers+=("2022.01.08a")

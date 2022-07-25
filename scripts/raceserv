@@ -137,6 +137,8 @@ if [ "$raceFolder" != "$relayFolder" ]; then
         mkdir -p "$relayFolder/common/csv"
         mkdir -p "$relayFolder/common/raceserv"
         mkdir -p "$relayFolder/common/matchmaker"
+        mkdir -p "$relayFolder/common/matchmaker/csv"
+        mkdir -p "$relayFolder/common/work"
         ln -s "$relayFolder/common" "$raceFolder/common"
     fi
 else

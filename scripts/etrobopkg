@@ -45,9 +45,9 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.07.02b"
+    export ETROBO_MANIFEST_VER="2022.08.28a"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
-    export ETROBO_COMPETITION_VER="2022_5.5.5"
+    export ETROBO_COMPETITION_VER="2022_5.7.0"
 
     #
     # GNU Arm Embedded Toolchain
@@ -81,9 +81,25 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
     #
     pkgs+=("ev3rt")
-    urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.1-release.zip")
-    vers+=("2022.01.08a")
-    sizes+=("14084448")
+    urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
+    case $ETROBO_EV3RT_VER in
+    "1.1" )
+        vers+=("2022.01.08a")
+        sizes+=("14084448")
+        ;;
+    "1.0" )
+        vers+=("2020.06.29a")
+        sizes+=("13774129")
+        ;;
+    "beta7-3" )
+        vers+=("2022.07.18a")
+        sizes+=("17413112")
+        ;;
+    * )
+        vers+=("2022.01.08a")
+        sizes+=("99999999")
+        ;;
+    esac
 
     #
     # EV3RT requirement from:
@@ -91,9 +107,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("mkimage")
-        urls+=("https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage")
-        vers+=("2020.06.29a")
-        sizes+=("7120")
+        urls+=("https://dev.toppers.jp/trac_user/ev3pf/raw-attachment/wiki/DevEnvMac/mkimage")
+        vers+=("2022.07.14a")
+        sizes+=("18108")
     fi
 
     #
@@ -187,16 +203,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=35879927
+        size=35986903
     elif [ "$target" = "mac" ]; then
-        size=41439545
+        size=41547310
     elif [ "$target" = "linux" ]; then
-        size=47487745
+        size=47599816
     fi
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("kintone://etrobocon/30/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-        vers+=("2022.07.02b")
+        vers+=("2022.08.28a")
         sizes+=("$size")
     fi
 
@@ -375,7 +391,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "Install TOPPERS/EV3RT:"
                 if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
                     rm -rf "$ETROBO_ROOT/workspace_autobackup"
-                    mv -f "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    rm -rf "$ETROBO_HRP3_WORKSPACE"
                     echo "********"
                     echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."
@@ -383,18 +400,34 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
 
                 ev3rt=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
-                rm -rf $ev3rt
-                rm -rf hrp3
-                unzip "$file" > /dev/null
-                cp $ev3rt/hrp3.tar.xz ./
-                tar xvf hrp3.tar.xz > /dev/null 2>&1
-                rm hrp3.tar.xz
-
-                if [ ! -d workspace ]; then
-                    ln -s hrp3/sdk/workspace workspace
+                kernel="hrp3"
+                if [ -n "`echo $ev3rt | grep beta`" ]; then
+                    kernel="hrp2"
                 fi
-                if [ -z "`cat workspace/Makefile | grep fakemake`" ]; then
-                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> workspace/Makefile
+                rm -rf $ev3rt
+                rm -rf $kernel
+                unzip "$file" > /dev/null
+                cp $ev3rt/$kernel.tar.xz ./
+                tar xvf $kernel.tar.xz > /dev/null 2>&1
+                rm $kernel.tar.xz
+
+                rm -f workspace
+                ln -s $kernel/sdk/workspace workspace
+
+                # build configurator
+                if [ "$kernel" == "hrp2" ]; then
+                    if [ "$ETROBO_OS" == "win" ]; then
+                        mv hrp2/cfg/cfg/cfg.exe hrp2/cfg/cfg/cfg
+                    else
+                        echo
+                        echo "CAUTION: you have to install cfg manually, see"
+                        echo "https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac"
+                        echo
+                    fi
+                fi
+
+                if [ -z "`cat $kernel/sdk/workspace/Makefile | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $kernel/sdk/workspace/Makefile
                 fi
                 ;;
             "mkimage" )

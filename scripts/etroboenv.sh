@@ -17,6 +17,26 @@ if [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ] || [ -n "`uname -r | grep WSL2`" ]; then
     done
 fi
 
+# select EV3RT kernel version
+ver=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | grep -v beta | tail -n 1 | sed -E "s/^ev3rt-(.*)-release$/\1/"`
+file="$ETROBO_ROOT/select_kernel_version"
+if [ -f "$file" ]; then
+    ver=`cat "$file"`
+fi
+if [ -z "$ver" ]; then
+    ver="1.1"
+fi
+kernel="hrp3"
+if [ -n "`echo $ver | grep beta`" ]; then
+    kernel="hrp2"
+fi
+currentWorkspace="`ls -la "$ETROBO_ROOT" | grep 'workspace ->' | sed -E 's/.* workspace -> (.*)$/\1/'`"
+targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
+if [ "$kernel" != "`echo $currentWorkspace | awk -F '/' '{print $1}'`" ] && [ -d "$targetWorkspace" ]; then
+    rm -f "$ETROBO_ROOT/workspace"
+    ln -s "$targetWorkspace" "$ETROBO_ROOT/workspace"
+fi
+
 if [ "$1" = "unset" ]; then
     . sim unset
     . etrobopkg unset
@@ -52,8 +72,9 @@ else
             export ETROBO_ENV="available"
             export ETROBO_SCRIPTS="$ETROBO_ROOT/scripts"
             export ETROBO_ATHRILL_GCC="$ETROBO_ROOT/athrill-gcc-package/usr/local/athrill-gcc"
-            export ETROBO_EV3RT_VER=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | tail -n 1 | sed -E "s/^ev3rt-([0-9]*.[0-9]*)-release$/\1/"`
-            export ETROBO_HRP3_SDK="$ETROBO_ROOT/hrp3/sdk"
+            export ETROBO_EV3RT_VER=$ver
+            export ETROBO_EV3RT_KERNEL="$kernel"
+            export ETROBO_HRP3_SDK="$ETROBO_ROOT/$kernel/sdk"
             export ETROBO_HRP3_WORKSPACE="$ETROBO_HRP3_SDK/workspace"
             export ETROBO_ATHRILL_EV3RT="$ETROBO_ROOT/ev3rt-athrill-v850e2m"
             export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_EV3RT/sdk"

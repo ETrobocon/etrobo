@@ -220,6 +220,10 @@ fi
 
 # `hackspi resetSSH <IPaddr>` deletes old records from known_hosts
 if [ "$1" == "resetSSH" ]; then
+    if [ "$ETROBO_OS" == "win" ]; then
+        cd "$ETROBO_USERPROFILE"
+        cmd.exe /c ssh-keygen -R "$2"
+    fi
     cd ~/.ssh
     ssh-keygen -f known_hosts -R "$2"
     exit $?

@@ -492,7 +492,8 @@ elif [ -n "$Teams" ] && [ -n "$Divisions" ] && [ -n "$Requests" ]; then
             if [ "$classPrefix" == "A" ]; then
                 banner="${classPrefix}${blockLetter}"
             else
-                banner="${classPrefix}${groupID}"
+                #banner="${classPrefix}${groupID}"
+                banner="${classPrefix}"
             fi
         fi
     fi

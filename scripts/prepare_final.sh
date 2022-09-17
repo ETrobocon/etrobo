@@ -25,6 +25,12 @@ json () {
 }
 export -f json
 
+target="$ETROBO_ROOT/dist/simvm.sh"
+if [ -f "$target" ]; then
+    source "$target"
+fi
+export relayFolder="$ETROBO_RELAY"
+
 if [ -n "`echo $1 | grep -E '^/'`" ]; then
     export relayFolder="$1"
     shift
@@ -66,7 +72,7 @@ if [ "$1" == "stringifyMasters" ]; then
      > "$commonFolder/Divisions.json"
 
     # Requests
-    fields=(ID teamID courseLetter classLetter divisionID)
+    fields=(ID courseLetter teamID classLetter divisionID)
     mapper=""
     for ((i=0; i<${#fields[@]}; i++)); do
         if [ -n "$mapper" ];then
@@ -83,7 +89,7 @@ fi
 export Teams="`cat \"$commonFolder/Teams.json\"`"
 export Divisions="`cat \"$commonFolder/Divisions.json\"`"
 export Requests="`cat \"$commonFolder/Requests.json\"`"
-export BlockPattern="`cat \"$commonFolder/BlockPattern.json\"`"
+#export BlockPattern="`cat \"$commonFolder/BlockPattern.json\"`"
 
 #
 # request /path/to/BlobFolder [/path/to/Requests]

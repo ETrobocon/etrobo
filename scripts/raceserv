@@ -22,10 +22,12 @@ fi
 # run before starting the simvm for each free practices or competitions
 #
 # for start server on simvm with relay, run `raceserv vm`.
-# for test use, run `raceserv`.
+# for no-relay such as Finals or test use, run `raceserv`.
 #
 target="$ETROBO_ROOT/dist/simvm.sh"
+unset prepare
 if [ "$1" == "prepare" ]; then
+    prepare="$1"
     if [ -f "$target" ]; then
         rm -f "$target"
     fi
@@ -163,6 +165,11 @@ rm -f waiting
 
 asp stop
 asp deep stop
+
+if [ -n "$prepare" ]; then
+    echo "new race is prepared."
+    exit 0
+fi
 
 # launch taskscheduler for ETroboSimRunner.Relay
 if [ -n "$vm" ]; then

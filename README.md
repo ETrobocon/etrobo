@@ -59,7 +59,7 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 - x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
         - MacBook Pro (Retina, Mid 2012) / macOS Mojave 10.14.6 / Xcode 11.0
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Monterey 12.1.0
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Venture 13.0.1
 - macOS Mojave(10.14)以降
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール

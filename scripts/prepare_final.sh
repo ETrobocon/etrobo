@@ -208,8 +208,9 @@ elif [ "$1" == "overlayPNG" ]; then
 elif [ "$1" == "mmmux" ]; then
     srcDir="$commonFolder/matchmaker/results"
     destDir="$commonFolder/raceserv"
-    ls -1 "$srcDir" \
-    | while read combinedID; do
+#    ls -1 "$srcDir" \
+    combinedIDs=(`ls -1 "$srcDir" | grep '.mp4$' | sed -E 's/^(E[0-9]{3})_.*$/ \1/'`)
+    for combinedID in ${combinedIDs[@]}; do
         echo "muxing... $combinedID"
         ffutil mmmux 2 $destDir/${combinedID}_L.mp4 info
         ffutil mmmux 2 $destDir/${combinedID}_R.mp4 info
@@ -460,6 +461,9 @@ elif [ "$1" == "replaceMovies" ]; then
             else
                 targetID=$(json record.groupID)
             fi
+            if [ "$divisionID" == "0" ]; then
+                targetID="0"
+            fi
         fi
     fi
 
@@ -483,8 +487,11 @@ elif [ "$1" == "replaceMovies" ]; then
             else
                 targetID=$(json record.groupID)
             fi
+            if [ "$divisionID" == "0" ]; then
+                targetID="0"
+            fi
             for group in ${groups[@]}; do
-                if [ "$group" == "$targetID" ]; then
+                if [ "$group" == "$targetID" ] || [ "$targetID" == "0" ]; then
 #                    echo "divisionID: $divisionID  targetID=$targetID  group=$group"
                     unset skip
                 fi
@@ -503,8 +510,9 @@ elif [ "$1" == "replaceMovies" ]; then
             innerFolder=`unzip -Z1 "$target" | head -n 1 | sed -E 's/^(.*)\/$/\1/'`
             cd "${destinationFolder}_${targetID}_${classLetter}"
             mkdir "$innerFolder"
-            cp "$relayFolder/common/raceserv/results_org/$combinedID.png" "${innerFolder}/"
-            cp "$relayFolder/common/raceserv/results_org/$raceID.mp4" "${innerFolder}/"
+            echo "replace: $raceID"
+            cp "$relayFolder/common/matchmaker/results/${combinedID}_リザルト.png" "${innerFolder}/"
+            cp "$relayFolder/common/raceserv/results/$raceID.mp4" "${innerFolder}/"
             cp "$relayFolder/common/matchmaker/csv/$raceID.csv" "${innerFolder}/"
             zip "$target" -d $innerFolder/$innerFolder.csv $innerFolder/$innerFolder.mp4 $innerFolder/result.json
             zip "$target" -r $innerFolder

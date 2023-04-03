@@ -581,7 +581,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 combinedID="${class}${teamID}"
 
                 matchmakerPath="`cd \"$raceservPath/../matchmaker\"; pwd`"
-                matchmakerFile="$matchmakerPath/results/$combinedID/${combinedID}_計測動画.mp4"
+#                matchmakerFile="$matchmakerPath/results/$combinedID/${combinedID}_計測動画.mp4"
+                matchmakerFile="$matchmakerPath/results/${combinedID}_計測.mp4"
                 destination="$raceservPath/${filename_body}_mmmux${filename_ext}"
 
                 if [ "$class" == "E" ]; then

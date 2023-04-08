@@ -3,11 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
+year="2022"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -68,7 +69,6 @@ if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ]; then
     fi
 fi
 
-year="2021"
 if [[ "$1" =~ ^[0-9]{4} ]];then
     year="$1"
     shift
@@ -223,8 +223,8 @@ if [ "$coursePrefix" == "R" ]; then
 fi
 
 # define competition rules
-if [ "$year" == "2021" ]; then
-    # ETrobocon 2021
+if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
+    # ETrobocon 2021 and 2022
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
@@ -254,23 +254,29 @@ if [ "$year" == "2021" ]; then
     done
 
     # bonus defaults
-    if [ "$class" == "entry" ]; then
-        ranking[7]=FALSE
-        ranking[8]=FALSE
-        ranking[9]=0
-    elif [ "$class" == "primary" ]; then
-        ranking[7]=FALSE
-        ranking[8]=FALSE
-        ranking[10]=FALSE
-        ranking[11]=0
-        ranking[12]=FALSE
-        ranking[13]=FALSE
-    elif [ "$class" == "advanced" ]; then
-        ranking[14]=0
-        ranking[15]=0
-        ranking[16]=0
-        ranking[17]=0
-        ranking[18]=0
+    if [ "$year" == "2021" ]; then
+        if [ "$class" == "entry" ]; then
+            ranking[7]=FALSE
+            ranking[8]=FALSE
+            ranking[9]=0
+        elif [ "$class" == "primary" ]; then
+            ranking[7]=FALSE
+            ranking[8]=FALSE
+            ranking[10]=FALSE
+            ranking[11]=0
+            ranking[12]=FALSE
+            ranking[13]=FALSE
+        elif [ "$class" == "advanced" ]; then
+            ranking[14]=0
+            ranking[15]=0
+            ranking[16]=0
+            ranking[17]=0
+            ranking[18]=0
+        fi
+    else
+        ranking[7]=FALSE    # GATE1 / HalfwayGate1
+        ranking[8]=FALSE    # GATE2 / HalfwayGate2
+        ranking[9]=0        # ENTRY_BONUS / CarryBlocks
     fi
 
     # time0
@@ -344,7 +350,9 @@ if [ "$year" == "2021" ]; then
                 # passed GATE2 gate
                 if [ "`json end.GATE2`" != "0" ]; then
                     if [ "$class" != "advanced" ]; then
-                        bonus=$(($bonus+2000))
+                        if [ "$year" != "2022" ]; then
+                            bonus=$(($bonus+2000))
+                        fi
                         ranking[8]="TRUE"
                     fi
                     # passed GOAL gate

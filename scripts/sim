@@ -172,14 +172,71 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     #
-    # `sim status` shows status
+    # `sim status` checks for proper operation and shows status
     #
     if [ "$1" = "status" ]; then
-        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM 2>&1`
-        if [ "$?" == "0" ];then
-            echo "$json" | jq .
+        echo "sim start checking for proper operation:"
+
+        echo "sim launch command: $ETROBO_LAUNCH_SIM"
+
+        echo -n "attempt to launch sim: "
+        eval "$ETROBO_LAUNCH_SIM"
+        if [ $? -eq 0 ]; then
+            echo "passed."
+        else
+            echo
+            echo "ERROR: unable to launch sim."
+            echo "due to sim files don't exists."
+            exit 1
         fi
-        exit 0
+
+        echo -n "attempt to connect to UIcomm up to 300 times: "
+        counter=0
+        loop="loop"
+        response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+        json=`echo "$response" | sed '$d'`
+        code=`echo "$response" | tail -n 1`
+        while [ "$code" != "200" ] && [ $counter -lt 300 ]; do
+            counter=$(( $counter + 1 ))
+            sleep 0.1
+            response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+            json=`echo "$response" | sed '$d'`
+            code=`echo "$response" | tail -n 1`
+        done
+        if [ $counter -lt 300 ]; then
+            echo "passed."
+            echo "$json"
+            echo "`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS`"
+            echo -n "terminating sim... "
+            sim stop
+            echo "done."
+            exit 0
+        else
+            echo
+            echo "ERROR: unable to connect to UIcomm."
+            echo "etrobo environment Ver.$ETROBO_ENV_VER"
+            echo "OS: $ETROBO_OS $ETROBO_OS_SUBSYSTEM"
+            echo "ResultCode from UIcomm: $code"
+            if [ -n "$http_proxy" ]; then echo "http_proxy envvar detected"; fi
+            if [ -n "$https_proxy" ]; then echo "https_proxy envvar detected"; fi
+            if [ -n "$HTTP_PROXY" ]; then echo "HTTP_PROXY envvar detected"; fi
+            if [ -n "$HTTPS_PROXY" ]; then echo "HTTPS_PROXY envvar detected" ;fi
+            if [ -n "ping -c 1 -t 1 8.8.8.8 2>&1 | grep icmp_seq=0" ]; then
+                echo "Google Public DNS: reachable."
+            else
+                echo "Google Public DNS: unreachable."
+            fi
+            if [ -n "ping -c 1 -t 1 google.com 2>&1 | grep icmp_seq=0" ]; then
+                echo "Outgoing by domain name: reachable."
+            else
+                echo "Outgoing by domain name: unreachable."
+            fi
+            echo -n "terminating sim... "
+            sim stop
+            echo "done."
+
+            exit 1
+        fi
     fi
 
     #

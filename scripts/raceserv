@@ -3,27 +3,44 @@
 # raceserv, ET robocon race server
 #   raceserv 
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-# fp0 ... 2021/07/17 13:00～2021/07/17 16:00
-# fp1 ... 2021/07/26 09:30～2021/08/01 20:00
-# fp2 ... 2021/08/29 09:30～2021/09/08 20:00
-# fpcs... 2021/10/30 10:00～2021/11/05 20:00
+# fp0 ... 2022/07/17 13:00～2022/07/17 16:00
+# fp1 ... 2022/07/25 10:00～2022/07/31 20:00
+# fp2 ... 2022/08/29 10:00～2022/09/08 20:00
 #
+if [ "$1" == "--help" ]; then
+    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] [fp0|fp1|fp2|fpcs|finals|csfinal] [/path/to/raceFolder [/path/to/relayFolder]]" 
+    echo "       raceserv prepare <raceMode> <basecampName> <raceFolderDrive> <relayFolderDrive>"
+    exit 0
+fi
 
-# ToDo:
-#   You should make symbolick link to relayFolder/Requests and relayFolder/Results from raceFolder.
-#       sudo mount -t drvfs <WindowsDriveLetter>: "$mountPath"
-#       ln -s /path/to/relayFolder/Requests /path/to/raceFolder/Requests
-#       ln -s /path/to/relayFolder/Results /path/to/raceFolder/Results
 #
-#   To export CSV and movie files, you also should make these folder and symbolick link to there.
-#       mkdir /path/to/relayFolder/common
-#       mkdir /path/to/relayFolder/common/csv
-#       mkdir /path/to/relayFolder/common/raceserv
-#       mkdir /path/to/relayFolder/common/matchmaker
-#       ln -s /path/to/relayFolder/common /path/to/raceFolder/common
+# prepare simvm : create 'simvm.sh' into 'dist/'
+# Usage: raceserv prepare <raceMode> <basecampName> <raceFolderDrive> <relayFolderDrive>
+# run before starting the simvm for each free practices or competitions
+#
+# for start server on simvm with relay, run `raceserv vm`.
+# for no-relay such as Finals or test use, run `raceserv`.
+#
+target="$ETROBO_ROOT/dist/simvm.sh"
+unset prepare
+if [ "$1" == "prepare" ]; then
+    prepare="$1"
+    if [ -f "$target" ]; then
+        rm -f "$target"
+    fi
+    echo "create $target"
+    echo "export ETROBO_RACEMODE=\"$2\"" | tee "$target"
+    echo "export ETROBO_RACE=\"/mnt/$4/_race\"" | tee -a "$target"
+    echo "export ETROBO_RELAY=\"/mnt/$5/$3\"" | tee -a "$target"
+    chmod +x "$target"
+fi
+
+if [ -f "$target" ]; then
+    source "$target"
+fi
 
 #
 # define error codes
@@ -70,131 +87,184 @@ if [ "$1" == "matchmaker" ] || [ "$1" == "flying" ]; then
     shift
 fi
 
+# prepare race and relay folder
+mode="$ETROBO_RACEMODE"
+raceFolder="$ETROBO_RACE"
+relayFolder="$ETROBO_RELAY"
 if [ -n "$2" ] && [ "$1" == "fp0" ] || [ "$1" == "fp1" ] || [ "$1" == "fp2" ] || [ "$1" == "fpcs" ] || [ "$1" == "finals" ] || [ "$1" == "csfinal" ];then
-    # prepare race folder
     mode="$1"
     raceFolder="$2"
     relayFolder="$raceFolder"
     if [ -n "$3" ]; then
         relayFolder="$3"
     fi
-    if [ -n "$vm" ]; then
-        raceDrive="`echo \"$raceFolder\" | sed -E 's/^(\/mnt\/.*)\/.*$/\1/'`"
-        relayDrive="`echo \"$relayFolder\" | sed -E 's/^(\/mnt\/.*)\/.*$/\1/'`"
-        #
-        # ToDo:
-        #   mount drives in vm
-        #
-    fi
-    rm -f "$raceFolder/"*.manifest
-    cd "$raceFolder"
-    rm -f left
-    rm -f right
-    rm -f ERROR
-    rm -f ZIP
-    rm -f END
-    rm -f waiting
+fi
+basecampName="Finals"
+if [ -n "$relayFolder" ]; then
+    basecampName="`echo \"$ETROBO_RELAY\" | sed -E 's/^\/mnt\/.*\/(.*)$/\1/'`"
+fi
 
-    asp stop
-    asp deep stop
+raceMount="`echo \"$raceFolder\" | sed -E 's/^(\/mnt\/.{1})\/.*$/\1/'`"
+relayMount="`echo \"$relayFolder\" | sed -E 's/(^\/mnt\/.{1})\/.*$/\1/'`"
+raceDriveLetter="`echo \"$raceMount\" | sed -E 's/^\/mnt\/(.{1})$/\U\1:/'`"
+relayDriveLetter="`echo \"$relayMount\" | sed -E 's/^\/mnt\/(.{1})$/\U\1:/'`"
+if [ `ls "$raceMount" >/dev/null 2>&1; echo $?` -ne 0 ]; then
+    sudo mkdir -p "$raceMount"
+fi
+if [ `ls "$raceFolder" >/dev/null 2>&1; echo $?` -ne 0 ]; then
+    sudo mount -t drvfs $raceDriveLetter $raceMount
+    mkdir -p "$raceFolder"
+fi
 
-    # launch taskscheduler for ETroboSimRunner.Relay
-    if [ -n "$vm" ]; then
-        ETroboSimRunner.Relay.sh serv "$raceFolder" "$relayFolder" &
-        trap "touch stop_relay" EXIT
+if [ "$raceFolder" != "$relayFolder" ]; then
+    if [ `ls "$relayMount" >/dev/null 2>&1; echo $?` -ne 0 ]; then
+        sudo mkdir -p "$relayMount"
     fi
 
-    #
-    # server main loop
-    #
-    # to stop server safely, `touch stop` on race folder
-    #
-    unset course
-    main_loop="loop"
-    while [ -n "$main_loop" ]; do
-        echo
-        echo "[ raceserv: waiting for Requests ]"
-        wait_loop="loop"
-        while [ -n "$wait_loop" ]; do
-            sleep 1
-            # raceserv stop
-            if [ -f "$raceFolder/stop" ]; then
-                rm -f "$raceFolder/stop"
+    if [ `ls "$relayFolder" >/dev/null 2>&1; echo $?` -ne 0 ]; then
+        sudo mount -t drvfs $relayDriveLetter $relayMount
+        mkdir -p "$relayFolder"
+        mkdir -p "$relayFolder/Requests"
+        mkdir -p "$relayFolder/Results"
+    fi
+
+    if [ ! -L "$raceFolder/Requests" ]; then
+        ln -s "$relayFolder/Requests" "$raceFolder/Requests"
+    fi
+    if [ ! -L "$raceFolder/Results" ]; then
+        ln -s "$relayFolder/Results" "$raceFolder/Results"
+    fi
+    if [ ! -L "$raceFolder/common" ]; then
+        mkdir -p "$relayFolder/common"
+        mkdir -p "$relayFolder/common/csv"
+        mkdir -p "$relayFolder/common/raceserv"
+        mkdir -p "$relayFolder/common/matchmaker"
+        mkdir -p "$relayFolder/common/matchmaker/csv"
+        mkdir -p "$relayFolder/common/work"
+        ln -s "$relayFolder/common" "$raceFolder/common"
+    fi
+else
+    mkdir -p "$raceFolder/Requests"
+    mkdir -p "$raceFolder/Results"
+fi
+
+# begin to start raceserv
+echo "----------"
+echo " raceserv  - on $basecampName"
+echo "----------"
+echo "initializing... "
+
+rm -f "$raceFolder/"*.manifest
+cd "$raceFolder"
+rm -f left
+rm -f right
+rm -f ERROR
+rm -f ZIP
+rm -f END
+rm -f waiting
+
+asp stop
+asp deep stop
+
+if [ -n "$prepare" ]; then
+    echo "new race is prepared."
+    exit 0
+fi
+
+# launch taskscheduler for ETroboSimRunner.Relay
+if [ -n "$vm" ]; then
+    ETroboSimRunner.Relay.sh serv "$raceFolder" "$relayFolder" &
+    trap "touch stop_relay" EXIT
+fi
+
+#
+# server main loop
+#
+# to stop server safely, `touch stop` on race folder
+#
+unset course
+main_loop="loop"
+while [ -n "$main_loop" ]; do
+    echo
+    echo "[ raceserv: waiting for Requests ]"
+    wait_loop="loop"
+    while [ -n "$wait_loop" ]; do
+        sleep 1
+        # raceserv stop
+        if [ -f "$raceFolder/stop" ]; then
+            rm -f "$raceFolder/stop"
+            unset wait_loop
+            unset main_loop
+        fi
+        # wait requests
+        if [ "$matchmaker" == "matchmaker" ]; then
+            if [ -f "$raceFolder/left" ]; then
+                course="left"
+            elif [ -f "$raceFolder/right" ]; then
+                course="right"
+            fi
+        else
+            course="auto"
+        fi
+
+        if [ -n "$course" ]; then
+            ls="`ls \"$relayFolder/Requests\" | grep -v ^cancel_ 2>&1`"
+            ls "$relayFolder/Requests" | grep -v ^cancel_ > /dev/null 2>&1 
+            if [ "$?" == "0" ] && [ -n "$ls"  ]; then
                 unset wait_loop
-                unset main_loop
-            fi
-            # wait requests
-            if [ "$matchmaker" == "matchmaker" ]; then
-                if [ -f "$raceFolder/left" ]; then
-                    course="left"
-                elif [ -f "$raceFolder/right" ]; then
-                    course="right"
-                fi
-            else
-                course="auto"
-            fi
-
-            if [ -n "$course" ]; then
-                ls="`ls \"$relayFolder/Requests\" | grep -v ^cancel_ 2>&1`"
-                ls "$relayFolder/Requests" | grep -v ^cancel_ > /dev/null 2>&1 
-                if [ "$?" == "0" ] && [ -n "$ls"  ]; then
-                    unset wait_loop
-                fi
-            fi
-        done
-        if [ -n "$main_loop" ]; then
-            #
-            # invoke race
-            #
-            if [ -n "$matchmaker" ]; then
-                race $sim_ver $matchmaker $mode auto $course "$raceFolder"
-                race_error="$?"
-            else
-                race $sim_ver $mode "$raceFolder"
-                race_error="$?"
-            fi
-
-            # get zip filename from manifest
-            manifest="`ls \"$raceFolder\" | grep .manifest$`"
-            zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
-            if [ "$?" == "$ERR_OK" ] && [ "$race_error" != "ERR_SEQ_ZIP_FAILED" ]; then
-                # put ERROR.txt into zip file 
-                if [ "$race_error" != "$ERR_OK" ]; then
-                    case "$race_error" in
-                        "$ERR_SEQ_UNZIP_FAILED" ) 
-                            mes="illegal zip file: unzip failed. you should run 'race zip'." ;;
-                        "$ERR_SEQ_RACE_NOT_FOUND" ) 
-                            mes="illegal zip file: __race folder not found. you should run 'race zip'." ;;
-                        "$ERR_SEQ_ASP_NOT_FOUND" ) 
-                            mes="illegal zip file: .asp file not found. you should run 'make app=<projName> sim up' first." ;;
-                        "$ERR_SEQ_TOO_MANY_FILES" ) 
-                            mes="illegal zip file: too many files in __ev3rtfs/_r. you should reduce file counts less than 256." ;;
-                        "$ERR_SEQ_MD5SUM_MISMATCH" ) 
-                            mes="illegal zip file: MD5 check sum mismatched. you should run 'update' first." ;;
-                        "$ERR_SEQ_FFMPEG_FAILED" ) 
-                            mes="video encode error: This error appears when your HackEV did flying-start." ;;
-                        * ) 
-                            mes="an error has occured while this race." ;;
-                    esac
-
-                    echo "[ raceserv: ERROR: $mes ]"
-                    echo "$mes" > ERROR.txt
-                    zip $zipname ERROR.txt > /dev/null
-                    cp -f $zipname "$relayFolder/Results/"
-                    rm $zipname
-                    rm ERROR.txt
-                fi
-            else
-                echo "[ raceserv: WARNING : result zip file creation failed!!! ]"
-            fi
-
-            # request post and get via ETroboSimRunner.Relay
-            if [ -n "$vm" ]; then
-                ETroboSimRunner.Relay.sh "$raceFolder" "$relayFolder"
             fi
         fi
-        rm -f "$raceFolder/"*.manifest
     done
-else
-    echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] fp1|fp2|fpcs|finals|csfinal /path/to/raceFolder [/path/to/relayFolder]" 
-fi
+    if [ -n "$main_loop" ]; then
+        #
+        # invoke race
+        #
+        if [ -n "$matchmaker" ]; then
+            race $sim_ver $matchmaker $mode auto $course "$raceFolder"
+            race_error="$?"
+        else
+            race $sim_ver $mode "$raceFolder"
+            race_error="$?"
+        fi
+
+        # get zip filename from manifest
+        manifest="`ls \"$raceFolder\" | grep .manifest$`"
+        zipname="`echo $manifest | sed -E 's/^(.*).manifest/\1/'`"
+        if [ "$?" == "$ERR_OK" ] && [ "$race_error" != "ERR_SEQ_ZIP_FAILED" ]; then
+            # put ERROR.txt into zip file 
+            if [ "$race_error" != "$ERR_OK" ]; then
+                case "$race_error" in
+                    "$ERR_SEQ_UNZIP_FAILED" ) 
+                        mes="illegal zip file: unzip failed. you should run 'race zip'." ;;
+                    "$ERR_SEQ_RACE_NOT_FOUND" ) 
+                        mes="illegal zip file: __race folder not found. you should run 'race zip'." ;;
+                    "$ERR_SEQ_ASP_NOT_FOUND" ) 
+                        mes="illegal zip file: .asp file not found. you should run 'make app=<projName> sim up' first." ;;
+                    "$ERR_SEQ_TOO_MANY_FILES" ) 
+                        mes="illegal zip file: too many files in __ev3rtfs/_r. you should reduce file counts less than 256." ;;
+                    "$ERR_SEQ_MD5SUM_MISMATCH" ) 
+                        mes="illegal zip file: MD5 check sum mismatched. you should run 'update' first." ;;
+                    "$ERR_SEQ_FFMPEG_FAILED" ) 
+                        mes="video encode error: This error appears when your HackEV did flying-start." ;;
+                    * ) 
+                        mes="an error has occured while this race." ;;
+                esac
+
+                echo "[ raceserv: ERROR: $mes ]"
+                echo "$mes" > ERROR.txt
+                zip $zipname ERROR.txt > /dev/null
+                cp -f $zipname "$relayFolder/Results/"
+                rm $zipname
+                rm ERROR.txt
+            fi
+        else
+            echo "[ raceserv: WARNING : result zip file creation failed!!! ]"
+        fi
+
+        # request post and get via ETroboSimRunner.Relay
+        if [ -n "$vm" ]; then
+            ETroboSimRunner.Relay.sh "$raceFolder" "$relayFolder"
+        fi
+    fi
+    rm -f "$raceFolder/"*.manifest
+done

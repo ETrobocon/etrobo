@@ -396,6 +396,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         [tmp3][lowerright] overlay=shortest=1:x=640:y=400 \
                     " \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     "$destination"
             elif [ "$multiplex" == "demultiplex" ]; then
                 "$ETROBO_FFMPEG" \
@@ -405,6 +406,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     -vf crop=640:400:0:0 \
                     "${destPrefix}_1.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -414,6 +416,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     -vf crop=640:400:640:0 \
                     "${destPrefix}_2.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -423,6 +426,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     -vf crop=640:400:0:400 \
                     "${destPrefix}_3.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -432,6 +436,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     -vf crop=640:400:640:400 \
                     "${destPrefix}_4.${destPostfix}"
             else
@@ -442,6 +447,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     "$destination"
             fi
         fi
@@ -484,6 +490,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -vf tpad=stop=${stretchFrames}:stop_mode=clone \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
+                -pix_fmt yuv420p \
                 "$file_main"
 
             # cut out "SHUTDOWN" animation
@@ -494,6 +501,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -i "$source" \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
+                -pix_fmt yuv420p \
                 "$file_shutdown"
             
             # concat these files
@@ -505,6 +513,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -filter_complex '[0:v][1:v]concat' \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
+                -pix_fmt yuv420p \
                 "$destination"
             
             rm "$filepath/${filebase}_main.$fileext"
@@ -572,7 +581,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 combinedID="${class}${teamID}"
 
                 matchmakerPath="`cd \"$raceservPath/../matchmaker\"; pwd`"
-                matchmakerFile="$matchmakerPath/results/$combinedID/${combinedID}_計測動画.mp4"
+#                matchmakerFile="$matchmakerPath/results/$combinedID/${combinedID}_計測動画.mp4"
+                matchmakerFile="$matchmakerPath/results/${combinedID}_計測.mp4"
                 destination="$raceservPath/${filename_body}_mmmux${filename_ext}"
 
                 if [ "$class" == "E" ]; then
@@ -731,6 +741,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -filter_complex "$fc" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
+                    -pix_fmt yuv420p \
                     "$(getWinPath $destination $ETROBO_FFMPEG_OS)"
 #                    -i "$(getWinPath $filterFile $ETROBO_FFMPEG_OS)" \
             fi

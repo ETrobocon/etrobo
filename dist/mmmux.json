@@ -4,10 +4,10 @@
             "MatchMaker multiplexing settings using from ffutil",
             "  mmmux.json",
             "Author: jtFuruhata",
-            "Copyright (c) 2021 ETロボコン実行委員会, Released under the MIT license",
+            "Copyright (c) 2021-2022 ETロボコン実行委員会, Released under the MIT license",
             "See LICENSE"
         ],
-        "version":                  "2021.fp2.0",
+        "version":                  "2022.entry.0",
         "matchMakerScreenWidth":    "1008",
         "matchMakerScreenHeight":   "750",
         "matchMakerFrameRate":      "30",
@@ -62,8 +62,8 @@
             "teamID": {
                 "width":    "205",
                 "height":   "70",
-                "x":        "145",
-                "y":        "649",
+                "x":        "708",
+                "y":        "657",
                 "toX":      "508",
                 "toY":      "0",  
                 "scale":    "0.5"
@@ -106,31 +106,22 @@
             }
         },
         "entry": {
-            "gate1": {
-                "width":    "150",
+            "gate4": {
+                "width":    "160",
                 "height":   "34",
-                "x":        "296",
-                "y":        "314",
-                "toX":      "10",
-                "toY":      "10",  
-                "scale":    "1.0"
-            },
-            "gate2": {
-                "width":    "150",
-                "height":   "34",
-                "x":        "126",
-                "y":        "314",
-                "toX":      "70",
-                "toY":      "110",  
+                "x":        "286",
+                "y":        "304",
+                "toX":      "120",
+                "toY":      "100",  
                 "scale":    "1.0"
             },
             "bonus": {
                 "width":    "168",
                 "height":   "34",
-                "x":        "16",
+                "x":        "24",
                 "y":        "391",
-                "toX":      "114",
-                "toY":      "280",  
+                "toX":      "70",
+                "toY":      "250",  
                 "scale":    "1.0"
             }
         },
@@ -243,7 +234,7 @@
             "teamInfo": {
                 "width":    "500",
                 "height":   "45",
-                "x":        "504",
+                "x":        "4",
                 "y":        "82",
                 "toX":      "4",
                 "toY":      "0",
@@ -252,8 +243,8 @@
             "teamName": {
                 "width":    "400",
                 "height":   "45",
-                "x":        "598",
-                "y":        "127",
+                "x":        "10",
+                "y":        "128",
                 "toX":      "14",
                 "toY":      "45",
                 "scale":    "1.0"
@@ -261,8 +252,8 @@
             "teamID": {
                 "width":    "205",
                 "height":   "70",
-                "x":        "663",
-                "y":        "649",
+                "x":        "708",
+                "y":        "657",
                 "toX":      "508",
                 "toY":      "0",  
                 "scale":    "0.5"
@@ -305,22 +296,13 @@
             }
         },
         "entry": {
-            "gate1": {
-                "width":    "150",
+            "gate4": {
+                "width":    "160",
                 "height":   "34",
                 "x":        "562",
-                "y":        "314",
-                "toX":      "480",
-                "toY":      "10",  
-                "scale":    "1.0"
-            },
-            "gate2": {
-                "width":    "150",
-                "height":   "34",
-                "x":        "732",
-                "y":        "314",
-                "toX":      "420",
-                "toY":      "110",  
+                "y":        "304",
+                "toX":      "360",
+                "toY":      "100",  
                 "scale":    "1.0"
             },
             "bonus": {
@@ -328,8 +310,8 @@
                 "height":   "34",
                 "x":        "812",
                 "y":        "391",
-                "toX":      "358",
-                "toY":      "280",  
+                "toX":      "402",
+                "toY":      "250",  
                 "scale":    "1.0"
             }
         },

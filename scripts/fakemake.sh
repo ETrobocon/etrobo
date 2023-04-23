@@ -156,8 +156,8 @@ if [ -n "$nxt" ]; then
     echo "[fakemake on nxtOSEK] invoke: make nxt app=$proj $simopt" 
     target="$ETROBO_NXTOSEK_ROOT/workspace/$proj"
     if [ -d "$target" ]; then
-        cd "$target"
         echo "app=$proj" > currentapp
+        cd "$target"
         if [ "$simopt" == "clean" ]; then
             make clean
         else

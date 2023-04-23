@@ -3,9 +3,8 @@
 !/LICENSE
 !/README.md
 !/scripts/
-!/dist/etrobosim2021_4.19-public_linux.tar.gz
-!/dist/etrobosim2021_4.19-public_mac.tar.gz
-!/dist/etrobosim2021_4.19-public_win.tar.gz
+/scripts/cygpath
+/scripts/wineconsole
 !/dist/settings.json.default
 !/dist/filter.png
 !/dist/mmmux.json

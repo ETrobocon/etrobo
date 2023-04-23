@@ -389,6 +389,15 @@ else
     "$ETROBO_ROOT/scripts/setup.sh"
 fi
 
+# prepare as nxtOSEK mode
+if [ -f "$ETROBO_ROOT/NXT" ]; then
+    cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
+    cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
+else
+    rm -f "$ETROBO_ROOT/scripts/wineconsole"
+    rm -f "$ETROBO_ROOT/scripts/cygpath"
+fi
+
 # invoke etrobo environment
 cd "$ETROBO_ROOT"
 if [ -z "$ETROBO_ENV" ]; then

@@ -3,7 +3,7 @@
 # fakemake, integrated build and launch system among HRP3/EV3 and ASP3/Athrill
 #   fakemake.sh 
 # Author: jtFuruhata, mhikichi1769, yurie
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -13,6 +13,13 @@ cd "$ETROBO_HRP3_WORKSPACE"
 if [ "$1" = "upload" ]; then
     make $@
     exit $?
+fi
+
+# `make nxt` enters into nxtOSEK mode
+unset nxt
+if [ "$1" = "nxt" ]; then
+    nxt="$1"
+    shift
 fi
 
 # `make skiphrp3` skips building for HRP3
@@ -82,7 +89,9 @@ fi
 
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
-    if [ "$2" = "tr" ]; then
+    if [ -n "$nxt" ]; then
+        fakemake.sh nxt app="helloworld" up
+    elif [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up
     elif [ "$2" = "mruby" ]; then
@@ -131,6 +140,8 @@ for arg in "$@"; do
         simopt="start"
     elif [ "$arg" == "up" ]; then
         simopt="up"
+    elif [ -n "$nxt" ] && [ "$arg" == "clean" ]; then
+        simopt="clean"
     fi
 done
 # prepare current app
@@ -138,6 +149,49 @@ if [ -z "$proj" ] && [ -f currentapp ]; then
     currentapp=`head -n 1 currentapp`
     args="$args $currentapp"
     proj=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+fi
+
+# invoke make for nxtOSEK mode
+if [ -n "$nxt" ]; then
+    echo "[fakemake on nxtOSEK] invoke: make nxt app=$proj $simopt" 
+    target="$ETROBO_NXTOSEK_ROOT/workspace/$proj"
+    if [ -d "$target" ]; then
+        cd "$target"
+        echo "app=$proj" > currentapp
+        if [ "$simopt" == "clean" ]; then
+            make clean
+        else
+            make all
+            if [ $? -eq 0 ]; then
+                echo "[fakemake on nxtOSEK] build succeed: $proj"
+                if [ "$simopt" == "up" ]; then
+                    unset file
+                    unset uploaded
+                    ./rxeflash.sh 2>&1 | while read line; do
+                        echo $line
+                        tmp="`echo \"$line\" | grep '^Executing NeXTTool to upload' | sed -E 's/^Executing NeXTTool to upload (.*.rxe)...$/\1/'`"
+                        if [ -n "$tmp" ]; then
+                            file="$tmp"
+                        elif [ -n "`echo \"$line\" | grep \"^$file=\"`" ]; then
+                            uploaded=true
+                        elif [ -n "`echo \"$line\" | grep '^NeXTTool is terminated.$'`" ]; then
+                            if [ -n "$uploaded" ]; then
+                                echo "[fakemake on nxtOSEK] upload succeed: $file"
+                            else
+                                echo "[fakemake on nxtOSEK] *** upload failed."
+                            fi
+                        fi
+                    done
+                fi
+            else
+                echo "[fakemake on nxtOSEK] *** one or more error occured while build for $proj"
+            fi
+        fi
+        exit 0
+    else
+        echo "[fakemake on nxtOSEK] *** project not found: $target."
+        exit 1
+    fi
 fi
 
 # transparent COPTS through Makefile.inc

@@ -2,7 +2,7 @@
 # etrobo all-in-one package downloader
 #   etrobopkg
 # Author: jtFuruhata
-# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -21,6 +21,12 @@ if [ "$1" == "sim_public" ]; then
     sim_public="$1"
 fi
 
+# hook `NXT` enabler
+unset nxt
+if [ -f NXT ]; then
+    nxt="NXT"
+fi
+
 # hook `unset` option
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
@@ -31,6 +37,11 @@ if [ "$1" == "unset" ]; then
     unset ETROBO_HRP3_GCC_URL_BASE
     unset ETROBO_HRP3_GCC_URL
     unset ETROBO_HRP3_GCC_DIR
+    if [ -n "$NXT" ]; then
+        unset ETROBO_NXTOSEK_ROOT
+        unset GNUARM_ROOT
+        unset NEXTTOOL_ROOT
+    fi
 else
     # prepare envvar (also with `set` option)
     userProfile="$ETROBO_USERPROFILE"
@@ -45,7 +56,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2022.08.28a"
+    export ETROBO_MANIFEST_VER="2023.04.23a"
     export ETROBO_PUBLIC_VER="2022_5.5.2-public"
     export ETROBO_COMPETITION_VER="2022_5.7.0"
 
@@ -58,6 +69,13 @@ else
     export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/${gnuarm}/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
     export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL_BASE`"
     export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
+
+    # nxtOSEK envvars
+    if [ -n "$nxt" ]; then
+        export ETROBO_NXTOSEK_ROOT="$userProfile/nxtOSEK"
+        export GNUARM_ROOT="$ETROBO_HRP3_GCC_DIR"
+        export NEXTTOOL_ROOT="$ETROBO_NXTOSEK_ROOT/bin"
+    fi
 fi
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     pkgs=()
@@ -140,16 +158,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
-        size="4326886"
+        size="4342735"
     else
         clikintone="linux"
-        size="4462320"
+        size="4480724"
     fi
     if [ "$ETROBO_OS" != "raspi" ]; then
         if [ -n "$clikintone" ]; then
             pkgs+=("cli-kintone")
-            urls+=("https://github.com/kintone-labs/cli-kintone/releases/download/v0.13.1/${clikintone}-x64.zip")
-            vers+=("2022.07.02a")
+            urls+=("https://github.com/kintone-labs/cli-kintone/releases/download/v0.14.1/${clikintone}-x64.zip")
+            vers+=("2023.04.23a")
             sizes+=("$size")
         fi
     fi
@@ -169,6 +187,32 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     urls+=("https://www.toppers.jp/download.cgi/tecsgen-1.8.0.tgz")
     vers+=("2022.05.24a")
     sizes+=("2317758")
+
+    if [ -n "$nxt" ]; then
+        #
+        # nxtOSEK
+        # https://lejos-osek.sourceforge.net/jp/index.htm
+        pkgs+=("nxtosek")
+        urls+=("https://sourceforge.net/projects/lejos-osek/files/nxtOSEK_arm_embedded/nxtOSEK_v300.zip")
+        vers+=("2023.04.23a")
+        sizes+=("8642741")
+
+        #
+        # NeXTTool
+        # https://bricxcc.sourceforge.net/
+        pkgs+=("nexttool")
+        urls+=("https://bricxcc.sourceforge.net/nexttool.zip")
+        vers+=("2023.04.23a")
+        sizes+=("142428")
+
+        #
+        # sg.exe from TOPPERS/ATK1
+        # https://www.toppers.jp/atk1-download.html
+        pkgs+=("atk1")
+        urls+=("https://www.toppers.jp/download.cgi/atk1-1.0.lzh")
+        vers+=("2023.04.23a")
+        sizes+=("3914272")
+    fi
 
     #
     # UnityETroboSim public version
@@ -288,7 +332,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             echo "download from $url"
             rm -f "$distManifest"
             if [ -z `echo $url | grep ^kintone://` ]; then
-                wget --no-check-certificate "$url" -O "$file"
+                if [ "$pkg" == "nxtosek" ]; then
+                    wget --no-check-certificate --content-disposition "$url/download" -O "$file"
+                else
+                    wget --no-check-certificate "$url" -O "$file"
+                fi
                 error=$?
                 case $error in
                     0 ) unset error;;
@@ -468,6 +516,47 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
                 echo "Distribute tecsgen:"
                 cp "$file" "$ETROBO_ROOT/dist/"
+                ;;
+            "nxtosek" )
+                echo "Install nxtOSEK"
+                if [ -L "$ETROBO_NXTOSEK_ROOT" ]; then
+                    unlink "$ETROBO_NXTOSEK_ROOT"
+                elif [ -d "$ETROBO_NXTOSEK_ROOT" ]; then
+                    rm -rf "${ETROBO_NXTOSEK_ROOT}_autobackup"
+                    cp -rf "$ETROBO_NXTOSEK_ROOT" "${ETROBO_NXTOSEK_ROOT}_autobackup"
+                    rm -rf "$ETROBO_NXTOSEK_ROOT"
+                    echo "********"
+                    echo " NOTICE - your nxtOSEK folder is automatically backuped as 'nxtOSEK_autobackup'"
+                    echo "          this autobackup folder will be deleted in the next time autobackup."
+                    echo "********"
+                fi
+                if [ -L nxtOSEK ]; then
+                    unlink nxtOSEK
+                elif [ -d nxtOSEK ]; then
+                    rm -rf nxtOSEK
+                fi
+                unzip "$file" > /dev/null
+                mv -f nxtOSEK "$ETROBO_USERPROFILE/"
+                mkdir "$ETROBO_NXTOSEK_ROOT/workspace"
+                cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/helloworld" "$ETROBO_NXTOSEK_ROOT/workspace/"
+                ln -s "$ETROBO_NXTOSEK_ROOT" nxtOSEK
+                ;;
+            "nexttool" )
+                echo "Install NeXTTool"
+                unzip "$file" > /dev/null
+                rm -f "$ETROBO_NXTOSEK_ROOT/bin/NeXTTool.exe"
+                mv -f NeXTTool.exe "$ETROBO_NXTOSEK_ROOT/bin/"
+                ;;
+            "atk1" )
+                echo "Install sg.exe from TOPPERS/ATK1"
+                if [ "`lha > /dev/null 2>&1; echo $?`" == "127" ]; then
+                    sudo apt update
+                    sudo apt -y install lhasa
+                fi
+                lha x "$file" > /dev/null
+                rm -f "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/sg.exe"
+                mv -f toppers_atk1/sg/sg.exe "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/"
+                rm -rf toppers_atk1
                 ;;
             "etrobosim" ) 
                 echo

@@ -15,9 +15,9 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2022.05.21a
-ATHRILL_OFFICIAL_COMMIT="056a7aa761ef48f67f2c1f6effef104c66fa3b8c"
-TARGET_OFFICIAL_COMMIT="2e0f02df5d0f55fc8ffff8f98cdc34f2f7db257e"
+# the ETrobo official certified commit: Ver.2023.04.23a
+ATHRILL_OFFICIAL_COMMIT="f09d7d551ef947538667bdef7da2d4d48e181112"
+TARGET_OFFICIAL_COMMIT="5e2c4da0d3073d1ec3972dfa67ce610541024f05"
 SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
 
 # mruby environment for UnityETroboSim

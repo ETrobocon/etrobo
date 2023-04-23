@@ -539,6 +539,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 mv -f nxtOSEK "$ETROBO_USERPROFILE/"
                 mkdir "$ETROBO_NXTOSEK_ROOT/workspace"
                 cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/helloworld" "$ETROBO_NXTOSEK_ROOT/workspace/"
+                cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/rms" "$ETROBO_NXTOSEK_ROOT/workspace/"
+                rm -rf "$ETROBO_NXTOSEK_ROOT/workspace/helloworld/".* > /dev/null 2>&1
+                rm -rf "$ETROBO_NXTOSEK_ROOT/workspace/rms/".* > /dev/null 2>&1
                 ln -s "$ETROBO_NXTOSEK_ROOT" nxtOSEK
                 ;;
             "nexttool" )

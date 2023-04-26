@@ -627,6 +627,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 ;;
             "t2n" )
                 echo "Install t2n; Talk To NXT"
+                tar xvf "$file" > /dev/null 2>&1
 
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
@@ -670,7 +671,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 cd "$ETROBO_ROOT"
                 cp -f t2n-0.6.src/obj/t2n dist/
                 cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
-
+                rm -rf t2n-0.6.src
                 ;;
             "etrobosim" ) 
                 echo

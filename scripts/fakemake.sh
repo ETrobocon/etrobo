@@ -165,23 +165,33 @@ if [ -n "$nxt" ]; then
             if [ $? -eq 0 ]; then
                 echo "[fakemake on nxtOSEK] build succeed: $proj"
                 if [ "$simopt" == "up" ]; then
-                    unset file
-                    unset uploaded
-                    ./rxeflash.sh 2>&1 | while read line; do
-                        echo $line
-                        tmp="`echo \"$line\" | grep '^Executing NeXTTool to upload' | sed -E 's/^Executing NeXTTool to upload (.*.rxe)...$/\1/'`"
-                        if [ -n "$tmp" ]; then
-                            file="$tmp"
-                        elif [ -n "`echo \"$line\" | grep \"^$file=\"`" ]; then
-                            uploaded=true
-                        elif [ -n "`echo \"$line\" | grep '^NeXTTool is terminated.$'`" ]; then
-                            if [ -n "$uploaded" ]; then
-                                echo "[fakemake on nxtOSEK] upload succeed: $file"
-                            else
-                                echo "[fakemake on nxtOSEK] *** upload failed."
-                            fi
+                    file="`cat rxeflash.sh | grep '^echo Executing NeXTTool' | sed -E 's/^echo Executing NeXTTool to upload (.*)...$/\1/'`"
+                    if [ -n "$file" ]; then
+                        if [ "$ETROBO_OS" == "win" ]; then
+                            util="$ETROBO_NXTOSEK_ROOT/bin/NeXTTool.exe"
+                            utilName="'NeXTTool'"
+                            uploader="$util /COM=usb -download=$file"
+                            verifier="$util /COM=usb -listfiles=$file"
+                        else
+                            util="$ETROBO_NXTOSEK_ROOT/bin/t2n"
+                            utilName="'Talk To NXT'"
+                            uploader="$util -put $file -y"
+                            verifier="$util -ls"
                         fi
-                    done
+                        echo "Executing $utilName to upload $file..."
+                        $uploader
+                        message="`$verifier`"
+                        message="`echo \"$message\" | grep \"$file\"`"
+                        echo "$message"
+                        echo $utilName is terminated.
+                        if [ -n "$message" ]; then
+                            echo "[fakemake on nxtOSEK] upload succeed: $file"
+                        else
+                            echo "[fakemake on nxtOSEK] *** upload failed."
+                        fi
+                    else
+                        echo "[fakemake on nxtOSEK] *** upload file not found."
+                    fi
                 fi
             else
                 echo "[fakemake on nxtOSEK] *** one or more error occured while build for $proj"

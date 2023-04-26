@@ -391,7 +391,9 @@ fi
 
 # prepare as nxtOSEK mode
 if [ -f "$ETROBO_ROOT/NXT" ]; then
-    cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
+    if [ "$ETROBO_OS" == "win" ]; then
+        cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
+    fi
     cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
 else
     rm -f "$ETROBO_ROOT/scripts/wineconsole"

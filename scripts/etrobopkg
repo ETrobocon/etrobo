@@ -632,9 +632,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
-                if [ "$ETROBO_KERNEL" == "darwin" ] && [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
-                    brew install libusb libusb-compat usbutils
-                elif [ "$ETROBO_OS" != "win" ]; then
+                if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                    if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
+                        brew install libusb libusb-compat usbutils
+                    fi
+                elif [ "$ETROBO_OS" == "linux" ]; then
                     sudo apt update
                     sudo apt -y install libusb-0.1-4 libusb-dev usbutils
                 fi
@@ -642,7 +644,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 # patch: add feature: -y option
                 cd t2n-0.6.src/src
                 cp t2n.cc t2n.cc.org
-                cat t2n.cc.org \
+                iconv -f WINDOWS-1252 -t UTF-8 t2n.cc.org \
                  | sed -E 's/(^\tbool v1, v2, v3;$)/\1\n\tbool yes_flag;/' \
                  | sed -E 's/(^\tmyargs.add_bool\("-vvv", "gossipy", &v3\);$)/\1\n\tmyargs.add_bool\("-y", "don'\''t ask for confirmation", \&yes_flag\);/' \
                  | sed -E 's/(^\tif\(v3\) set_verbose_mode\(3\);$)/\1\n\tif\(yes_flag\) set_yes_flag\(\);/' \
@@ -653,11 +655,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                  > errors.h
                 cp errors.cc errors.cc.org
                 cat errors.cc.org \
-                 | sed -E 's/(^static int VERBOSE = 0;$)/\1\nstatic int YES_FLAG = -1;/' \
-                 | sed -E 's/(^void set_verbose_mode\(\)\{ VERBOSE = 1; \}$)/\1\nvoid set_yes_flag\(\)\{ YES_FLAG = 0; \}/' \
-                 | sed -E 's/(^\tint s = 1;$)/\1\n\tif \(YES_FLAG\) \{/' \
-                 | sed -E 's/(^\t\} while \(\(s != 1\) \|\| \(r == -1\)\);)/\1\n\t\} else \{\n\t\tr = 1;\n\t\}/' \
-                 > errors.cc
+                | sed -E 's/(^static int VERBOSE = 0;$)/\1\nstatic int YES_FLAG = -1;/' \
+                | sed -E 's/(^void set_verbose_mode\(\)\{ VERBOSE = 1; \}$)/\1\nvoid set_yes_flag\(\)\{ YES_FLAG = 0; \}/' \
+                | sed -E 's/(^\tint s = 1;$)/\1\n\tif \(YES_FLAG\) \{/' \
+                | sed -E 's/(^\t\} while \(\(s != 1\) \|\| \(r == -1\)\);)/\1\n\t\} else \{\n\t\tr = 1;\n\t\}/' \
+                > errors.cc
 
                 # make t2n
                 cd ..

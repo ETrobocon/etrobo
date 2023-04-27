@@ -23,7 +23,7 @@ fi
 
 # hook `NXT` enabler
 unset nxt
-if [ -f NXT ]; then
+if [ -f "$ETROBO_ROOT/NXT" ]; then
     nxt="NXT"
 fi
 
@@ -627,17 +627,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 ;;
             "t2n" )
                 echo "Install t2n; Talk To NXT"
+                rm -rf t2n-0.6.src
                 tar xvf "$file" > /dev/null 2>&1
 
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
-                if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
-                    if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                        brew install libusb libusb-compat usbutils
-                    elif [ "$ETROBO_OS" != "win" ]; then
-                        sudo apt update
-                        sudo apt -y install libusb libusb-dev usbutils
-                    fi
+                if [ "$ETROBO_KERNEL" == "darwin" ] && [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
+                    brew install libusb libusb-compat usbutils
+                elif [ "$ETROBO_OS" != "win" ]; then
+                    sudo apt update
+                    sudo apt -y install libusb-0.1-4 libusb-dev usbutils
                 fi
 
                 # patch: add feature: -y option
@@ -655,13 +654,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 cp errors.cc errors.cc.org
                 cat errors.cc.org \
                  | sed -E 's/(^static int VERBOSE = 0;$)/\1\nstatic int YES_FLAG = -1;/' \
-                 | sed -E 's/(^void set_verbose_mode\(\){ VERBOSE = 1; }$)/\1\nvoid set_yes_flag\(\){ YES_FLAG = 0; }/' \
-                 | sed -E 's/(^\tint s = 1;$)/\1\n\tif \(YES_FLAG\) {/' \
-                 | sed -E 's/(^\t} while \(\(s != 1\) \|\| \(r == -1\)\);)/\1\n\t} else {\n\t\tr = 1;\n\t}/' \
+                 | sed -E 's/(^void set_verbose_mode\(\)\{ VERBOSE = 1; \}$)/\1\nvoid set_yes_flag\(\)\{ YES_FLAG = 0; \}/' \
+                 | sed -E 's/(^\tint s = 1;$)/\1\n\tif \(YES_FLAG\) \{/' \
+                 | sed -E 's/(^\t\} while \(\(s != 1\) \|\| \(r == -1\)\);)/\1\n\t\} else \{\n\t\tr = 1;\n\t\}/' \
                  > errors.cc
 
                 # make t2n
-                cd t2n-0.6.src
+                cd ..
                 cp Makefile Makefile.org
                 cat Makefile.org \
                  | sed -E 's/(^CFLAGS\+= -I\$\(SRCDIR\) -I\$\(OBJDIR\) -g -Wall$)/\1 -I\$\(BEERHALL\)\/usr\/local\/include/' \
@@ -671,7 +670,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 cd "$ETROBO_ROOT"
                 cp -f t2n-0.6.src/obj/t2n dist/
                 cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
-                rm -rf t2n-0.6.src
+                sudo cp -f t2n-0.6.src/udev/72-lego.rules /etc/udev/rules.d/
                 ;;
             "etrobosim" ) 
                 echo

@@ -670,7 +670,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 cd "$ETROBO_ROOT"
                 cp -f t2n-0.6.src/obj/t2n dist/
                 cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
-                sudo cp -f t2n-0.6.src/udev/72-lego.rules /etc/udev/rules.d/
+                if [ "$ETROBO_OS" == "linux" ]; then
+                    sudo cp -f t2n-0.6.src/udev/72-lego.rules /etc/udev/rules.d/
+                fi
                 ;;
             "etrobosim" ) 
                 echo

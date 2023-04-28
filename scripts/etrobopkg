@@ -594,21 +594,30 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 rm -f NeXTTool.exe
                 ;;
             "atk1" )
-                echo "Install sg.exe from TOPPERS/ATK1"
-
                 # install wine(-crossover) if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
-                if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ]; then
+                echo "Install Wine(32) to launch sg.exe if necessary"
+                unset i386
+                if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                    i386="mac"
+                else
+                    i386="`sudo dpkg --print-foreign-architectures | grep i386`"
+                fi
+                if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ] || [ -z "$i386" ]; then
                     if [ "$ETROBO_KERNEL" == "darwin" ]; then
                         brew install --cask --no-quarantine gcenx/wine/wine-crossover
                     elif [ "$ETROBO_OS" != "win" ]; then
+                        if [ -z "$i386" ]; then
+                            sudo dpkg --add-architecture i386
+                        fi
                         sudo apt update
-                        sudo apt -y install wine64
+                        sudo apt -y install wine
                     fi
                 fi
 
                 # install lhasa if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
+                echo "Install Lhasa to deflate sg.exe if necessary"
                 if [ "`lha > /dev/null 2>&1; echo $?`" == "127" ]; then
                     if [ "$ETROBO_KERNEL" == "darwin" ]; then
                         brew install lhasa
@@ -617,6 +626,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         sudo apt -y install lhasa
                     fi
                 fi
+
+                echo "Install sg.exe from TOPPERS/ATK1"
                 lha x "$file" > /dev/null
                 rm -f dist/sg.exe
                 rm -f "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/sg.exe"
@@ -636,7 +647,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
                         brew install libusb libusb-compat usbutils
                     fi
-                elif [ "$ETROBO_OS" == "linux" ]; then
+                elif [ "$ETROBO_KERNEL" == "debian" ]; then
                     sudo apt update
                     sudo apt -y install libusb-0.1-4 libusb-dev usbutils
                 fi
@@ -672,7 +683,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 cd "$ETROBO_ROOT"
                 cp -f t2n-0.6.src/obj/t2n dist/
                 cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
-                if [ "$ETROBO_OS" == "linux" ]; then
+                if [ "$ETROBO_KERNEL" == "debian" ]; then
                     sudo cp -f t2n-0.6.src/udev/72-lego.rules /etc/udev/rules.d/
                 fi
                 ;;

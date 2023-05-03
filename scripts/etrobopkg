@@ -56,8 +56,8 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2023.05.03a"
-    export ETROBO_PUBLIC_VER="2023_5.7.9-public"
+    export ETROBO_MANIFEST_VER="2023.05.03b"
+    export ETROBO_PUBLIC_VER="2023_5.7.99-public"
     export ETROBO_COMPETITION_VER="2022_5.7.0"
 
     #
@@ -234,16 +234,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=33386747
+        size=33110463
     elif [ "$target" = "mac" ]; then
-        size=39327903
+        size=39325206
     elif [ "$target" = "linux" ]; then
-        size=29194964
+        size=29207961
     fi    
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-        vers+=("2023.05.03a")
+        vers+=("2023.05.03b")
         sizes+=("$size")
     fi
 

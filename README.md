@@ -36,7 +36,7 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2023 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
@@ -44,23 +44,22 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 
 - x86-64アーキテクチャのCPU
 - Windows 11、またはWindows 10 version 2004以降、またはWindows 10 Enterprise LTSC 2021
-    - version 21H2以降の利用を推奨します。 
+    - version 21H2以降の利用を推奨します。20H2以前をetrobo環境でサポートするのは2023年度が最後です。 
     - version 1709未満のWindows 10や、Windows 7などでは動作しません。
     - version 1903/1909のWindows 10でもWSL2で動作しますが、サポート対象外です。
     - version 1809(LTSC 2019)はWSL1でのみ動作します。
-- `wsl --install`によりインストールされたUbuntuまたはUbuntu-20.04(WSL2)
+- `wsl --install`によりインストールされたUbuntuまたはUbuntu-22.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
-    - Ubuntu-22.04でも動くようになった、はずです。トラブルありましたらご連絡ください。
-    - Ubuntu-18.04、Ubuntu-16.04、Debian(9/10/11)でも動作するようですが、サポート対象外です。
+    - Ubuntu-20.04・18.04・16.04、Debian(9/10/11)でも動作するようですが、サポート対象外です。
     - Windows Services for Linux (WSL1)のサポートも引き続き行いますが、LTSC 2019に限ります。
-- Visual Studio Code(「Remote - WSL」拡張機能）のインストール
+- Visual Studio Code(「WSL」拡張機能）のインストール
 
 ### Mac
 - x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
-        - MacBook Pro (Retina, Mid 2012) / macOS Mojave 10.14.6 / Xcode 11.0
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Venture 13.0.1
-- macOS Mojave(10.14)以降
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Venture 13.3.1 / Xcode CLT 14.3
+- macOS Big Sur(11.0)以降
+    - HomeBrewの動作環境に準じます。これ以前のmacOSでも動作する可能性は高いですが、サポート対象外です。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
 - Xcode(Command Line Tools)のインストール
@@ -68,24 +67,20 @@ Copyright(C) 2020-2022 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 10 または Ubuntu 20.04（または18.04）
+- Debian GNU/Linux 11 または Ubuntu 22.04（または20.04または18.04）
     - 環境のインストールにsudoers権限が必要です。
-    - Debian 11/Ubuntu 22.04でも動くようになった、はずです。トラブルありましたらご連絡ください。
-        - Debian 11にインストールする場合は、wgetが必要です `sudo apt -y install wget`
-    - Debian 9/Ubuntu 16.04でも動作する可能性はありますが、サポート対象外です。
-    - Ubuntu 18.04でも引き続き動作すると考えていますが、今後広範な動作確認は行われません。
+    - Debian 11にインストールする場合は、wgetが必要です `sudo apt -y install wget`
+    - Debian 10/Ubuntu 20.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール
 
-### Chrome OS/Chromium OS
+### ChromeOS
 - x86-64アーキテクチャのCPU
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
-        - Chrome OS 102.0.5005.75 (Official Build)
+        - Chrome OS 112.0.5615.134 (Official Build)
         - Debian GNU/Linux 11 (bullseye)
-    - Chromium OSでの動作確認は以下の環境で行っています：
-        - ASUS TAICHI21
-        - CloudReady:Home Edition 80.4.1 Stableチャンネル
-- Chrome/Chromium OS 80以降
+- ChromeOS 102以降
+    - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも動作するものと考えていますがサポート対象外です。
     - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。
     - 78以前では、localhostのポート制限により動作しない可能性が高いものと認識していますが、未確認です。
 - 「Linux開発環境」のインストール

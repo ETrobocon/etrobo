@@ -87,6 +87,9 @@ else
 
             export ETROBO_PLATFORM="`uname -m`"
             subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"
+            if [ "$subsystem" == "WSL2+" ]; then
+                subsystem="WSL2"
+            fi
             if [ `uname` == "Darwin" ]; then
                 export ETROBO_OS="mac"
                 export ETROBO_KERNEL="darwin"

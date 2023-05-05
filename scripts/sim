@@ -117,7 +117,7 @@ else
     if [ "$ETROBO_KERNEL" = "debian" ]; then
         simLocation="${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}"
         export ETROBO_SIM_DATA="$simLocation/etrobosim_Data"
-        export ETROBO_LAUNCH_SIM="\"$simLocation/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}\" &"
+        export ETROBO_LAUNCH_SIM="\"$simLocation/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}\" > /dev/null &"
     elif [ "$ETROBO_KERNEL" = "darwin" ]; then
         simLocation="/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}"
         export ETROBO_SIM_DATA="$simLocation/Contents/Resources/Data"
@@ -733,7 +733,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 if [ -n "$start_gate" ] && [ -z "$gate1" ] \
                 && [ "`echo $json | jq -r .${sim_select}Measurement.GATE1`" == "1" ]; then
-                    echo "[ launcher: $sim_select: passed Gate 4 ]"
+                    echo "[ launcher: $sim_select: passed Mid Gate ]"
                     gate1="passed"
                 fi
                 #if [ -n "$gate1" ] && [ -z "$gate2" ] \
@@ -746,7 +746,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 && [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
                     measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
                     goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
-                    echo "[ launcher: $sim_select: GOAL!  Goal Time: $goal ]"
+                    echo "[ launcher: $sim_select: passed LAP Gate  Lap Time: $goal ]"
                 fi
             else
                 unset loop

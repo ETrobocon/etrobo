@@ -67,7 +67,7 @@ Copyright(C) 2020-2023 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 11 または Ubuntu 22.04（または20.04または18.04）
+- Debian GNU/Linux 11 または Ubuntu 22.04
     - 環境のインストールにsudoers権限が必要です。
     - Debian 11にインストールする場合は、wgetが必要です `sudo apt -y install wget`
     - Debian 10/Ubuntu 20.04以前でも引き続き動作するものと考えていますが、サポート対象外です。

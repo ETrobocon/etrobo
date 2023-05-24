@@ -807,7 +807,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     unset loop
                 fi
             fi
-            if [ -z "$unitydev" ] && [ -n "`sim check sim`" ]; then
+            if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
                 unset loop
             fi
         done

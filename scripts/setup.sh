@@ -157,6 +157,9 @@ if [ "$ETROBO_OS" != "raspi" ]; then
         tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
         if [ "$?" = "0" ]; then
             mv -f "$targetSrc" "$targetDist/"
+            if [ "$ETROBO_OS" == "linux" ]; then
+                chmod +x "$targetDist/$targetSrc/etrobosim.x86_64"
+            fi
         else
             echo "unpacking error: ${targetName}.tar.gz"
             exit 1

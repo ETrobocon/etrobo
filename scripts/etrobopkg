@@ -56,7 +56,7 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2023.07.02a"
+    export ETROBO_MANIFEST_VER="2023.07.02c"
     export ETROBO_PUBLIC_VER="2023_5.7.99-public"
     export ETROBO_COMPETITION_VER="2023_5.8.1"
 
@@ -266,7 +266,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-        vers+=("2023.07.02b")
+        vers+=("2023.07.02c")
         sizes+=("$size")
     fi
 

@@ -261,12 +261,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     elif [ "$target" = "mac" ]; then
         size=45239569
     elif [ "$target" = "linux" ]; then
-        size=35229041
+        size=35371000
     fi
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-        vers+=("2023.07.02a")
+        vers+=("2023.07.02b")
         sizes+=("$size")
     fi
 

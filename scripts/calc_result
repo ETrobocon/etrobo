@@ -431,28 +431,28 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
                     if [ "`json end.LAP`" != "0" ]; then
                         ranking[7]="TRUE"
                         time=$((`json end.MEASUREMENT_TIME`/10*10))
-                        bonus=5000
+                        bonus=5
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
                             ranking[9]="`json end.ENTRY_BONUS`"
-                            bonus=$(($bonus+(${ranking[9]}*1000)))
+                            bonus=$(($bonus+${ranking[9]}))
                             status="goal"
                         fi
                         # passed GOAL gate
                         if [ "`json end.GOAL`" != "0" ]; then
                             ranking[8]="TRUE"
-                            bonus=$((bonus+10000))
+                            bonus=$((bonus+10))
                             status="goal"
                         fi
                     fi
                 fi
             fi
-            result=$(awk "BEGIN { printf \"%d\",30000-((($time+$bonus)/30000)*30000) }")
+            result=$(awk "BEGIN { printf \"%d\",30000-(($time/30000)*30000) }")
             if [ $result -lt 0 ]; then
                 result=0
             fi
             result=$(($result/10))
-            result=$(awk "BEGIN { printf \"%.2f\",$result/100 }")
+            result=$(awk "BEGIN { printf \"%.2f\",($result/100)+$bonus }")
         fi
     fi
     #echo "Preliminary Result Time: $result secs."

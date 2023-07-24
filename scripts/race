@@ -736,9 +736,9 @@ else
             resultTime="`calc_result request $teamID \"$raceFolder\" $class \"$raceFolder/common/csv/${classPrefix}_$requestID.csv\"`"
         fi
     fi
-    echo "race sequencer: Preliminary Result Time: $resultTime secs." 
+    echo "race sequencer: Preliminary Result Point: $resultTime points." 
     if [ "$mode" != "finals" ] && [ "$mode" != "csfinal" ]; then
-        echo "Preliminary Result Time: $resultTime secs." >> console.log
+        echo "Preliminary Result Point: $resultTime points." >> console.log
     fi
 
     # update result.json

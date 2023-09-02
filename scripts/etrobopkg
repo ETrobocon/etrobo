@@ -57,9 +57,9 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2023.07.18a"
+    export ETROBO_MANIFEST_VER="2023.09.02a"
     export ETROBO_PUBLIC_VER="2023_5.7.99-public"
-    export ETROBO_BETA_VER="2023_6.0.1-beta"
+    export ETROBO_BETA_VER="2023_6.0.1b"
     export ETROBO_COMPETITION_VER="2023_5.8.2"
 
     #
@@ -259,16 +259,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=48419497
+        size=42364874
     elif [ "$target" = "mac" ]; then
-        size=39325206
+        size=49343736
     elif [ "$target" = "linux" ]; then
-        size=29207961
+        size=38234834
     fi    
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
-        vers+=("2023.09.01a")
+        vers+=("2023.09.02a")
         sizes+=("$size")
     fi
 

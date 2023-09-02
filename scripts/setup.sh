@@ -56,26 +56,23 @@ if [ -n "$update" ]; then
     . "$scripts/etroboenv.sh" unset
     . "$scripts/etroboenv.sh" silent
 
+    unset simselect
     if [ "$option" = "sim" ]; then
         ls "$ETROBO_CACHE"/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do
             rm -f "$line"
             rm -f "$line.manifest"
         done
-        if [ "$option2" = "public" ]; then
-            sim_public="sim_public"
-            ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do
-                rm -f "$line"
-                rm -f "$line.manifest"
-            done
-        elif [ "$option2" = "beta" ]; then
-            sim_public="sim_beta"
-            ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_BETA_VER" | while read line; do
-                rm -f "$line"
-                rm -f "$line.manifest"
-            done
+        ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_PUBLIC_VER" | while read line; do
+            rm -f "$line"
+            rm -f "$line.manifest"
+        done
+        if [ "$option2" = "beta" ]; then
+            sim_select="sim_beta"
+        elif [ "$option2" = "public" ]; then
+            sim_select="sim_public"
         fi
     fi
-    etrobopkg $sim_public
+    etrobopkg $sim_select
     . "$scripts/sim" env
 fi
 

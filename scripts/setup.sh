@@ -67,6 +67,12 @@ if [ -n "$update" ]; then
                 rm -f "$line"
                 rm -f "$line.manifest"
             done
+        elif [ "$option2" = "beta" ]; then
+            sim_public="sim_beta"
+            ls "$ETROBO_ROOT"/dist/*etrobosim*.tar.gz | grep -v "$ETROBO_BETA_VER" | while read line; do
+                rm -f "$line"
+                rm -f "$line.manifest"
+            done
         fi
     fi
     etrobopkg $sim_public

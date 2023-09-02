@@ -15,7 +15,7 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
 fi
 cd "$ETROBO_ROOT"
 
-# hook `sim_public` option
+# hook `sim_public` or `sim_beta` option
 unset sim_public
 if [ "$1" == "sim_public" ]; then
     sim_public="$1"
@@ -31,6 +31,7 @@ fi
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
     unset ETROBO_PUBLIC_VER
+    unset ETROBO_BETA_VER
     unset ETROBO_COMPETITION_VER
     unset ETROBO_CACHE
     unset ETROBO_HRP3_GCC_VER
@@ -58,6 +59,7 @@ else
     #
     export ETROBO_MANIFEST_VER="2023.07.18a"
     export ETROBO_PUBLIC_VER="2023_5.7.99-public"
+    export ETROBO_BETA_VER="2023_6.0.1-beta"
     export ETROBO_COMPETITION_VER="2023_5.8.2"
 
     #
@@ -244,6 +246,29 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         pkgs+=("etrobosim")
         urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
         vers+=("2023.05.03b")
+        sizes+=("$size")
+    fi
+
+    #
+    # UnityETroboSim beta version via Kintone
+    #
+    unset target
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        target="linux"
+    else
+        target="$ETROBO_OS"
+    fi
+    if [ "$target" = "win" ]; then
+        size=48419497
+    elif [ "$target" = "mac" ]; then
+        size=39325206
+    elif [ "$target" = "linux" ]; then
+        size=29207961
+    fi    
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("etrobosim")
+        urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+        vers+=("2023.09.01a")
         sizes+=("$size")
     fi
 

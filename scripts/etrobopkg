@@ -15,10 +15,10 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
 fi
 cd "$ETROBO_ROOT"
 
-# hook `sim_public` option
-unset sim_public
-if [ "$1" == "sim_public" ]; then
-    sim_public="$1"
+# hook `sim_public` or `sim_beta` option
+unset sim_select
+if [ "$1" = "sim_public" ] || [ "$1" = "sim_beta" ]; then
+    sim_select="$1"
 fi
 
 # hook `NXT` enabler
@@ -31,6 +31,7 @@ fi
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
     unset ETROBO_PUBLIC_VER
+    unset ETROBO_BETA_VER
     unset ETROBO_COMPETITION_VER
     unset ETROBO_CACHE
     unset ETROBO_HRP3_GCC_VER
@@ -56,8 +57,9 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2023.07.18a"
+    export ETROBO_MANIFEST_VER="2023.09.02a"
     export ETROBO_PUBLIC_VER="2023_5.7.99-public"
+    export ETROBO_BETA_VER="2023_6.0.1b"
     export ETROBO_COMPETITION_VER="2023_5.8.2"
 
     #
@@ -248,26 +250,51 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     fi
 
     #
+    # UnityETroboSim beta version via Kintone
+    #
+    if [ "$sim_select" = "sim_beta" ]; then
+        unset target
+        if [ "$ETROBO_OS" = "chrome" ]; then
+            target="linux"
+        else
+            target="$ETROBO_OS"
+        fi
+        if [ "$target" = "win" ]; then
+            size=42364874
+        elif [ "$target" = "mac" ]; then
+            size=49343736
+        elif [ "$target" = "linux" ]; then
+            size=38234834
+        fi    
+        if [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("etrobosim")
+            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+            vers+=("2023.09.02a")
+            sizes+=("$size")
+        fi
+    else
+    #
     # UnityETroboSim via Kintone
     #
-    unset target
-    if [ "$ETROBO_OS" = "chrome" ]; then
-        target="linux"
-    else
-        target="$ETROBO_OS"
-    fi
-    if [ "$target" = "win" ]; then
-        size=38833214
-    elif [ "$target" = "mac" ]; then
-        size=45067592
-    elif [ "$target" = "linux" ]; then
-        size=35175247
-    fi
-    if [ "$ETROBO_OS" != "raspi" ]; then
-        pkgs+=("etrobosim")
-        urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-        vers+=("2023.07.18a")
-        sizes+=("$size")
+        unset target
+        if [ "$ETROBO_OS" = "chrome" ]; then
+            target="linux"
+        else
+            target="$ETROBO_OS"
+        fi
+        if [ "$target" = "win" ]; then
+            size=38833214
+        elif [ "$target" = "mac" ]; then
+            size=45067592
+        elif [ "$target" = "linux" ]; then
+            size=35175247
+        fi
+        if [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("etrobosim")
+            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+            vers+=("2023.07.18a")
+            sizes+=("$size")
+        fi
     fi
 
     #
@@ -359,7 +386,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     7 ) echo "Protocol error:";;
                     8 ) echo "Server error: something is wrong with this file server";;
                 esac
-            elif [ -z "$sim_public" ]; then
+            elif [ "$sim_select" != "sim_public" ]; then
                 query_d=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\1/'`
                 query_a=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\2/'`
                 query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`

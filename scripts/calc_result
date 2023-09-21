@@ -430,7 +430,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
                     # passed LAP gate
                     if [ "`json end.LAP`" != "0" ]; then
                         ranking[7]="TRUE"
-                        time=$((`json end.MEASUREMENT_TIME`/10*10))
+                        time=$((`json end.MEASUREMENT_TIME`/100*100))
                         bonus=5
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then

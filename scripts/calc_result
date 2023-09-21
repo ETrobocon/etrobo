@@ -459,7 +459,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
     echo "$result"
 
     # prepare result data
-    ranking[4]=$(awk "BEGIN { printf \"%.1f\",$time/1000 }")
+    ranking[4]=$(awk "BEGIN { printf \"%.2f\",$time/1000 }")
     ranking[5]=$result
     if [ "$status" == "goal" ]; then
         ranking[6]='1'

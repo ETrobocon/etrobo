@@ -423,6 +423,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
 
         #for year>=2023 (only entry class)
         else
+            result="0.00"
             # passed START gate
             if [ "`json end.RUN_TIME`" != "0" ]; then
                 # passed GATE gate

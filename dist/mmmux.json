@@ -4,10 +4,10 @@
             "MatchMaker multiplexing settings using from ffutil",
             "  mmmux.json",
             "Author: jtFuruhata",
-            "Copyright (c) 2021-2022 ETロボコン実行委員会, Released under the MIT license",
+            "Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license",
             "See LICENSE"
         ],
-        "version":                  "2022.entry.0",
+        "version":                  "2023.entry.0",
         "matchMakerScreenWidth":    "1008",
         "matchMakerScreenHeight":   "750",
         "matchMakerFrameRate":      "30",
@@ -106,11 +106,11 @@
             }
         },
         "entry": {
-            "gate4": {
-                "width":    "160",
+            "lapgate": {
+                "width":    "191",
                 "height":   "34",
-                "x":        "286",
-                "y":        "304",
+                "x":        "32",
+                "y":        "564",
                 "toX":      "120",
                 "toY":      "100",  
                 "scale":    "1.0"
@@ -118,10 +118,19 @@
             "bonus": {
                 "width":    "168",
                 "height":   "34",
-                "x":        "24",
-                "y":        "391",
+                "x":        "32",
+                "y":        "231",
                 "toX":      "70",
                 "toY":      "250",  
+                "scale":    "1.0"
+            },
+            "goalgate": {
+                "width":    "104",
+                "height":   "34",
+                "x":        "372",
+                "y":        "231",
+                "toX":      "70",
+                "toY":      "200",  
                 "scale":    "1.0"
             }
         },
@@ -296,11 +305,11 @@
             }
         },
         "entry": {
-            "gate4": {
+            "lapgate": {
                 "width":    "160",
                 "height":   "34",
-                "x":        "562",
-                "y":        "304",
+                "x":        "816",
+                "y":        "564",
                 "toX":      "360",
                 "toY":      "100",  
                 "scale":    "1.0"
@@ -308,10 +317,19 @@
             "bonus": {
                 "width":    "168",
                 "height":   "34",
-                "x":        "812",
-                "y":        "391",
+                "x":        "808",
+                "y":        "231",
                 "toX":      "402",
                 "toY":      "250",  
+                "scale":    "1.0"
+            },
+            "goalgate": {
+                "width":    "104",
+                "height":   "34",
+                "x":        "532",
+                "y":        "231",
+                "toX":      "402",
+                "toY":      "200",  
                 "scale":    "1.0"
             }
         },

@@ -208,6 +208,9 @@ elif [ "$1" == "overlayPNG" ]; then
 elif [ "$1" == "mmmux" ]; then
     srcDir="$commonFolder/matchmaker/results"
     destDir="$commonFolder/raceserv"
+    if [ ! -d "$destDir/results" ]; then
+        mkdir -p "$destDir/results"
+    fi
 #    ls -1 "$srcDir" \
     combinedIDs=(`ls -1 "$srcDir" | grep '.mp4$' | sed -E 's/^(E[0-9]{3})_.*$/ \1/'`)
     for combinedID in ${combinedIDs[@]}; do

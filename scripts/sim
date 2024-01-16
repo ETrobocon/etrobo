@@ -2,16 +2,44 @@
 #
 # sim, centralized simulator launcher/controller
 #   sim 
-# Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Author: jtFuruhata, mhikichi1969
+# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
+# for developer: Athrill2 launcher has been moved to `asp/athrill_runner`
 
-# default filenames for launcher
-athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
-memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
-device_config_txt="$ETROBO_ATHRILL_SDK/common/device_config.txt"
-target="$ETROBO_ATHRILL_WORKSPACE/asp"
+if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
+    echo "Usage: sim [unitydev] [import|export|prefs] [restrict|flying] [l|left|r|right] [ver <version>] [banner <bannerName>] [show|check|status|stop] [manual] [noset|unprefs] [stdout] [btcat] [only|matchmaker] [launch|ctl [--help]]"
+    exit 0
+fi
+
+# `sim unitydev` enters into development with Unity Editor mode
+unset unitydev
+if [ "$1" == "unitydev" ]; then
+    unitydev="$1"
+    shift
+fi
+
+#
+# `sim prefs` returns prefernces
+# `sim export` writes preferences into settings.json at run time
+#  (you should use `export launch` for export file into simdist/projName)
+unset prefs
+unset prefs_stop
+if [ "$1" = "prefs" ] || [ "$1" = "export" ] || [ "$1" = "import" ]; then
+    prefs="$1"
+    shift
+    if [ -z "`sim check sim`" ]; then
+        prefs_stop="stop"
+    fi
+fi
+
+# `sim restrict` limits running time
+unset restriction
+if [ "$1" == "restrict" ] || [ "$1" == "flying" ]; then
+    restriction="$1"
+    shift
+fi
 
 # unset default envvars
 if [ "$1" = "unset" ]; then
@@ -19,52 +47,135 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_SIM_DEV
     unset ETROBO_SIM_COMPANY
     unset ETROBO_SIM_NAME
+    unset ETROBO_SIM_DATA
     unset ETROBO_SIM_LOG
-    unset ETROBO_LAUNCH_ASP
+    unset ETROBO_SIM_DIST
+    unset ETROBO_SIM_COMM
     unset ETROBO_LAUNCH_SIM
+    . "$ETROBO_SCRIPTS/asp" unset
 else
     # export default envvars
-    export ETROBO_SIM_VER=`ls $ETROBO_ROOT/dist | grep ^etrobosim | sed -E "s/^etrobosim(.*)_.*.tar.gz/\1/" | tail -n 1`
+    if [ "$ETROBO_OS" == "chrome" ]; then
+        simos="linux"
+    else
+        simos="$ETROBO_OS"
+    fi
+    export ETROBO_SIM_VER=`ls -v1 $ETROBO_ROOT/dist | grep ^etrobosim.*gz$ | sed -E "s/^etrobosim(.*)_$simos\.tar\.gz/\1/" | tail -n 1`
     export ETROBO_SIM_DEV="UnityETroboSim"
     export ETROBO_SIM_COMPANY="ETロボコン実行委員会"
-    export ETROBO_SIM_NAME="ETロボコンシミュレータ"
-    export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/$ETROBO_SIM_NAME/Player.log"
-    if [ "$ETROBO_OS" = "win" ]; then
-        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
-    elif [ "$ETROBO_KERNEL" = "debian" ]; then
-        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/$ETROBO_SIM_LOG"
-    elif [ "$ETROBO_OS" = "mac" ]; then
-        export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
+    export ETROBO_SIM_NAME="etrobosim"
+
+    if [ -n "$unitydev" ]; then
+        if [ "$ETROBO_OS" = "win" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/Local/Unity/Editor/Editor.log"
+        elif [ "$ETROBO_KERNEL" = "debian" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/Editor.log"
+        elif [ "$ETROBO_OS" = "mac" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/Unity/Editor.log"
+        else
+            unset ETROBO_SIM_LOG
+        fi
     else
-        unset ETROBO_SIM_LOG
+        export ETROBO_SIM_LOG="$ETROBO_SIM_COMPANY/ETロボコンシミュレータ/Player.log"
+        if [ "$ETROBO_OS" = "win" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/AppData/LocalLow/$ETROBO_SIM_LOG"
+        elif [ "$ETROBO_KERNEL" = "debian" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/.config/unity3d/$ETROBO_SIM_LOG"
+        elif [ "$ETROBO_OS" = "mac" ]; then
+            export ETROBO_SIM_LOG="$ETROBO_USERPROFILE/Library/Logs/$ETROBO_SIM_LOG"
+        else
+            unset ETROBO_SIM_LOG
+        fi
+    fi
+    export ETROBO_SIM_DIST="$ETROBO_HRP3_WORKSPACE/simdist"
+    . "$ETROBO_SCRIPTS/asp" env
+
+    # determine URL of UIcomm and athrillHost
+    unset athrillHost
+    if [ -e "$ETROBO_ATHRILL_CONFIG" ]; then
+        ip=`cat "$ETROBO_ATHRILL_CONFIG" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+    fi
+    if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+        ip="$ETROBO_ATHRILL_TX"
+        athrillHost=",\"athrillHost\":\"$ETROBO_ATHRILL_RX\""
+    fi
+    if [ -z "$ip" ]; then
+        ip="localhost"
+    fi
+    export ETROBO_SIM_COMM="http://$ip:54000/"
+
+    # course select
+    app_prefix=""
+    app_select="l_app"
+    sim_select="left"
+    app_req="{\"LHackEV\":1,\"RHackEV\":0$athrillHost}"
+    if [ "$1" = "l" ] || [ "$1" = "left" ]; then
+        app_prefix="l_"
+        shift
+    elif [ "$1" = "r" ] || [ "$1" = "right" ]; then
+        app_prefix="r_"
+        app_select="r_app"
+        sim_select="right"
+        app_req="{\"LHackEV\":0,\"RHackEV\":1$athrillHost}"
+        shift
     fi
 
-    export ETROBO_LAUNCH_ASP="${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 ${target}"
-
+    #
+    # `ver <version>` option selects version of UnityETroboSim
+    #
     if [ "$1" = "ver" ]; then
         export ETROBO_SIM_VER="$2"
         shift 2
     fi
 
+    # set sim launcher script
     if [ "$ETROBO_OS" = "chrome" ]; then
         os="linux"
     else
         os="$ETROBO_OS"
     fi
     if [ "$ETROBO_KERNEL" = "debian" ]; then
-        export ETROBO_LAUNCH_SIM='"${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" &'
+        simLocation="${ETROBO_USERPROFILE}/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}"
+        export ETROBO_SIM_DATA="$simLocation/etrobosim_Data"
+        export ETROBO_LAUNCH_SIM="\"$simLocation/${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}\" > /dev/null &"
     elif [ "$ETROBO_KERNEL" = "darwin" ]; then
-        export ETROBO_LAUNCH_SIM='open -a "/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}"'
+        simLocation="/Applications/etrobosim/etrobosim${ETROBO_SIM_VER}_${os}${ETROBO_EXE_POSTFIX}"
+        export ETROBO_SIM_DATA="$simLocation/Contents/Resources/Data"
+        export ETROBO_LAUNCH_SIM="open -a \"$simLocation\""
     else
+        unset ETROBO_LAUNCH_SIM
+    fi
+    if [ -n "$unitydev" ]; then
         unset ETROBO_LAUNCH_SIM
     fi
 fi
 
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    #
+    # `banner <bannerName>` option selects topcenter<bannerName>.png for UnityETroboSim
+    #
+    unset banner
+    if [ "$1" = "banner" ]; then
+        banner="topcenter$2.png"
+        shift 2
+    fi
+
+    #
+    # `show` option shows full-path to UnityETroboSim
+    #
     if [ "$1" = "show" ]; then
         shift
         echo $(eval echo "$ETROBO_LAUNCH_SIM")
+        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS 2>&1`
+        if [ "$?" == "0" ];then
+            echo "$json" | jq .
+        fi
+        exit 0
     fi
+
+    #
+    # `sim check` command returns PID of sim, l_app, r_app and bt
+    # 
     if [ "$1" = "check" ]; then
         if [ "$ETROBO_OS" = "win" ]; then
             checker='tasklist.exe /FI "imagename eq ${ETROBO_SIM_NAME}${ETROBO_EXE_POSTFIX}" | grep ${ETROBO_SIM_NAME} | sed -E "s/^${ETROBO_SIM_NAME}(.*$)/\1/"'
@@ -72,52 +183,642 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             checker='ps aux | grep -v grep | grep etrobosim'
         fi
         pid=$(eval $checker | awk '{print $2}')
-        echo $pid
+
+        if [ -z "$2" ] || [ "$2" == "sim" ]; then
+            echo $pid
+        fi
+        if [ "$2" != "sim" ]; then
+            # check athrill app by asp controller
+            "$ETROBO_SCRIPTS/asp" check "$2"
+        fi
         exit 0
     fi
-    if [ "$1" = "stop" ]; then
-        pid=`sim check`
-        while [ -n "$pid" ]; do
-            if [ "$ETROBO_OS" = "win" ]; then
-                taskkill.exe /pid $pid > /dev/null
+
+    #
+    # `sim status` checks for proper operation and shows status
+    #
+    if [ "$1" = "status" ]; then
+        echo "sim start checking for proper operation:"
+
+        echo "sim launch command: $ETROBO_LAUNCH_SIM"
+
+        echo -n "attempt to launch sim: "
+        eval "$ETROBO_LAUNCH_SIM"
+        if [ $? -eq 0 ]; then
+            echo "passed."
+        else
+            echo
+            echo "ERROR: unable to launch sim."
+            echo "due to sim files don't exists."
+            exit 1
+        fi
+
+        echo -n "attempt to connect to UIcomm up to 300 times: "
+        counter=0
+        loop="loop"
+        response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+        json=`echo "$response" | sed '$d'`
+        code=`echo "$response" | tail -n 1`
+        while [ "$code" != "200" ] && [ $counter -lt 300 ]; do
+            counter=$(( $counter + 1 ))
+            sleep 0.1
+            response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+            json=`echo "$response" | sed '$d'`
+            code=`echo "$response" | tail -n 1`
+        done
+        if [ $counter -lt 300 ]; then
+            echo "passed."
+            echo "$json"
+            echo "`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS`"
+            if [ -z "$unitydev" ]; then
+                echo -n "terminating sim... "
+                sim stop
+            fi
+            echo "done."
+            exit 0
+        else
+            echo
+            echo "ERROR: unable to connect to UIcomm."
+            echo "etrobo environment Ver.$ETROBO_ENV_VER"
+            echo "OS: $ETROBO_OS $ETROBO_OS_SUBSYSTEM"
+            echo "ResultCode from UIcomm: $code"
+            if [ -n "$http_proxy" ]; then echo "http_proxy envvar detected"; fi
+            if [ -n "$https_proxy" ]; then echo "https_proxy envvar detected"; fi
+            if [ -n "$HTTP_PROXY" ]; then echo "HTTP_PROXY envvar detected"; fi
+            if [ -n "$HTTPS_PROXY" ]; then echo "HTTPS_PROXY envvar detected" ;fi
+            if [ -n "ping -c 1 -t 1 8.8.8.8 2>&1 | grep icmp_seq=0" ]; then
+                echo "Google Public DNS: reachable."
             else
-                kill $pid
+                echo "Google Public DNS: unreachable."
             fi
-            sleep 1s
-            pid=`sim check`
-        done
+            if [ -n "ping -c 1 -t 1 google.com 2>&1 | grep icmp_seq=0" ]; then
+                echo "Outgoing by domain name: reachable."
+            else
+                echo "Outgoing by domain name: unreachable."
+            fi
+            echo -n "terminating sim... "
+            sim stop
+            echo "done."
+
+            exit 1
+        fi
+    fi
+
+    #
+    # `sim stop` command terminates sim, l_app, r_app and bt
+    #
+    if [ "$1" = "stop" ]; then
+        # stop UnityETroboSim
+        if [ -z "$2" ] || [ "$2" == "sim" ]; then
+            shift
+
+            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END`
+            sleep 1     # @ToDo: its magic number
+            counter=0
+            while [ -n "`echo $json | jq -r .measurement.mode`" ] && [ "`echo $json | jq -r .measurement.mode`" != "END" ]; do
+                sleep 0.1
+                json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
+                counter=$(( $counter + 1 ))
+                if [ $counter -ge 50 ]; then
+                    unset json
+                fi
+            done
+
+            pid="`sim check sim`"
+            while [ -n "$pid" ]; do
+                if [ "$ETROBO_OS" = "win" ]; then
+                    taskkill.exe /pid $pid >/dev/null 2>&1
+                else
+                    kill $pid
+                fi
+                sleep 0.1
+                pid="`sim check sim`"
+            done
+        fi
+        # stop athrill apps by asp controller
+        if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "l_app" ]; then
+            "$ETROBO_SCRIPTS/asp" stop l_app
+        fi
+        if [ -z "$2" ] || [ "$2" == "apps" ] || [ "$2" == "r_app" ]; then
+            "$ETROBO_SCRIPTS/asp" stop r_app
+        fi
+        # stop btcat
+        if [ -z "$2" ] || [ "$2" == "bt" ]; then
+            shift
+            "$ETROBO_SCRIPTS/asp" stop r_app
+        fi
         exit 0
     fi
-    unset sim_wait
+
+    #
+    # auto robot start and stop
+    #
+    # `sim launch` starts and stops on specified course automatically.
+    # `sim manual launch` doesn't start and stop automatically, just old `sim launch`
+    #
+    auto_start="auto"
+    if [ "$1" = "manual" ]; then
+        shift
+        unset auto_start
+    fi
+
+    # `sim unprefs` doesn't load preferences from settings.json
+    load_prefs="load"
+    if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
+        shift
+        unset load_prefs
+    fi
+
+    # `sim stdout` launch asp as stdout
+    unset stdout
+    console="/dev/null"
+    if [ "$1" = "stdout" ]; then
+        shift
+        stdout="stdout"
+        console="/dev/"
+        if [ "$ETROBO_KERNEL" == "darwin" ]; then
+            console="/dev/tty"
+        fi
+        console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+    fi
+
+    # `sim btcat` outputs Virtual BT into bt.log
+    unset btcat
+    if [ "$1" = "btcat" ]; then
+        shift
+        btcat="btcat"
+    fi
+
+    #
+    # nextgen procedure of launching athrill apps from `simdist`:
+    #
+    # nextgen `sim launch` launches athrill apps via asp/athrill_runner.
+    # `sim launchws` is no longer working.
+    #
+    # $ETROBO_ATHRILL_WORKSPACE
+    #   |- athrill2
+    # $ETROBO_SIM_DIST
+    #   |- [projName]
+    #   |   |- log.txt
+    #   |   |- l_projName.asp
+    #   |   |- r_projName.asp
+    #   |   |- settings.json
+    #   |   |- __ev3rt_bt_in
+    #   |   |- __ev3rt_bt_out
+    #   |   |- [__ev3rtfs]
+    #   |- l_app.status
+    #   |- r_app.status
+    #
+    # `sim launch [projName]` lanches both the UnityETroboSim and a Athrill app
+    # `sim only launch [projName]` only lanches a Athrill app
+    unset sim_opt
     if [ "$1" = "wait" ]; then
-        sim_wait="true"
         shift
     fi
-
     if [ "$1" = "only" ]; then
+        sim_opt="$1"
         shift
-    else
-        if [ -z `sim check` ]; then
-            if [ -f "$ETROBO_SIM_LOG" ]; then
-                mv -f "$ETROBO_SIM_LOG" "$(dirname $ETROBO_SIM_LOG)/Player-prev.log"
-            fi
-            eval "$ETROBO_LAUNCH_SIM"
-        fi
-        loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
-        while [ -z "$loop" ]; do
-            sleep 1s
-            loop=`cat "$ETROBO_SIM_LOG" 2>&1 | grep CONTROLLABLE`
-        done
+    elif [ "$1" = "matchmaker" ]; then
+        sim_opt="$1"
+        unset load_prefs
+        unset auto_start
+        shift
     fi
 
+    unset projName
+    projName="$2"
+    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+        projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+    fi
+    unset target
+    unset ctl_command
+    unset ctl_params
     if [ "$1" = "launch" ]; then
-        if [ -f "$ETROBO_ATHRILL_WORKSPACE/currentasp" ]; then
-            target=`cat "$ETROBO_ATHRILL_WORKSPACE/currentasp"`
+        if [ -z "$sim_opt" ]; then
+            sim_opt="launch"
         fi
-        if [ -n "$2" ]; then
-            target="$2"
+        target="${app_prefix}${projName}.asp"
+        if [ ! -f "$ETROBO_SIM_DIST/$projName/$target" ]; then
+            target="${projName}.asp"
         fi
-        echo "$target" > "$ETROBO_ATHRILL_WORKSPACE/currentasp"
-        ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$ETROBO_ATHRILL_WORKSPACE/$target"
+    elif [ -z "$sim_opt" ]; then
+        sim_opt="skipASP"
+        target="__dummy__"
+        if [ "$1" = "ctl" ]; then
+            unset load_prefs
+            shift
+            ctl_command="$1"
+            if [ -z "$ctl_command" ]; then
+                ctl_command="get"
+            elif [ "$ctl_command" == "--help" ]; then
+                echo "usage: sim ctl [COMMAND] [PARAMS...]"
+                echo "  COMMAND  (default:get)"
+                echo "    get ... get JSON status from etrobosim"
+                echo "    get status <key> ... get value of <key> in etrobosim status"
+                echo "    get <key> ... get value of <key> in preferences"
+                echo "    set <JSON> ... set preferences into etrobosim by JSON"
+                echo "    set <key> <value> ... set <key> preference to <value>"
+                echo "    pos ... move HackEV to 'X Y Z ROT' position in PARAMS"
+                echo "    initpos ... move HackEV to default position that is defined in settings.json"
+                echo "    prepare ... make etrobosim into PREPARE mode"
+                echo "    go ... make etrobosim into GO mode"
+                echo "    end ... make etrobosim into END mode"
+                exit 0
+            fi
+            shift
+            ctl_key="$1"
+            ctl_val="$2"
+            ctl_params=$@
+        fi
+    fi
+
+    # launch a athrill app at background
+    if [ -f "$ETROBO_SIM_DIST/$projName/$target" ] || [ "$sim_opt" == "skipASP" ]; then
+        unset launcher_pid
+        if [ "$sim_opt" != "skipASP" ]; then
+            if [ "$sim_opt" == "only" ] && [ -z `sim check sim` ]; then
+                "$ETROBO_SCRIPTS/asp" $stdout $app_prefix $btcat $projName
+                # execution will deadlock here. to terminate, user have to hit Ctrl+C key.
+            else
+                "$ETROBO_SCRIPTS/asp" $stdout $app_prefix $btcat $projName &
+            fi
+            launcher_pid=$!
+        fi
+
+        # thread terminator
+        loop="loop"
+        trap "unset loop; echo ' now terminating...'" SIGINT
+        trap "unset loop" EXIT
+
+        # launch UnityETroboSim at background
+        if [ "$sim_opt" != "only" ]; then
+            if [ -z `sim check sim` ]; then
+                if [ -f "$ETROBO_SIM_LOG" ] && [ -z "$unitydev" ]; then
+                    mv -f "$ETROBO_SIM_LOG" "$(dirname "$ETROBO_SIM_LOG")/$(basename "$ETROBO_SIM_LOG" | sed -E "s/^(.*).log$/\1-prev.log/")"
+                fi
+                topcenter="$ETROBO_SIM_DATA/topcenter.png"
+                if [ -e "$topcenter" ]; then
+                    rm -rf "$topcenter"
+                fi
+                if [ -n "$banner" ] && [ -e "$ETROBO_ROOT/dist/topcenter/$banner" ]; then
+                    cp -f "$ETROBO_ROOT/dist/topcenter/$banner" "$topcenter"
+                fi
+                eval "$ETROBO_LAUNCH_SIM"
+            fi
+            # wait for starting up UnityETrobosim
+            hook="UIHttpServer start"
+            comm_ready="init"
+            counter=0
+            missingUIComm="`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`"
+            while [ -z "$missingUIComm" ] && [ -n "$loop" ]; do
+                unset missingUIComm
+                simCheckSim="`sim check sim`"
+                counter=$(( $counter + 1 ))
+                if [ $counter -ge 30 ]; then
+                    if [ -z "$simCheckSim" ]; then
+                        echo "[ launcher: etrobosim was already terminated. ]" | tee $console
+                        unset loop
+                        unset comm_ready
+                    elif [ -n "$restriction" ]; then
+                        echo "[ launcher: INTERNAL SERVER ERROR: missing UIComm ]" | tee $console
+                        cp -f "$ETROBO_SIM_LOG" "$(dirname "$ETROBO_SIM_LOG")/Player-missingUIComm.log"
+                        missingUIComm="missing"
+                    fi
+                fi
+                if [ -z "$missingUIComm" ]; then
+                    missingUIComm="`cat "$ETROBO_SIM_LOG" 2>&1 | grep "$hook"`"
+                fi
+                sleep 0.1
+            done
+            if [ "$sim_opt" != "skipASP" ] && [ -n "$loop" ]; then
+                echo "[ launcher: $hook detected ]"
+            fi
+
+            # wait for starting up UIcomm
+            counter=0
+            if [ "$comm_ready" == "init" ]; then
+                response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                json=`echo "$response" | sed '$d'`
+                code=`echo "$response" | tail -n 1`
+                while [ "$code" != "200" ] && [ -n "$loop" ]; do
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 300 ] && [ -n "$restriction" ]; then
+                        echo "[ launcher: unable to connect with UIcomm. ]" | tee $console
+                        unset loop
+                        unset comm_ready
+                    fi
+                    sleep 0.1
+                    response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM -w '\n%{http_code}\n'`
+                    json=`echo "$response" | sed '$d'`
+                    code=`echo "$response" | tail -n 1`
+                done
+                if [ -n "$loop" ]; then
+                    comm_ready="ready"
+                    if [ "$sim_opt" != "skipASP" ]; then
+                        echo "[ launcher: connected to UIcomm ]" | tee $console
+                    fi
+                else
+                    echo "[ launcher: etrobosim was already terminated. ]" | tee $console
+                    unset comm_ready
+                    unset loop
+                fi
+            fi                
+
+            # return or export prefs
+            if [ -n "$prefs" ] && [ "$comm_ready" == "ready" ]; then
+                invoker="curl -m 1 -s -X GET ${ETROBO_SIM_COMM}?GET=PREFS | jq -M ."
+                if [ "$prefs" == "export" ] || [ "$prefs" == "import" ]; then
+                    eval "$invoker" > settings.json
+                    rm -f "$ETROBO_SIM_DIST/$projName/settings.json"
+                    cp -f settings.json "$ETROBO_SIM_DIST/$projName/settings.json"
+                    rm -f settings.json
+                else
+                    eval "$invoker"
+                fi
+                if [ "$prefs_stop" == "stop" ] && [ "$sim_opt" == "skipASP" ]; then
+                    sim stop sim
+                fi
+            fi
+
+            # load prefernces from settings.json
+            if [ -n "$load_prefs" ] && [ -f "$ETROBO_SIM_DIST/$projName/settings.json" ] && [ "$comm_ready" == "ready" ]; then
+                req="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\" | jq -M -c .`"
+                if [ -n "$req" ]; then
+                    curl -m 1 -s -X POST -d $req $ETROBO_SIM_COMM > /dev/null
+                    sleep 1     # @ToDo: its magic number
+                else
+                    echo "[ launcher: WARNING: illegal settings.json ]" | tee $console
+                fi
+            fi
+
+            # sim controller
+            if [ "$ctl_command" == "get" ]; then
+                if [ "$ctl_key" == "status" ] || [ -z "$ctl_key" ]; then
+                    json="`curl -m 1 -s -X GET $ETROBO_SIM_COMM`"
+                    ctl_key=$ctl_val
+                else
+                    json="`curl -m 1 -s -X GET $ETROBO_SIM_COMM?GET=PREFS`"
+                fi
+                if [ -z "$ctl_key" ]; then
+                    echo "$json" | jq .
+                else
+                    echo "$json" | jq -r ".$ctl_key"
+                fi
+            elif [ "$ctl_command" == "set" ]; then
+                if [ -n "$ctl_val" ]; then
+                    ctl_params="{\"$ctl_key\":\"$ctl_val\"}"
+                fi
+                curl -m 1 -s -X POST -d "$ctl_params" $ETROBO_SIM_COMM
+                echo
+            elif [ "$ctl_command" == "pos" ] || [ "$ctl_command" == "initpos" ]; then
+                initpos="initL"
+                l=1
+                r=0
+                if [ "$sim_select" == "right" ]; then
+                    initpos="initR"
+                    l=0
+                    r=1
+                fi
+                if [ "$ctl_command" == "pos" ]; then
+                    params=($ctl_params)
+                else
+                    x=0
+                    y=0
+                    z=0
+                    rot=0
+                    json="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\"`"
+                    if [ -n "$json" ]; then
+                        x=`echo $json | jq -r .${initpos}X`
+                        y=`echo $json | jq -r .${initpos}Y`
+                        z=`echo $json | jq -r .${initpos}Z`
+                        rot=`echo $json | jq -r .${initpos}ROT`
+                    fi
+                    params=($x $y $z $rot)
+                fi
+                json="{\"LHackEV\":$l,\"RHackEV\":$r,\"${initpos}X\":${params[0]},\"${initpos}Y\":${params[1]},\"${initpos}Z\":${params[2]},\"${initpos}ROT\":${params[3]}}"
+                curl -m 1 -s -X POST -d "$json" $ETROBO_SIM_COMM
+                echo
+            elif [ "$ctl_command" == "prepare" ]; then
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE
+                echo
+            elif [ "$ctl_command" == "go" ]; then
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO
+                echo
+            elif [ "$ctl_command" == "end" ]; then
+                curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=END
+                echo
+            fi
+
+            # put HackEV onto specified course and wait for connecting with athrillHost
+            if [ "$comm_ready" == "ready" ]; then
+                rm -f result.json
+                if [ "$sim_opt" != "matchmaker" ]; then
+                    curl -m 1 -s -X POST -d $app_req $ETROBO_SIM_COMM > /dev/null
+                    sleep 1     # @ToDo: its magic number
+                fi
+            fi
+
+            # exit if no launch
+            if [ "$sim_opt" == "skipASP" ]; then
+                if [ -z "$loop" ]; then
+                    exit 1
+                else
+                    exit 0
+                fi
+            fi
+
+            if [ "$comm_ready" == "ready" ]; then
+                # wait for EV3RT is ready
+                counter=0
+                status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
+                while [ $status -lt 1 ] && [ -n "$loop" ]; do
+                    if [ $status -eq 0 ]; then
+                        echo "[ launcher: runner was already dead. ]" | tee $console
+                        unset loop
+                        kill -s SIGINT $$
+                    fi
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 600 ] && [ -n "$restriction" ]; then
+                        echo "[ launcher: EV3RT boot sequence time out]"
+                        unset loop
+                        kill -s SIGINT $$
+                    fi
+                    sleep 0.1
+                    status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
+                done
+                if [ -n "$loop" ]; then
+                    echo "[ launcher: EV3RT is booted up, got it ]" | tee $console
+                fi
+
+                counter=0
+                response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
+                while [ -z "`echo "$response" | jq -r .$sim_select.mode | grep CONNECTING`" ] && [ -n "$loop" ]; do
+                    sleep 0.1
+                    counter=$(( $counter + 1 ))
+                    if [ $counter -ge 100 ]; then
+                        echo "[ launcher: autostart sequence timeout before PREPARE ]" | tee $console
+                        unset loop
+                    fi
+                    if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
+                        echo "[ launcher: etrobosim was already terminated. ]" | tee $console
+                        unset loop
+                        unset comm_ready
+                    fi
+                    response=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
+                done
+
+                if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
+                    unset loop
+                else
+                    if [ -n "$loop" ]; then
+                        echo "[ launcher: ready to start on $sim_select course ]" | tee $console
+                    fi
+
+                    # auto start sequence
+                    if [ -n "$loop" ]; then
+                        # request PREPARE and wait CALIBRATING
+                        echo "[ launcher: waiting for calibration ]" | tee $console
+                        json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=PREPARE`
+                        sleep 1     # @ToDo: its magic number
+                        counter=0
+                        while [ "`echo $json | jq -r .measurement.mode`" != "READY" ] && [ -n "$loop" ]; do
+                            sleep 0.1
+                            counter=$(( $counter + 1 ))
+                            if [ $counter -ge 900 ] && ( [ -n "$restriction" ] || [ "$sim_opt" == "matchmaker" ] ); then
+                                echo "[ launcher: calibration time out. You aren't able to start. ]" | tee $console
+                                unset loop
+                            fi
+                            if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
+                                echo "[ launcher: etrobosim was already terminated. ]" | tee $console
+                                unset loop
+                                unset comm_ready
+                            fi
+                            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
+                        done
+                        # auto start
+                        echo "[ launcher: Go to the start, Ready? ]" | tee $console
+                        if [ -n "$auto_start" ]; then
+                            echo -n "[ launcher: 3..." | tee $console
+                            sleep 1
+                            echo -n "2..." | tee $console
+                            sleep 1
+                            echo -n "1..." | tee $console
+                            sleep 1
+                            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM?MEASUREMENT=GO`
+                            echo " ]" | tee $console
+                            echo "[ launcher: Go!!!!!!!! ]" | tee $console
+                        elif [ "$sim_opt" == "matchmaker" ]; then
+                            echo "[ launcher: $sim_select: slave of matchmaker mode ]" | tee $console
+                            if [ -n "$loop" ]; then
+                                exit 0
+                            else
+                                exit 1
+                            fi
+                        else
+                            echo "[ launcher: $sim_select: manual start mode ]" | tee $console
+                        fi
+                    fi
+                fi
+            elif [ -n "$loop" ]; then
+                echo
+                echo "*** WARNING ***"
+                echo
+                echo "You are *NOT* using the 'etrobosim$ETROBO_COMPETITION_VER' which is a simulator for competition."
+                echo "If you are a participant, run 'update sim' to download it."
+                echo
+            fi
+        fi
+
+        # loop while UnityETroboSim is running
+        unset start_gate
+        unset gate1
+        unset gate2
+        unset goal
+        unset startgoal
+        start_time=`date "+%s"`
+        if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
+            unset loop
+        fi
+        while [ -n "$loop" ]; do
+            sleep 0.1
+            json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
+            if [ -n "$json" ]; then
+                if [ "`echo $json | jq -r .measurement.mode`" == "END" ] || [ "`\"$ETROBO_SCRIPTS/asp\" check`" == ":" ]; then
+                    echo "[ launcher: end of this race ]" | tee $console
+                    echo "$json" | jq . > result.json
+                    if [ -z "$unitydev" ] && [ -n "`sim check sim`" ]; then
+                        sim stop sim
+                    fi
+                    unset loop
+                fi
+
+                if [ "$restriction" == "flying" ]; then
+                    "$ETROBO_SCRIPTS/asp" stop
+                fi
+
+                # competition rules
+                if [ -z "$start_gate" ] \
+                && [ "`echo $json | jq -r .${sim_select}Measurement.RUN_TIME`" != "0" ]; then
+                    echo "[ launcher: $sim_select: passed Start Gate ]"
+                    start_gate="passed"
+                fi
+                if [ -n "$start_gate" ] && [ -z "$gate1" ]; then
+                    if [ "`echo $json | jq -r .${sim_select}Measurement.GATE1`" == "1" ]; then
+                        echo "[ launcher: $sim_select: passed Gate 4 ]"
+                        gate1="Gate4"
+                    elif [ "`echo $json | jq -r .${sim_select}Measurement.GATE`" == "1" ]; then
+                        echo "[ launcher: $sim_select: passed Mid Gate ]"
+                        gate1="MidGate"
+                    fi
+                fi
+                #if [ -n "$gate1" ] && [ -z "$gate2" ] \
+                #&& [ "`echo $json | jq -r .${sim_select}Measurement.GATE2`" == "1" ]; then
+                #    echo "[ launcher: $sim_select: passed Gate 2 ]"
+                #    gate2="passed"
+                #fi
+                #if [ -n "$gate2" ] && [ -z "$goal" ] \
+                if [ -n "$gate1" ] && [ -z "$goal" ]; then
+                    if [ "$gate1" != "MidGate" ]; then
+                        if [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
+                            measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
+                            goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
+                            echo "[ launcher: $sim_select: GOAL! Goal Time: $goal ]"
+                        fi
+                    else
+                        if [ "`echo $json | jq -r .${sim_select}Measurement.LAP`" == "1" ]; then
+                            measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
+                            goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
+                            echo "[ launcher: $sim_select: passed LAP Gate  Lap Time: $goal ]"
+                        fi
+                    fi
+                fi
+                if [ "$gate1" == "MidGate" ] && [ -n "$goal" ] && [ -z "$startgoal" ] \
+                && [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
+                    echo "[ launcher: $sim_select: GOAL! ]"
+                    startgoal="finished"
+                fi
+            else
+                unset loop
+            fi
+            if [ -n "$restriction" ]; then
+                if [ $((`date "+%s"` - start_time)) -gt 300 ] && [ -n "$auto_start" ]; then
+                    echo "[ launcher: past 5 minute from `date --date=@$start_time`. ]"
+                    unset loop
+                fi
+            fi
+            if [ -z "$unitydev" ] && [ -z "`sim check sim`" ]; then
+                unset loop
+            fi
+        done
+
+        # terminate launcher
+        sleep 1
+        "$ETROBO_SCRIPTS/asp" stop $app_select
+        if [ -n "$launcher_pid" ] && [ "`ps -fp $launcher_pid | sed '1d'`" ]; then
+            echo "[ launcher: NOTICE: this launcher is force terminated. ]"
+            kill $launcher_pid 2>&1 > /dev/null
+        fi
+        wait $launcher_pid 2>&1 > /dev/null
     fi
 fi

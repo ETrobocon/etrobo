@@ -1,0 +1,737 @@
+#!/usr/bin/env bash
+# '---------'
+# ' hackspi - HackSPi installer/headless runner'
+# '---------'
+# Author: jtFuruhata
+# Copyright (c) 2022 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# this script requires `./repl_client.py` to be executed.
+#
+
+# raspi-config
+# please change these settings if you don't like
+do_camera="0"           # 0=Enable Legacy Camera 1=Disable Legacy Camera
+do_vnc="1"              # 0=Enable VNC 1=Disable VNC
+do_ssh="0"              # 0=Enable SSH 1=Disable SSH
+do_serial="1"           # 0=Enable Serial Console 1=Disable Serial Console
+do_boot_behaviour="B2"  # B1=Console B2=Console Autologin B3=Desktop B4=Desktop Autologin
+do_vnc_resolution="1024x768"    # specify VNC resolution
+
+# Bluetooth PAN-NAP DHCP Address
+# please change this setting if you don't like
+dhcpAddress="172.16.16.1/24"
+
+# force reboot flag
+unset reboot
+
+# Utility commands
+
+# usage
+if [ "$1" == "--help" ]; then
+    echo "usage: ./hackspi [make|run|repl|firstrun|pairing|update|remove]"
+    echo "       ./hackspi autorun [once|on|off]"
+    echo "       ./hackspi hub restart|shutdown|showip [wlan0|pan0|eth0]|showclock|uname"
+    echo "       ./hackspi hubfs ls|cat|rm|mv|cd|pwd|mkdir|rmdir|stat"
+    echo "       ./hackspi mainpy repair|upload [<nameOnLocal> [<nameOnHubfs>]]"
+    echo "       hackspi install|resetSSH <IPaddr>"
+    exit 0
+fi
+
+# do a REPL command on Spike Hub immediately
+function REPL() {
+    echo -e "\x03$@\r" > /dev/`ls -1 /dev | grep ACM | head -n 1`
+}
+# `./hackspi repl <command>` invokes command on REPL
+# remember that once in REPL mode,
+# auto power-off is enabled until restart.
+if [ "$1" == "repl" ]; then
+    REPL "$2"
+    exit 0
+fi
+
+# `./hackspi make <projName>` builds app
+if [ "$1" == "make" ]; then
+    cd ~/work/RasPike/sdk/workspace
+    make img=$2
+    exit $?
+fi
+
+# `./hackspi run` starts app
+if [ "$1" == "run" ]; then
+    ./hackspi hub restart
+    touch /tmp/launched
+    cd ~/work/RasPike/sdk/workspace
+    make start
+    exit $?
+fi
+
+# `./hackspi autorun [once|on|off]` switches autorun mode
+# 'autorun once'... HackSPi starts running automatically at *once* boot time
+# 'autorun on'  ... HackSPi starts running automatically at boot time
+# 'autorun off' ... HackSPi doesn't start running automatically at boot time
+# default: autorun once
+autorun="once"
+if [ "$1" == "autorun" ]; then
+    autorun="$2"
+    shift 2
+
+    if [ "$autorun" == "off" ]; then
+        rm -f ~/launch
+    else
+        echo "$autorun" > ~/launch
+    fi
+    exit 0
+fi
+
+# `./hackspi hub|hubfs|mainpy` controls Spike Hub via REPL
+if [ "$1" == "hub" ] || [ "$1" == "hubfs" ] || [ "$1" == "mainpy" ]; then
+    command="$2"
+    shift 2
+    tty="/dev/`ls -1 /dev | grep ACM | head -n 1`"  # USB connection to Spike Hub
+
+    # check the USB connection
+    if [ -n "`echo $tty | grep ACM`" ] && [ `ls $tty > /dev/null 2>&1; echo $?` -eq 0 ]; then
+        # start to do command
+        # no return value commands are able to execute immediately using by REPL()
+        if [ "$command" == "restart" ]; then
+            REPL "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+            REPL "hub.repl_restart(True)"
+            echo "restart requested."
+        elif [ "$command" == "shutdown" ]; then
+            REPL "hub.power_off()"
+            echo "shutdown requested."
+        elif [ "$command" == "showip" ]; then
+            interface="wlan0"
+            if [ -n "$1" ]; then
+                interface="$1"
+            fi
+            ip=`ip addr show $interface | grep "inet " | sed -E "s/\s*inet ([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})\/.*/\1/"`
+            if [ -n "$ip" ]; then
+                ip="$interface: $ip"
+                echo "$ip"
+                REPL "hub.display.show('$ip ', loop=True)"
+            else
+                echo "$interface: disconnected."
+                REPL "hub.display.show('?')"
+            fi
+        elif [ "$command" == "showclock" ]; then
+            REPL "hub.display.show(hub.Image.ALL_CLOCKS,delay=400,clear=True,wait=False,loop=True,fade=0)"
+        # these commands executes using by `repl_client.py`,
+        # due to `mpremote` is unstable.
+        elif [ "$command" == "uname" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.uname()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mem_info" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import micropython"
+            ./repl_client.py $tty "micropython.mem_info()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "ls" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.listdir()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "cat" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "with open('$1') as f:"
+            ./repl_client.py $tty "    print(f.read())"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "rm" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.remove('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mv" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.rename('$1', '$2')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "cd" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.chdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "pwd" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.getcwd()"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "mkdir" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.mkdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "rmdir" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.rmdir('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "stat" ]; then
+            ./repl_client.py $tty ">>> REPL" > /dev/null
+            ./repl_client.py $tty "import os"
+            ./repl_client.py $tty "os.stat('$1')"
+            ./repl_client.py $tty "=== EXEC"
+        elif [ "$command" == "repair" ]; then
+            tmpFile=$(mktemp)
+            cat << EOF > $tmpFile
+import gc
+import micropython
+
+import hub_runtime
+
+micropython.alloc_emergency_exception_buf(256)
+
+hub_runtime.start()
+EOF
+            ./hackspi mainpy upload $tmpFile main.py #> /dev/null
+            rm -f $tmpFile
+            echo "main.py is repaired to the factory default."
+
+        # only use `mpremote` for file transfers, no choice due to out of memory
+        elif [ "$command" == "upload" ]; then
+            fileName="work/RasPike/spike/raspike_etrobo.py"
+            targetName="main.py"
+            if [ -n "$1" ]; then
+                fileName="$1"
+            fi
+            if [ -n "$2" ]; then
+                targetName="$2"
+            fi
+            if [ ! -f "$fileName" ]; then
+                echo "file not found: $fileName"
+                exit 1
+            fi
+            
+            # run mpremote
+            # to access to Spike Hub by REPL
+            mpremote connect $tty cp "$fileName" :$targetName
+            ./hackspi hub restart
+            echo "$fileName is uploaded as $targetName"
+        fi
+        exit 0
+    else
+        echo "Error: Spike Hub isn't connected."
+        exit 1
+    fi
+fi
+
+# `hackspi resetSSH <IPaddr>` deletes old records from known_hosts
+if [ "$1" == "resetSSH" ]; then
+    if [ "$ETROBO_OS" == "win" ]; then
+        cd "$ETROBO_USERPROFILE"
+        cmd.exe /c ssh-keygen -R "$2"
+    fi
+    cd ~/.ssh
+    ssh-keygen -f known_hosts -R "$2"
+    exit $?
+fi
+
+# setup commands
+echo '---------'
+echo ' hackspi - HackSPi installer/headless runner'
+echo '---------'
+
+# recognize options
+unset install
+unset firstrun
+unset setup
+userhome="$(pwd)"
+username="$(whoami)"
+if [ "$1" == "install" ]; then
+    install="$1"
+    shift 1
+elif [ "$1" == "firstrun" ]; then
+    firstrun="pass1"
+    userhome="$2"
+    username="`echo \"$userhome\" | sed -E 's/^\/home\/(.*)$/\1/'`"
+    shift 2
+elif [ "$1" == "pairing" ] || [ "$1" == "update" ] || [ "$1" == "remove" ]; then
+    setup="$1"
+    shift 1
+fi
+
+# log directory
+log_dir="$userhome/.hackspi"
+
+#
+# firstrun control, run as root
+#
+# pass1: run by `firstrun.sh`, do configuration
+if [ -n "$firstrun" ]; then
+    if [ ! -f "$log_dir/pass1" ] && [ ! -f "$log_dir/pass2" ]; then
+        # disable external login consoles until pass2 is finished
+        do_vnc="1"              # 0=Enable VNC 1=Disable VNC
+        do_ssh="1"              # 0=Enable SSH 1=Disable SSH
+        do_serial="1"           # 0=Enable Serial Console 1=Disable Serial Console
+        # after pass1 finish and reboot, pass2 will run at autologin console
+        do_boot_behaviour="B2"  # B1=Console B2=Console Autologin B3=Desktop B4=Desktop Autologin
+        touch "$log_dir/pass1"
+        # modify /etc/rc.local to run firstrun:pass2/3
+        target="/etc/rc.local"
+        tmpFile=$(mktemp)
+        mv -f $target $target.org
+        cat $target.org | sed -E 's/^exit 0//' > $tmpFile
+        echo "\"$userhome/hackspi\" firstrun \"$userhome\" >> \"$log_dir/firstrun.log\" #cutme" >> $tmpFile
+        echo "exit 0" >> $tmpFile
+        mv -f $tmpFile $target
+        sudo chmod 755 /etc/rc.local
+
+    # pass2: run by `/etc/rc.local`, do apt install
+    elif [ -f "$log_dir/pass1" ]; then
+        rm -f "$log_dir/pass1"
+        firstrun="pass2"
+        touch "$log_dir/pass2"
+        chmod 666 "$log_dir/pass2"
+        # disable external login consoles until pass2 is finished
+        do_vnc="1"              # 0=Enable VNC 1=Disable VNC
+        do_ssh="1"              # 0=Enable SSH 1=Disable SSH
+        do_serial="1"           # 0=Enable Serial Console 1=Disable Serial Console
+        # after pass2 finish and reboot, pass3 will run at autologin console
+        do_boot_behaviour="B2"  # B1=Console B2=Console Autologin B3=Desktop B4=Desktop Autologin
+        # waiting for link up wlan0
+        echo "waiting for link up wlan0"
+        counter=60
+        while [ $counter -gt 0 ]; do
+            if [ -n "`ip address show wlan0 | grep 'inet ' | grep -v ' 169\.154\.'`" ]; then
+                counter=-$counter
+            else
+                counter=$(($counter - 1))
+                sleep 1
+            fi
+        done
+        if [ counter == 0 ]; then
+            echo "timeout: unable to connect on wlan0"
+        else
+            echo "wlan0 is linked up: $(($counter + 60)) secs."
+        fi
+        # restart Spike Hub to against auto power-off
+        "$userhome/hackspi" hub restart
+
+    # pass3: run by `/etc/rc.local`, enable external login console
+    elif [ -f "$log_dir/pass2" ]; then
+        rm -f "$log_dir/pass2"
+        firstrun="pass3"
+        touch "$log_dir/pass3"
+        chmod 666 "$log_dir/pass3"
+        # repair /etc/rc.local
+        target="/etc/rc.local"
+        if [ ! -f $target.org ]; then
+            echo "warning: $target.org not found."
+            echo "please modify $target manually."
+        else
+            rm -f $target
+            mv -f $target.org $target
+            echo "firstrun:pass3 on $userhome: finished."
+        fi
+    fi
+else
+    if [ -f "$log_dir/pass1" ] || [ -f "$log_dir/pass2" ]; then
+        echo "now running firstrun."
+        exit 1
+    fi
+fi
+
+# pass4: run by `.bashrc`, show IP address
+if [ -f "$log_dir/pass3" ] || [ -f "$userhome/showip" ]; then
+    # waiting for link up wlan0
+    echo "waiting for link up wlan0"
+    counter=60
+    while [ $counter -gt 0 ]; do
+        if [ -n "`ip address show wlan0 | grep 'inet ' | grep -v ' 169\.154\.'`" ]; then
+            counter=-$counter
+        else
+            counter=$(($counter - 1))
+            sleep 1
+        fi
+    done
+    if [ counter == 0 ]; then
+        echo "timeout: unable to connect on wlan0"
+    else
+        echo "wlan0 is linked up: $(($counter + 60)) secs."
+    fi
+    # show IP address on Hub display
+    REPL "hub.sound.play('sounds/startup')"
+    "$userhome/hackspi" hub showip
+    rm -f "$log_dir/pass3"
+fi
+
+#
+# `hackspi install` installs HackSPi capability
+#  into "first run image" SD card of the Rasberry Pi OS
+#  from host pc
+#
+if [ -n "$install" ]; then
+    # mount "boot" volume (from mount.sh)
+    unset ready
+    unset physicalDrive
+    unset volumeName
+
+    if [ "$ETROBO_OS" = "win" ]; then
+        mountPath="/mnt/hackspi"
+        Caption=""
+        VolumeName=""
+        tmpFile=$(mktemp)
+
+        wmic.exe LogicalDisk get Caption,VolumeName > $tmpFile
+        while read line; do
+            if [ ${line:1:1} = ":"  ]; then
+                if [ "${line:9:4}" = "boot" ]; then
+                    Caption="${line:0:2}"
+                    physicalDrive=${Caption:0:1}
+                    volumeName=`echo ${line:9:-2}`
+                fi
+            fi
+        done < $tmpFile
+        rm $tmpFile
+
+        if [ $Caption ]; then
+            if [ -z "$1" ]; then
+                echo "HackSPi auto mounter needs permission as sudoers."
+                echo "Please enter your login password if [sudo] ask you."
+            fi
+            if [ ! -d "$mountPath" ]; then
+                sudo mkdir "$mountPath" 2> /dev/null
+            fi
+            sudo mount -t drvfs $Caption "$mountPath"
+            if [ "$?" -eq 0 ]; then
+                ready="ready"
+            fi
+        fi
+    else
+        if [ "$ETROBO_OS" = "raspi" ]; then
+            physicalDrive="/boot"
+        elif [ "$ETROBO_OS" = "mac" ]; then
+            physicalDrive="/Volumes"
+        elif [ "$ETROBO_OS" = "chrome" ]; then
+            physicalDrive="/mnt/chromeos/removable"
+        elif [ "$ETROBO_KERNEL" = "debian" ]; then
+            physicalDrive="/media/$(basename $ETROBO_USERPROFILE)"
+        else
+            physicalDrive="/mnt"
+        fi
+        volumeName=`ls -1 "$physicalDrive" | grep ^boot | head -n 1`
+        if [ -n "$volumeName" ]; then
+            mountPath="$physicalDrive/$volumeName"
+            ready="ready"
+        fi
+    fi
+
+    if [ -z "$ready" ]; then
+        echo 'Raspberry Pi OS "boot" SD card is not found.'
+        exit 1
+    fi
+
+    # copy hackspi into /boot if it's firstrun
+    echo "found: $physicalDrive $volumeName -> $mountPath"
+    file="$mountPath/firstrun.sh"
+    if [ ! -f "$file" ]; then
+        echo "firstrun.sh not found."
+        exit 1
+    fi
+    cp -f "$ETROBO_SCRIPTS/hackspi" "$mountPath/"
+    cp -f "$ETROBO_SCRIPTS/repl_client.py" "$mountPath/"
+
+    # modify firstrun.sh
+    tmpFile=$(mktemp)
+    cat "$file" | sed -E "s/^exit 0$//" > $tmpFile
+    echo 'user="`getent passwd 1000 | cut -d: -f1`"' >> $tmpFile
+    echo 'userhome="`getent passwd 1000 | cut -d: -f6`"' >> $tmpFile
+    echo 'cp -f /boot/hackspi "$userhome/"' >> $tmpFile
+    echo 'cp -f /boot/repl_client.py "$userhome/"' >> $tmpFile
+    echo 'mkdir "$userhome/.hackspi"' >> $tmpFile
+    echo 'chown $user:$user "$userhome/hackspi"' >> $tmpFile
+    echo 'chown $user:$user "$userhome/repl_client.py"' >> $tmpFile
+    echo 'chown $user:$user "$userhome/.hackspi"' >> $tmpFile
+    echo 'chmod +x "$userhome/hackspi"' >> $tmpFile
+    echo 'chmod +x "$userhome/repl_client.py"' >> $tmpFile
+    echo 'chmod 755 "$userhome/.hackspi"' >> $tmpFile
+    echo '"$userhome/hackspi" firstrun "$userhome" > "$userhome/.hackspi/firstrun.log"' >> $tmpFile
+    echo 'exit 0' >> $tmpFile
+    rm -f "$file"
+    cp -f $tmpFile "$file"
+    rm -f $tmpFile
+
+    # macOS >=Monterey notice
+    if [ "$ETROBO_OS" == "mac" ] && [ `sw_vers | grep ProductVersion \
+     | sed -E "s/^ProductVersion:\t([0-9]*)\..*$/\1/"` -ge 12 ]; then
+        echo "*** notice for users using macOS Monterey or later ***"
+        echo "Bluetooth PAN is NOT available on Monterey or later."
+        echo "You have to use Wi-Fi connection to control your HackSPi."
+    # chromeOS notice
+    elif [ "$ETROBO_OS" == "chrome" ]; then
+        echo "*** notice for users using chromeOS ***"
+        echo "Bluetooth PAN is NOT available on chromeOS."
+        echo "You have to use Wi-Fi connection to control your HackSPi."
+    fi
+
+    echo
+    echo "finish install"
+    echo "put this SD card into your HackSPi and power on."
+    echo "your HackSPi will continue to install and reboot 4 times herself."
+    echo 'after about 15 mins, your HackSPi will *sound* and display'
+    echo "her IP address of Wi-Fi; ex)'wlan0: 192.168.0.2 ' and reboot."
+    echo 'you should connect to above address from SSH after boot up'
+    echo 'and run `./hackspi pairing`.'
+    echo "when 'Default agent requested' is indicated,"
+    echo "you can connect to HackSPi's Bluetooth PAN from this host PC."
+    echo "when you are asked (yes/no)?, answer 'yes' on HackSpi first."
+    echo "you can stop by [Ctrl]+[C] after success to pairing."
+    echo
+
+    exit 0
+fi
+
+# boot config
+# echo "checking raspi-config..."
+if [ "`sudo raspi-config nonint get_camera`" != "$do_camera" ]; then
+    echo "change: Legacy Camera Support -> $do_camera"
+    sudo raspi-config nonint do_camera $do_camera
+    reboot="force"
+fi
+if [ "`sudo raspi-config nonint get_vnc`" != "$do_vnc" ]; then
+    echo "change: Enable RealVNC Server -> $do_vnc"
+    sudo raspi-config nonint do_vnc $do_vnc
+    reboot="force"
+fi
+if [ "`sudo raspi-config nonint get_ssh`" != "$do_ssh" ]; then
+    echo "change: Enable SSH Server -> $do_ssh"
+    sudo raspi-config nonint do_ssh $do_ssh
+    reboot="force"
+fi
+if [ "`sudo raspi-config nonint get_serial`" != "$do_serial" ]; then
+    echo "change: Enable Serial port and console -> $do_serial"
+    sudo raspi-config nonint do_serial $do_serial
+    reboot="force"
+fi
+if [ "$setup" == "update" ] || [ -n "$reboot" ]; then
+    echo "change: Boot Behaviour -> $do_boot_behaviour"
+    sudo raspi-config nonint do_boot_behaviour $do_boot_behaviour
+fi
+if [ "`sudo raspi-config nonint get_vnc_resolution`" != "$do_vnc_resolution" ]; then
+    echo "change: VNC Resolution -> $do_vnc_resolution"
+    sudo raspi-config nonint do_vnc_resolution $do_vnc_resolution
+    reboot="force"
+fi
+# echo "checking /boot/config.txt..."
+file="/boot/config.txt"
+if [ -z "`cat $file | grep dtoverlay=uart5`" ] || [ "$setup" == "update" ]; then
+    echo "modifing $file"
+    if [ ! -f $file.org ]; then
+        sudo cp -f $file $file.org
+        sudo rm -f $file
+    fi
+    tmpFile=$(mktemp)
+    cat $file.org | sed -E "s/^#(hdmi_force_hotplug=1)$/\1/" > $tmpFile
+    echo "dtoverlay=uart5" >> $tmpFile
+    sudo cp -f $tmpFile $file
+    rm -f $tmpFile
+    reboot="force"
+fi
+
+# setting autostart feature
+# echo "checking autostart feature..."
+file="$userhome/.bashrc"
+log_file="autostart.log"
+if [ -z "`cat $file | grep 'HackSPi/RasPike'`" ] || [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
+    if [ "$setup" == "update" ] || [ "$setup" == "remove" ]; then
+        # remove standalone runner from .bashrc
+        echo "remove autostart feature from .bashrc"
+        touch $file
+        unset removeFlag
+        tmpFile=$(mktemp)
+        cat $file | 
+        while IFS= read -r line; do
+            if [ -z "$removeFlag" ]; then
+                if [ -n "`echo $line | grep HackSPi`" ]; then
+                    removeFlag="remove"
+                else
+                    echo "$line" >> $tmpFile
+                fi
+            else
+                if [ -n "`echo $line | grep HackSPi`" ]; then
+                    unset removeFlag
+                fi
+            fi
+        done
+        rm -f $file
+        rm -rf $log_dir
+        if [ -s $tmpFile ]; then
+            sudo mv -f $tmpFile $file
+        else
+            rm $tmpFile
+        fi
+    fi
+    mkdir "$log_dir"
+    sudo chown $username:$username "$log_dir"
+    echo "add autostart feature into .bashrc"
+    echo '#--- begin autostart feature for HackSPi/RasPike -------' >> "$file"
+    echo "if [ -f \"$log_dir/$log_file.2\" ]; then" >> "$file"
+    echo "    mv -f \"$log_dir/$log_file.2\" \"$log_dir/$log_file.3\"" >> "$file"
+    echo 'fi' >> "$file"
+    echo "if [ -f \"$log_dir/$log_file.1\" ]; then" >> "$file"
+    echo "    mv -f \"$log_dir/$log_file.1\" \"$log_dir/$log_file.2\"" >> "$file"
+    echo 'fi' >> "$file"
+    echo "if [ -f \"$log_dir/$log_file\" ]; then" >> "$file"
+    echo "    mv -f \"$log_dir/$log_file\" \"$log_dir/$log_file.1\"" >> "$file"
+    echo 'fi' >> "$file"
+    echo "\"$userhome/hackspi\" | tee \"$log_dir/$log_file\"" >> "$file"
+    echo '#--------- autostart feature for HackSPi/RasPike end ---' >> "$file"
+fi
+
+# create files for pan0 if neccessary
+#
+# instruction from:
+# https://raspberrypi.stackexchange.com/questions/29504/how-can-i-set-up-a-bluetooth-pan-connection-with-a-raspberry-pi-and-an-ipod#71587
+# echo "checking system files for pan0..."
+file="/etc/systemd/network/pan0.netdev"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[NetDev]' > $tmpFile
+    echo 'Name=pan0' >> $tmpFile
+    echo 'Kind=bridge' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/network/pan0.network"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Match]' > $tmpFile
+    echo 'Name=pan0' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Network]' >> $tmpFile
+    echo "Address=$dhcpAddress" >> $tmpFile
+    echo 'DHCPServer=yes' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/system/bt-agent.service"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Unit]' > $tmpFile
+    echo 'Description=Bluetooth Auth Agent' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Service]' >> $tmpFile
+    echo 'ExecStart=/usr/bin/bt-agent -c NoInputNoOutput' >> $tmpFile
+    echo 'Type=simple' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Install]' >> $tmpFile
+    echo 'WantedBy=multi-user.target' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+file="/etc/systemd/system/bt-network.service"
+if [ ! -f $file ] || [ "$setup" == "update" ]; then
+    echo "create $file"
+    tmpFile=$(mktemp)
+    echo '[Unit]' > $tmpFile
+    echo 'Description=Bluetooth NEP PAN' >> $tmpFile
+    echo 'After=pan0.network' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Service]' >> $tmpFile
+    echo 'ExecStart=/usr/bin/bt-network -s nap pan0' >> $tmpFile
+    echo 'Type=simple' >> $tmpFile
+    echo >> $tmpFile
+    echo '[Install]' >> $tmpFile
+    echo 'WantedBy=multi-user.target' >> $tmpFile
+    chmod 644 $tmpFile
+    sudo mv -f $tmpFile $file
+fi
+
+# finish firstrun:pass1
+if [ "$firstrun" == "pass1" ]; then
+    echo "firstrun:pass1 on $userhome: finished."
+    exit 0
+fi
+
+# install bluez-tools if neccessary
+# echo "checking network tools installation..."
+cd "$userhome"
+if [ `bt-network > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+    sudo apt update
+    sudo apt -y upgrade
+    sudo apt -y install bluez-tools
+    pip install mpremote
+fi
+
+# install ruby if neccessary
+# echo "checking ruby installation..."
+if [ `ruby -v > /dev/null 2>&1; echo $?` == 127 ] || [ "$setup" == "update" ]; then
+    sudo apt -y install ruby
+    sudo -E gem install shell
+fi
+
+# install RasPike environment
+# echo "checking RasPike environment installation..."
+if [ ! -d "work" ] || [ "$setup" == "update" ]; then
+    if [ ! -d "work" ]; then
+        mkdir work
+    fi
+    cd work
+    if [ ! -d "RasPike" ]; then
+        git clone https://github.com/ETrobocon/RasPike.git
+    else
+        cd RasPike
+        git pull --ff-only
+    fi
+    cd "$userhome"
+    sudo chown -R $username:$username work 
+    ./hackspi mainpy upload
+    ./hackspi hub restart
+fi
+
+# launch network services
+echo "starting network services"
+sudo systemctl enable systemd-networkd
+sudo systemctl enable bt-agent
+sudo systemctl enable bt-network
+sudo systemctl start systemd-networkd
+sudo systemctl start bt-agent
+sudo systemctl start bt-network
+
+# wait until activated
+unset loop
+counter=0
+isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
+while [ -z "$isActive" ] && [ $counter -lt 30 ]; do
+    sleep 0.1
+    counter=$(( $counter + 1 ))
+    isActive="`sudo systemctl status bt-network | grep 'Active: active'`"
+done
+
+# finish firstrun:pass2
+if [ "$firstrun" == "pass2" ]; then
+    echo "firstrun:pass2 on $userhome: finished."
+    sudo reboot
+fi
+
+# attempt to pairing
+if [ "$setup" == "pairing" ]; then
+    echo "start pairing..."
+    sudo bluetoothctl pairable on
+    sudo bluetoothctl discoverable on
+    sudo bt-agent
+fi
+
+# autorun launcher
+if [ -f ~/launch ] && [ ! -f /tmp/launched ]; then
+    ./hackspi hub restart
+    if [ -n "`cat ~/launch | grep once`" ]; then
+        rm -f ~/launch
+    fi
+    touch /tmp/launched
+    cd ~/work/RasPike/sdk/workspace
+    echo "invoke make start"
+    make start
+fi
+
+echo "done."
+if [ -n "$reboot" ]; then
+    echo "reboot here."
+    sudo reboot
+fi

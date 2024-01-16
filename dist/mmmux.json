@@ -1,0 +1,440 @@
+{
+    "global": {
+        "//": [
+            "MatchMaker multiplexing settings using from ffutil",
+            "  mmmux.json",
+            "Author: jtFuruhata",
+            "Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license",
+            "See LICENSE"
+        ],
+        "version":                  "2023.entry.0",
+        "matchMakerScreenWidth":    "1008",
+        "matchMakerScreenHeight":   "750",
+        "matchMakerFrameRate":      "30",
+        "etrobosim": {
+            "width":    "640",
+            "height":   "400",
+            "x":        "0",
+            "y":        "0",
+            "toX":      "72",
+            "toY":      "90",
+            "scale":    "0.775"
+        },
+        "banner": {
+            "width":    "1008",
+            "height":   "82",
+            "x":        "0",
+            "y":        "0",
+            "toX":      "",
+            "toY":      "",
+            "scale":    ""
+        },
+        "time": {
+            "width":    "165",
+            "height":   "39",
+            "x":        "428",
+            "y":        "120",
+            "toX":      "428",
+            "toY":      "38",
+            "scale":    "1.0"
+        }
+    },
+    "left": {
+        "common": {
+            "teamInfo": {
+                "width":    "500",
+                "height":   "45",
+                "x":        "4",
+                "y":        "82",
+                "toX":      "4",
+                "toY":      "0",
+                "scale":    "1.0"
+            },
+            "teamName": {
+                "width":    "400",
+                "height":   "45",
+                "x":        "10",
+                "y":        "128",
+                "toX":      "14",
+                "toY":      "45",
+                "scale":    "1.0"
+            },
+            "teamID": {
+                "width":    "205",
+                "height":   "70",
+                "x":        "660",
+                "y":        "650",
+                "toX":      "508",
+                "toY":      "3",  
+                "scale":    "0.5"
+            },
+            "goalTime": {
+                "width":    "166",
+                "height":   "41",
+                "x":        "289",
+                "y":        "368",
+                "toX":      "320",
+                "toY":      "92",  
+                "scale":    "0.5"
+            },
+            "goalTimeArea": {
+                "width":    "166",
+                "height":   "65",
+                "x":        "289",
+                "y":        "353",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            },
+            "goalStatus": {
+                "width":    "166",
+                "height":   "41",
+                "x":        "286",
+                "y":        "440",
+                "toX":      "320",
+                "toY":      "115",  
+                "scale":    "0.5"
+            },
+            "goalStatusArea": {
+                "width":    "166",
+                "height":   "65",
+                "x":        "286",
+                "y":        "425",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            }
+        },
+        "entry": {
+            "lapgate": {
+                "width":    "191",
+                "height":   "34",
+                "x":        "32",
+                "y":        "564",
+                "toX":      "30",
+                "toY":      "350",  
+                "scale":    "1.0"
+            },
+            "bonus": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "32",
+                "y":        "231",
+                "toX":      "5",
+                "toY":      "5",  
+                "scale":    "1.0"
+            },
+            "goalgate": {
+                "width":    "104",
+                "height":   "34",
+                "x":        "372",
+                "y":        "231",
+                "toX":      "175",
+                "toY":      "50",  
+                "scale":    "1.0"
+            }
+        },
+        "primary": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "296",
+                "y":        "314",
+                "toX":      "10",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "126",
+                "y":        "314",
+                "toX":      "70",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "slalom": {
+                "width":    "168",
+                "height":   "33",
+                "x":        "16",
+                "y":        "352",
+                "toX":      "89",
+                "toY":      "280",  
+                "scale":    "1.0"
+            },
+            "petbottle": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "16",
+                "y":        "391",
+                "toX":      "89",
+                "toY":      "314",  
+                "scale":    "1.0"
+            },
+            "blockin": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "186",
+                "y":        "551",
+                "toX":      "85",
+                "toY":      "180",  
+                "scale":    "1.0"
+            },
+            "garagein": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "16",
+                "y":        "551",
+                "toX":      "85",
+                "toY":      "214",  
+                "scale":    "1.0"
+            }
+        },
+        "advanced": {
+            "move": {
+                "width":    "246",
+                "height":   "33",
+                "x":        "16",
+                "y":        "352",
+                "toX":      "10",
+                "toY":      "10",
+                "scale":    "1.0"
+            },
+            "movep": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "391",
+                "toX":      "10",
+                "toY":      "50",
+                "scale":    "1.0"
+            },
+            "movec": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "431",
+                "toX":      "10",
+                "toY":      "90",
+                "scale":    "1.0"
+            },
+            "bingo": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "16",
+                "y":        "471",
+                "toX":      "10",
+                "toY":      "130",
+                "scale":    "1.0"
+            },
+            "bingop": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "16",
+                "y":        "511",
+                "toX":      "10",
+                "toY":      "170",
+                "scale":    "1.0"
+            }
+        }
+    },
+    "right": {
+        "common": {
+            "teamInfo": {
+                "width":    "500",
+                "height":   "45",
+                "x":        "4",
+                "y":        "82",
+                "toX":      "4",
+                "toY":      "0",
+                "scale":    "1.0"
+            },
+            "teamName": {
+                "width":    "400",
+                "height":   "45",
+                "x":        "10",
+                "y":        "128",
+                "toX":      "14",
+                "toY":      "45",
+                "scale":    "1.0"
+            },
+            "teamID": {
+                "width":    "205",
+                "height":   "70",
+                "x":        "660",
+                "y":        "650",
+                "toX":      "508",
+                "toY":      "0",  
+                "scale":    "0.5"
+            },
+            "goalTime": {
+                "width":    "166",
+                "height":   "41",
+                "x":        "555",
+                "y":        "368",
+                "toX":      "237",
+                "toY":      "92",  
+                "scale":    "0.5"
+            },
+            "goalTimeArea": {
+                "width":    "166",
+                "height":   "65",
+                "x":        "555",
+                "y":        "353",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            },
+            "goalStatus": {
+                "width":    "166",
+                "height":   "41",
+                "x":        "551",
+                "y":        "440",
+                "toX":      "236",
+                "toY":      "115",  
+                "scale":    "0.5"
+            },
+            "goalStatusArea": {
+                "width":    "166",
+                "height":   "65",
+                "x":        "561",
+                "y":        "425",
+                "toX":      "",
+                "toY":      "",  
+                "scale":    ""
+            }
+        },
+        "entry": {
+            "lapgate": {
+                "width":    "191",
+                "height":   "34",
+                "x":        "816",
+                "y":        "564",
+                "toX":      "450",
+                "toY":      "350",  
+                "scale":    "1.0"
+            },
+            "bonus": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "808",
+                "y":        "231",
+                "toX":      "467",
+                "toY":      "5",  
+                "scale":    "1.0"
+            },
+            "goalgate": {
+                "width":    "104",
+                "height":   "34",
+                "x":        "532",
+                "y":        "231",
+                "toX":      "361",
+                "toY":      "50",  
+                "scale":    "1.0"
+            }
+        },
+        "primary": {
+            "gate1": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "562",
+                "y":        "314",
+                "toX":      "480",
+                "toY":      "10",  
+                "scale":    "1.0"
+            },
+            "gate2": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "732",
+                "y":        "314",
+                "toX":      "420",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "slalom": {
+                "width":    "168",
+                "height":   "33",
+                "x":        "812",
+                "y":        "352",
+                "toX":      "383",
+                "toY":      "280",  
+                "scale":    "1.0"
+            },
+            "petbottle": {
+                "width":    "168",
+                "height":   "34",
+                "x":        "812",
+                "y":        "391",
+                "toX":      "383",
+                "toY":      "314",  
+                "scale":    "1.0"
+            },
+            "blockin": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "660",
+                "y":        "551",
+                "toX":      "405",
+                "toY":      "180",  
+                "scale":    "1.0"
+            },
+            "garagein": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "830",
+                "y":        "551",
+                "toX":      "405",
+                "toY":      "214",  
+                "scale":    "1.0"
+            }
+        },
+        "advanced": {
+            "move": {
+                "width":    "246",
+                "height":   "33",
+                "x":        "734",
+                "y":        "352",
+                "toX":      "384",
+                "toY":      "10",
+                "scale":    "1.0"
+            },
+            "movep": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "391",
+                "toX":      "384",
+                "toY":      "50",
+                "scale":    "1.0"
+            },
+            "movec": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "431",
+                "toX":      "384",
+                "toY":      "90",
+                "scale":    "1.0"
+            },
+            "bingo": {
+                "width":    "150",
+                "height":   "34",
+                "x":        "830",
+                "y":        "471",
+                "toX":      "480",
+                "toY":      "130",
+                "scale":    "1.0"
+            },
+            "bingop": {
+                "width":    "246",
+                "height":   "34",
+                "x":        "734",
+                "y":        "511",
+                "toX":      "384",
+                "toY":      "170",
+                "scale":    "1.0"
+            }
+        }
+    }
+}

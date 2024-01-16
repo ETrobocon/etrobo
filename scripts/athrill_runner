@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+#
+# Athrill2 application thread runner
+#   athrill_runner.sh
+# Author: jtFuruhata
+# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+# `athrill_runner` is just a thread which runs a Athrill app and outputs running status.
+# This thread must be terminated safely by `asp` which invoked this.
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: athrill_runner <appSelect> </path/to/athrill2> </path/to/memory.txt> </path/to/device_config.txt> <appFileName> [stdout] [btcat]"
+    exit 0
+fi
+
+app_select="$1"
+athrill2="$2"
+memory_txt="$3"
+device_config_txt="$4"
+target="$5"
+
+console="/dev/"
+if [ "$ETROBO_KERNEL" == "darwin" ]; then
+    console="/dev/tty"
+fi
+console="$console`ps aux | grep 'ps aux' | tail -n 1 | awk '{print $7}'`"
+
+if [ "$6" == "stdout" ]; then
+    console_athrill="/dev/null"
+    shift
+else
+    console_athrill="$console"
+fi
+btcat="$6"
+
+
+status="$ETROBO_SIM_DIST/${app_select}.status"
+runner="$ETROBO_SIM_DIST/${app_select}.runner"
+projName=$(basename $(pwd))
+
+# IP address modification for WSL2
+if [ -f "${device_config_txt}.back" ]; then
+    cp -f "${device_config_txt}.back" "${device_config_txt}"
+    rm -f "${device_config_txt}.back"
+fi
+ip=`cat "$device_config_txt" | grep DEBUG_FUNC_VDEV_TX_IPADDR | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR[ $(echo $'\t')]*([^ $(echo $'\t')]*$)/\1/"`
+if [ "$ip" == "127.0.0.1" ] && [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ]; then
+    cp -f "${device_config_txt}" "${device_config_txt}.back"
+
+    ip_tx=`ip route | grep 'default via' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
+    ip_rx=`ip addr show eth0 | grep "inet\ " | awk '{print $2}' | sed -E 's/^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}).*$/\1/'`
+
+    if [ -z "`cat \"${device_config_txt}\" | grep DEBUG_FUNC_VDEV_RX_IPADDR`" ]; then
+        echo "DEBUG_FUNC_VDEV_RX_IPADDR   127.0.0.1" >> "${device_config_txt}"
+    fi
+
+    cat "${device_config_txt}" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_TX_IPADDR\ *(.*)$/DEBUG_FUNC_VDEV_TX_IPADDR\ \ \ $ip_tx/" \
+    | sed -E "s/^DEBUG_FUNC_VDEV_RX_IPADDR\ *(.*)$/DEBUG_FUNC_VDEV_RX_IPADDR\ \ \ $ip_rx/" \
+    > "${device_config_txt}.tmp"
+    cp -f "${device_config_txt}.tmp" "${device_config_txt}"
+    rm -f "${device_config_txt}.tmp"
+fi
+
+# make trap
+loop="loop"
+unset athrill_pid
+unset btcat_pid
+runner_pid=$$
+trap "unset loop" SIGTERM SIGINT EXIT
+
+stdbuf -o 0 ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$target" 2>&1\
+| tee $console_athrill \
+| while [ -n "$loop" ]; do
+    if [ -z "$athrill_pid" ]; then
+        if [ "$ETROBO_KERNEL" != "darwin" ]; then
+            athrill_pid="`ps -f --ppid $runner_pid | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2}'`"
+        else
+            athrill_pid=$(ps -f | sed '1d' | grep -v athrill_runner | grep -v ' tee ' | awk '{print $2" "$3}' | while read line; do if [ "`echo \"$line\" | awk '{print $2}'`" == "$runner_pid" ]; then echo "$line" | awk '{print $1}'; fi; done)
+        fi
+        if [ -z "$athrill_pid" ]; then
+            echo "[ athrill_runner #$runner_pid: FATAL ERROR: can't get Athrill_PID ]" | tee $console
+            athrill_pid=$runner_pid
+        fi
+        echo $athrill_pid >> "$runner"
+        echo $runner_pid >> "$runner"
+        echo "[ athrill_runner #$runner_pid: Athrill VM is running on #$athrill_pid ]" | tee $console > /dev/null
+    else
+        # get athrill status
+        read -t 1 line
+        if [ "$?" == "0" ]; then
+            echo "$line"
+            if [[ $line = ELF\ STRING\ TABLE\ SECTION\ LOADED* ]]; then
+                echo "[ $app_select runner: V850E2M VCPU is powered on ]" | tee $console
+                echo "-2 $SECONDS" >> "$status"
+            elif [[ $line = athrill_device_func_call* ]]; then
+                echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
+                echo "-1 $SECONDS" >> "$status"
+            elif [[ $line = Initialization\ is\ completed* ]]; then
+                echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
+                echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console
+                echo "1 $SECONDS" >> "$status"
+                # launch btcat
+                if [ "$btcat" ]; then
+                    btcat $app_select app=$projName app.bt &
+                    btcat_pid=$!
+                    echo "bt $btcat_pid" >> "$runner"
+                    echo "[ $app_select runner: launch btcat #$btcat_pid]" | tee $console
+                fi
+            elif [[ $line = DEVICE_CONFIG_BT_BASENAME* ]]; then
+                echo "[ $app_select runner: EV3RT is ready for use Virtual BT ]" | tee $console
+                echo "2 $SECONDS" >> "$status"
+            fi
+
+            # terminate this thread
+            if [[ $line = ERROR\ can\ not\ open ]]; then
+                unset loop
+            fi
+        else
+            if [ -z "`ps -fp $athrill_pid | sed '1d'`" ]; then
+                echo "[ $app_select runner: exit: Athrill2 was shutted down ]" | tee $console
+                echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
+                echo "0 $SECONDS" >> "$status"
+                unset loop
+            fi
+            if [ ! -f "$runner" ]; then
+                echo "[ $app_select runner: exit: force shutdown requested ]" | tee $console
+                echo "[ $app_select runner: duration of running: $SECONDS secs in real-world time ]" | tee $console
+                echo "0 $SECONDS" >> "$status"
+                unset loop
+            fi
+        fi
+        # terminate btcat if necessory
+        if [ -z "$loop" ] && [ "$btcat_pid" ] && [ -n "`ps -fp $btcat_pid | sed '1d'`" ]; then
+            kill $btcat_pid
+            wait $btcat_pid
+            echo "[ $app_select runner: exit: btcat is force shutted down ]" | tee $console
+        fi
+    fi
+done
+
+rm -f "$runner"
+echo "0" >> "$status"
+echo "[ athrill_runner #$runner_pid: terminated. ]" | tee $console > /dev/null

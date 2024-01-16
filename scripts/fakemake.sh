@@ -2,12 +2,48 @@
 #
 # fakemake, integrated build and launch system among HRP3/EV3 and ASP3/Athrill
 #   fakemake.sh 
-# Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Author: jtFuruhata, mhikichi1769, yurie
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
 cd "$ETROBO_HRP3_WORKSPACE"
+
+# no-fake invoke on `make upload`
+if [ "$1" = "upload" ]; then
+    make $@
+    exit $?
+fi
+
+# `make nxt` enters into nxtOSEK mode
+unset nxt
+if [ "$1" = "nxt" ]; then
+    nxt="$1"
+    shift
+fi
+
+# `make skiphrp3` skips building for HRP3
+unset skiphrp3
+if [ "$1" = "skiphrp3" ]; then
+    skiphrp3="$1"
+    shift
+fi
+
+# `make strip` strips symbols
+unset strip
+if [ "$1" = "strip" ]; then
+    strip="$1"
+    shift
+fi
+
+# `make import` imports from UnityETroboSim preferences to settings.json
+import=""
+export=""
+if [ "$1" = "import" ]; then
+    import="import"
+    export="export"
+    shift
+fi
 
 # select course
 courseSelect=""
@@ -30,19 +66,40 @@ if [ -n "$app_prefix" ]; then
     arg_app_prefix="app_prefix=$app_prefix"
 fi
 
+# manual launch control
+manual_launch=""
+if [ "$1" = "manual" ]; then
+    manual_launch="manual"
+    shift
+fi
+
+# `make unprefs` doesn't set preference to UnityETroboSim preferences
+unprefs=""
+if [ "$1" = "unprefs" ] || [ "$1" = "noset" ]; then
+    unprefs="unprefs"
+    shift
+fi
+
+# `sim btcat` outputs Virtual BT into bt.log
+unset btcat
+if [ "$1" = "btcat" ]; then
+    shift
+    btcat="btcat"
+fi
+
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
-    if [ "$2" = "tr" ]; then
+    if [ -n "$nxt" ]; then
+        fakemake.sh nxt app="helloworld" up
+    elif [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
-        make $courseSelect app="etrobo_tr" sim up
+        make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up
+    elif [ "$2" = "mruby" ]; then
+        cd "$ETROBO_ROOT"
+        make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_mruby" sim up
     else
         cd "$ETROBO_ROOT"
-        make $courseSelect app="sample_c4" sim up
-#        cd "$ETROBO_ATHRILL_WORKSPACE"
-#        make $courseSelect img=athrillsample
-#        if [ $? -eq 0 ]; then
-#            sim wait launch
-#        fi
+        make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_c4" sim up
     fi
     exit 0
 fi
@@ -56,25 +113,95 @@ fi
 
 if [ "$1" = "start" ]; then
     if [ "$2" = "up" ]; then
-        sim wait launch
+        sim $export $courseSelect $manual_launch $unprefs $btcat launch
     else
-        sim only launch asp
+        sim $export $courseSelect $manual_launch $unprefs $btcat only launch
     fi
     exit 0
 fi
 
-# prepare current app and get project name
+if [ "$1" = "stop" ]; then
+    sim stop $2
+    exit 0
+fi
+
+# parse options and get project name
+unset build_asp3
+unset simopt
 args="$@"
 for arg in "$@"; do
     prepare=`echo "$arg" | grep -e app= -e img= | sed -E "s/^app=|img=(.*)$/\1/"`
     if [ -n "$prepare" ]; then
         proj="$prepare"
     fi
+    if [ "$arg" == "sim" ]; then
+        build_asp3="sim"
+    elif [ "$arg" == "start" ]; then
+        simopt="start"
+    elif [ "$arg" == "up" ]; then
+        simopt="up"
+    elif [ -n "$nxt" ] && [ "$arg" == "clean" ]; then
+        simopt="clean"
+    fi
 done
+# prepare current app
 if [ -z "$proj" ] && [ -f currentapp ]; then
     currentapp=`head -n 1 currentapp`
     args="$args $currentapp"
     proj=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
+fi
+
+# invoke make for nxtOSEK mode
+if [ -n "$nxt" ]; then
+    echo "[fakemake on nxtOSEK] invoke: make nxt app=$proj $simopt" 
+    target="$ETROBO_NXTOSEK_ROOT/workspace/$proj"
+    if [ -d "$target" ]; then
+        echo "app=$proj" > currentapp
+        cd "$target"
+        if [ "$simopt" == "clean" ]; then
+            make clean
+        else
+            make all
+            if [ $? -eq 0 ]; then
+                echo "[fakemake on nxtOSEK] build succeed: $proj"
+                if [ "$simopt" == "up" ]; then
+                    file="`cat rxeflash.sh | grep '^echo Executing NeXTTool' | sed -E 's/^echo Executing NeXTTool to upload (.*)...$/\1/'`"
+                    if [ -n "$file" ]; then
+                        if [ "$ETROBO_OS" == "win" ]; then
+                            util="$ETROBO_NXTOSEK_ROOT/bin/NeXTTool.exe"
+                            utilName="'NeXTTool'"
+                            uploader="$util /COM=usb -download=$file"
+                            verifier="$util /COM=usb -listfiles=$file"
+                        else
+                            util="$ETROBO_NXTOSEK_ROOT/bin/t2n"
+                            utilName="'Talk To NXT'"
+                            uploader="$util -put $file -y"
+                            verifier="$util -ls"
+                        fi
+                        echo "Executing $utilName to upload $file..."
+                        $uploader
+                        message="`$verifier`"
+                        message="`echo \"$message\" | grep \"$file\"`"
+                        echo "$message"
+                        echo $utilName is terminated.
+                        if [ -n "$message" ]; then
+                            echo "[fakemake on nxtOSEK] upload succeed: $file"
+                        else
+                            echo "[fakemake on nxtOSEK] *** upload failed."
+                        fi
+                    else
+                        echo "[fakemake on nxtOSEK] *** upload file not found."
+                    fi
+                fi
+            else
+                echo "[fakemake on nxtOSEK] *** one or more error occured while build for $proj"
+            fi
+        fi
+        exit 0
+    else
+        echo "[fakemake on nxtOSEK] *** project not found: $target."
+        exit 1
+    fi
 fi
 
 # transparent COPTS through Makefile.inc
@@ -88,57 +215,106 @@ if [ -f "$incFile" ]; then
 fi
 cp -f "$incFile" "${incFile}.org"
 if [ -n "$copts" ]; then
+    echo >> "$incFile"
     echo "COPTS += $copts" >> "$incFile"
 fi
 cp -f "$incFile" "${incFile}.base"
 
-# invoke make for HRP3/EV3
-echo "COPTS += -DMAKE_EV3" >> "$incFile"
-echo invoker make $arg_app_prefix $args
-make $arg_app_prefix $args
-makeResult=$?
-cp -f "${incFile}.org" "$incFile"
-if [ $makeResult -eq 0 ]; then
-    echo fakemake on HRP3: build succseed: ${app_prefix}${proj}
-    currentapp=`head -n 1 currentapp`
-    simopt=`tail -n 1 currentapp`
-
-    if [ "$currentapp" != "$simopt" ]; then
-        if [ "$proj" = "athrillsample" ]; then
-            echo fakemake on ASP3: \"athrillsample\" can\'t be integrated on this system.
-            echo please make on \$ETROBO_ATHRILL_WORKSPACE... I can\'t remember there absolute path...
-            exit 1
-        fi
-
-        # invoke make for ASP3/Athrill
-        rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
-        mv -f "${incFile}.base" "${incFile}"
-        cp -r "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"
-        mv -f "${incFile}.org" "$incFile"
-        cd "$ETROBO_ATHRILL_WORKSPACE"
-        echo "COPTS += -DMAKE_SIM" >> "$incFile"
-        make img="$proj"
-        if [ $? -eq 0 ]; then
-            mv -f "${incFile}.org" "$incFile"
-            echo fakemake on ASP3: build succseed: ${app_prefix}${proj}.asp
-            cp -f asp "${app_prefix}${proj}.asp"
-            echo "${app_prefix}${proj}.asp" > currentasp
-            if [ "$simopt" = "up" ]; then
-                echo launch sim
-            	sim wait launch "${app_prefix}${proj}.asp"
-            elif [ "$simopt" = "start" ]; then
-            	sim only launch "${app_prefix}${proj}.asp"
-            fi
-        else
-            echo fakemake on ASP3: one or more error occured while build for $proj
-            exit 1
-        fi
-    fi
-    rm -f "${incFile}.org"
-    rm -f "${incFile}.base"
-else
-    echo fakemake on HRP3: make failed ... `cat currentapp`
-    cd "$ETROBO_HRP3_WORKSPACE"
-    rm -f "${incFile}.org"
-    rm -f "${incFile}.base"
+# build to mruby bytecode
+if [ -n "`cat \"$incFile\" | grep ETROBO_MRUBY`" ]; then
+    echo "Build to mruby bytecode"
+    cd "$proj"
+    ruby "generate_bytecode.rb"
+    skiphrp3="mruby"
+    cd ..
 fi
+
+# invoke make for HRP3/EV3
+echo invoke: make $arg_app_prefix $args
+echo >> "$incFile"
+echo "COPTS += -DMAKE_EV3" >> "$incFile"
+if [ -z "$skiphrp3" ]; then
+    make $arg_app_prefix $args
+    makeResult=$?
+    cp -f "${incFile}.org" "$incFile"
+    if [ $makeResult -eq 0 ]; then
+        echo fakemake on `echo "$ETROBO_EV3RT_KERNEL" | sed -E "s/(.*)/\U\1/"`: build succeed: ${app_prefix}${proj}
+        currentapp=`head -n 1 currentapp`
+        simopt=`tail -n 1 currentapp`
+    else
+        echo fakemake on `echo "$ETROBO_EV3RT_KERNEL" | sed -E "s/(.*)/\U\1/"`: make failed ... `cat currentapp`
+        cd "$ETROBO_HRP3_WORKSPACE"
+        rm -f "${incFile}.org"
+        rm -f "${incFile}.base"
+        exit 1
+    fi
+else
+    cd "$ETROBO_HRP3_WORKSPACE"
+    echo "app=$proj" > currentapp
+fi
+
+if [ -n "$build_asp3" ]; then
+    if [ "$proj" = "athrillsample" ]; then
+        echo fakemake on ASP3: \"athrillsample\" can\'t be integrated on this system.
+        echo please make on \$ETROBO_ATHRILL_WORKSPACE... I can\'t remember there absolute path...
+        exit 1
+    fi
+
+    # invoke make for ASP3/Athrill
+    rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
+    mv -f "${incFile}.base" "${incFile}"
+    cp -rH "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
+    mv -f "${incFile}.org" "$incFile"
+
+    cd "$ETROBO_ATHRILL_WORKSPACE"
+    echo >> "$incFile"
+    echo "COPTS += -DSYSLOG_IMPLEMENT_AS_PRINTF -DMAKE_SIM" >> "$incFile"
+    make img="$proj"
+    if [ $? -eq 0 ]; then
+        mv -f "${incFile}.org" "$incFile"
+        if [ -n "$strip" ]; then
+            echo fakemake on ASP3: strip debug symbols
+            v850-elf-strip --keep-symbol=_athrill_device_func_call --keep-symbol=_athrill_device_raise_interrupt asp
+        fi
+        echo fakemake on ASP3: build succeed: ${app_prefix}${proj}.asp
+        cp -f asp "${app_prefix}${proj}.asp"
+        echo "${app_prefix}${proj}.asp" > currentasp
+
+        #
+        # prepare simdist folder
+        #
+        # the directory structure for new launch simdist procedure:
+        # `sim` launches athrill apps from under the `workspace/simdist/[projName]` folder.
+        #
+        # $ETROBO_ATHRILL_WORKSPACE
+        #   |- athrill2
+        # $ETROBO_HRP3_WORKSPACE
+        #   |- [simdist]
+        #       |- [projName]
+        #           |- log.txt
+        #           |- l_projName.asp
+        #           |- r_projName.asp
+        #           |- settings.json
+        #           |- __ev3rt_bt_in
+        #           |- __ev3rt_bt_out
+        #           |- [__ev3rtfs]
+        #
+        simdist="$ETROBO_SIM_DIST/$proj"
+        if [ ! -d "$simdist" ]; then
+            mkdir -p "$simdist"
+        fi
+        cp -f "${app_prefix}${proj}.asp" "$simdist/"
+
+        if [ "$simopt" = "up" ]; then
+            echo "launch sim"
+            sim $export $courseSelect $manual_launch $unprefs $btcat launch $proj
+        elif [ "$simopt" = "start" ]; then
+            sim $export $courseSelect $manual_launch $unprefs $btcat only launch $proj
+        fi
+    else
+        echo fakemake on ASP3: one or more error occured while build for $proj
+        exit 1
+    fi
+fi
+rm -f "${incFile}.org"
+rm -f "${incFile}.base"

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# fake cygpath for nxtOSEK running on WSL
+#
+# (fake)cygpath
+#
+# for etrobo environment Ver 1.00a.230423
+# Copyright (c) 2023 jtLab, Hokkaido Information University
+# by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
+# Released under the MIT license
+# https://opensource.org/licenses/mit-license.php
+#
+for arg in "$@"; do
+    if [[ $arg != -* ]]; then
+        echo "$arg"
+    fi
+done

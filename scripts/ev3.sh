@@ -4,12 +4,32 @@
 #
 # ev3.sh
 #
-# for etrobo environment Ver 3.00a.200608
-# Copyright (c) 2020 jtLab, Hokkaido Information University
+# for etrobo environment Ver 3.10a.220531
+# Copyright (c) 2020-2022 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 #
+
+# please change this IP address if you have changed from default value
+BTPAN_IP="10.0.10.1"
+
+# `ev3 cp` copies app via Bluetooth PAN if connected
+if [ "$1" = "cp" ]; then
+    ping -c 1 -W 1 $BTPAN_IP > /dev/null
+    if [ $? -eq 0 ]; then
+        curl -m 1 $BTPAN_IP > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            name="$2"
+            if [ -z "$name" ]; then
+                name="app"
+            fi
+            make upload ip=$BTPAN_IP from=$ETROBO_HRP3_WORKSPACE/app to=$name
+            exit $?
+        fi
+    fi
+fi
+
 mountInfo=`$ETROBO_SCRIPTS/mount.sh export`
 if [ $? -eq 0 ]; then
     eval $mountInfo;

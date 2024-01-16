@@ -3,12 +3,18 @@ echo '-------------'
 echo ' startetrobo - etrobo all-in-one package installer/invoker'
 echo '-------------'
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
+# if you want to use `ffutil` or `race` as sequencer,
+# you should run `touch ffutil_autoload`.
+# (please remember you also should run `ffutil install` first)
+
 # check dev branch
 if [ "$ETROBO_ENV" = "available" ]; then
+    current="`pwd`"
+    cd "$ETROBO_ROOT"
     if [ -z "`git branch | grep "* master"`" ]; then
         echo
         echo "****************************************"
@@ -20,6 +26,7 @@ if [ "$ETROBO_ENV" = "available" ]; then
         echo "****************************************"
         echo
     fi
+    cd "$current"
 fi
 
 # check BeerHall
@@ -30,6 +37,10 @@ else
 fi
 
 # platform detection
+unset host
+unset kernel
+unset guest
+unset raspi
 if [ `uname` == "Darwin" ]; then
     host="mac"
     kernel="darwin"
@@ -45,28 +56,40 @@ if [ `uname` == "Darwin" ]; then
     fi
 elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
     host="win"
+    guest=" on WSL1"
+elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "WSL2" ]; then
+    host="win"
+    guest=" on WSL2"
 elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
     host="chrome"
 elif [ `uname` == "Linux" ]; then
     host="linux"
 else
-    echo unknown Host OS or not WSL on Windows 10.
-    exit 1
-fi
-if [ `uname -m` != "x86_64" ]; then
-    echo this environment is available for x86_64.
+    echo unknown Host OS or not WSL/WSL2 on Windows 10/11.
     exit 1
 fi
 if [ `uname` == "Linux" ]; then
-    if [ "`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/" | tail -n 1`" != "debian" ]; then
+    id="`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/"`"
+    if [ "`echo \"$id\" | grep debian`" != "debian" ]; then
         echo this environment is available for Debian GNU/Linux variants.
         exit 1
     else
         kernel="debian"
-        guest=`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E "s/^PRETTY_NAME=\"(.*)\"/\1/"`
+        guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
+        raspi="`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`"
     fi
 fi
-echo "detect platform: $host.x86_64($guest)"
+platform="`uname -m`"
+if [ "$platform" != "x86_64" ]; then
+    if [ -n "$raspi" ]; then
+        host="raspi"
+        guest="$guest on $raspi"
+    elif [ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]; then
+        echo this environment is available for x86_64, Apple Silicon and Raspberry Pi.
+        exit 1
+    fi
+fi
+echo "detect platform: $host.$platform($guest)"
 
 # export ETROBO_ROOT if necessary
 if [ -z "$ETROBO_ROOT" ]; then
@@ -74,7 +97,7 @@ if [ -z "$ETROBO_ROOT" ]; then
 fi
 
 # cancel etrobo environment disabler
-rm -f "$ETROBO/disable"
+rm -f "$ETROBO_ROOT/disable"
 
 # usage
 if [ "$1" = "--help" ]; then
@@ -83,7 +106,7 @@ if [ "$1" = "--help" ]; then
     echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
     echo
     echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
-    echo '  . startetrobo shell ... export etrobo environment vars into this instance'
+    echo '  . startetrobo set   ... export etrobo environment vars into this instance'
     echo
     echo '  startetrobo checkout [<branch_name>]'
     echo '                      ... (for developer) checkout <branch_name>'
@@ -92,11 +115,16 @@ if [ "$1" = "--help" ]; then
     echo '  startetrobo clean   ... remove etrobo environment from here'
     echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
     echo
+    echo '  startetrobo update  ... update etrobo environment core package (for win/linux)'
+    echo '                          for Mac users: run bellow command instead of this option.'
+    echo '                          `./startetrobo_mac.command update Beerhall`'
+    echo
     exit 0
 fi
 
 # `checkout [<branch name>]` option
-if [ "$1" = "checkout" ] && [ "$ETROBO_ENV" = "available" ]; then
+unset branch
+if [ "$1" = "checkout" ]; then
     shift
     if [ -n "$1" ]; then
         branch="$1"
@@ -104,6 +132,24 @@ if [ "$1" = "checkout" ] && [ "$ETROBO_ENV" = "available" ]; then
     else
         branch="master"
     fi
+    # install with specified branch
+    if [ "$ETROBO_ENV" != "available" ]; then
+        cd "`dirname $0`"
+        echo
+        echo 'Clone etrobo core package'
+        git clone https://github.com/ETrobocon/etrobo.git
+        if [ $? -eq 0 ]; then
+            cd "$ETROBO_ROOT"
+            git checkout $branch
+            echo
+            echo "this environment is switched into $branch branch."
+        else
+            echo
+            echo 'an error occured duaring git clone. setup aborted.'
+            exit 1
+        fi
+    fi
+
     cd "$ETROBO_ROOT"
     git checkout .
     git checkout master
@@ -119,7 +165,9 @@ if [ "$1" = "checkout" ] && [ "$ETROBO_ENV" = "available" ]; then
         echo "startetrobo_mac.command is copied into `cd $ETROBO_ROOT/../..`"
     fi
     echo "this environment is switched into $branch branch."
-    exit 0
+    if [ "$ETROBO_ENV" = "available" ]; then
+        exit 0
+    fi
 fi
 
 # `unset` option
@@ -146,7 +194,7 @@ fi
 if [ "$1" = "clean" ]; then
     echo
     echo 'NOTICE:'
-    echo '  run `update dist` on the etrobo terminal'
+    echo '  run `update` on the etrobo terminal'
     echo '  before this `clean` process to update startetrobo.'
     echo
     echo 'WARNING:'
@@ -161,6 +209,33 @@ if [ "$1" = "clean" ]; then
     sudo rm -f "$BeerHall/etc/profile.d/etrobo.sh"
     cd "$ETROBO_ROOT/.."
     rm -rf etrobo
+
+    # remove exporter from .bashrc
+    touch ~/.bashrc
+    unset removeFlag
+    bashrc=$(mktemp)
+    cat ~/.bashrc | 
+    while IFS= read -r line; do
+        if [ -z "$removeFlag" ]; then
+            if [ -n "`echo $line | grep startetrobo`" ]; then
+                removeFlag="remove"
+            else
+                echo "$line" >> $bashrc
+            fi
+        else
+            if [ -n "`echo $line | grep startetrobo`" ]; then
+                unset removeFlag
+            fi
+        fi
+    done
+    rm -f ~/.bashrc
+    if [ -s $bashrc ]; then
+        sudo mv -f $bashrc ~/.bashrc
+    else
+        rm $bashrc
+    fi
+
+    # deep clean
     if [ -n "$deepFlag" ]; then
         if [ "$kernel" = "debian" ]; then
             echo "remove /etc/profile.d/ev3rt.sh"
@@ -168,7 +243,14 @@ if [ "$1" = "clean" ]; then
             echo "remove /opt/gcc-arm-none-eabi*/"
             sudo rm -rf /opt/gcc-arm-none-eabi*/
             if [ "$host" = "win" ]; then
-                userProfile="$(cmd.exe /c echo %USERPROFILE% | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+                comspec="`which cmd.exe`"
+                if [ -z "$comspec" ]; then
+                    comspec="/mnt/c/Windows/System32/cmd.exe"
+                fi
+                userProfile="$(\"$comspec\" /c echo %USERPROFILE% 2>/dev/null | sed -r 's/^(.{1}):.*$/\/mnt\/\L&/' | sed -r 's/:|\r|\n//g' | sed -r 's/\\/\//g')"
+                if [ -z $userProfile ]; then
+                    userProfile="/mnt/c/Users/`whoami`"
+                fi
             else
                 userProfile="$HOME"
             fi
@@ -201,19 +283,65 @@ if [ ! -f "$BeerHall/etc/profile.d/etrobo.sh" ]; then
     sudo mv tmpFile "$BeerHall/etc/profile.d/etrobo.sh"
 fi
 
+# append .bashrc
+if [ "$kernel" = "debian" ]; then
+    touch ~/.bashrc
+    if [ -z "`cat ~/.bashrc 2>&1 | grep startetrobo`" ]; then
+        echo "add etrobo environment vars exporter into ~/.bashrc"
+        echo | sudo tee -a ~/.bashrc
+        echo '# ----- this section was added by startetrobo -----' | sudo tee -a ~/.bashrc
+        echo 'if [ -n "$ETROBO_ROOT" ]; then' | sudo tee -a ~/.bashrc
+        echo '    . "$ETROBO_ROOT/scripts/etroboenv.sh"' | sudo tee -a ~/.bashrc
+        echo 'fi' | sudo tee -a ~/.bashrc
+        echo "# ------------------------------- startetrobo end -" | sudo tee -a ~/.bashrc
+    fi
+    echo
+fi
+
+# repair mode
+unset repair
+if [ "$1" = "repair" ]; then
+    shift
+    repair="$1"
+    shift
+fi
+
 # platform update and git clone etrobo
-if [ ! -d "$ETROBO_ROOT" ]; then
+if [ ! -d "$ETROBO_ROOT" ] || [ -n "$branch" ]; then
     echo
     echo "Install etrobo Environment: start"
     echo
-    echo "update and upgrade your platform"
-    echo 'Please enter your login password as sudoers if [sudo] ask you'
+    install="install"
+else
+    install="skip"
+    if [ "$1" = "update" ]; then
+        install="update"
+    fi
+fi
+
+if [ "$install" = "install" ] || [ "$install" = "update" ]; then
     if [ -z "$BeerHall" ];then
+        echo "update and upgrade your platform"
+        echo 'Please enter your login password as sudoers if [sudo] ask you'
         sudo apt -y update
         sudo apt -y upgrade
         sudo apt -y install build-essential
+        sudo apt -y install sshpass
         sudo apt -y install git
         sudo apt -y install ruby
+        sudo -E gem install shell
+        sudo apt -y install curl
+        sudo apt -y install jq
+        sudo apt -y install bison
+        sudo apt -y install psmisc
+        sudo apt -y install net-tools
+        if [ -n "`echo \"$guest\" | grep \"Ubuntu 20.04\"`" ]; then
+            sudo apt -y install gcc-10 g++-10
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 10
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
+        fi
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh
@@ -224,8 +352,16 @@ if [ ! -d "$ETROBO_ROOT" ]; then
         echo
         echo "Install u-boot-tools and lib32stdc++6:"
         sudo apt install u-boot-tools lib32stdc++6 -y
+    elif [ "$install" = "update" ]; then
+        echo
+        echo "--- NOTICE ---"
+        echo '`startetrobo update` option is only for Debian/GNU Linux and its variants.'
+        echo 'if you want to update and upgrade your platform on Mac, run `startetrobo_mac.command update BeerHall`.'
+        echo
     fi
+fi
 
+if [ "$install" = "install" ] && [ -z "$branch" ]; then
     cd "`dirname $0`"
     echo
     echo 'Clone etrobo core package'
@@ -247,7 +383,22 @@ if [ -d "$ETROBO_ROOT" ]; then
 fi
 
 # install Athrill2 & UnityETroboSim
-"$ETROBO_ROOT/scripts/setup.sh"
+if [ -n "$repair" ]; then
+    "$ETROBO_ROOT/scripts/setup.sh repair $repair"
+else
+    "$ETROBO_ROOT/scripts/setup.sh"
+fi
+
+# prepare as nxtOSEK mode
+if [ -f "$ETROBO_ROOT/NXT" ]; then
+    if [ "$host" == "win" ]; then
+        cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
+    fi
+    cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
+else
+    rm -f "$ETROBO_ROOT/scripts/wineconsole"
+    rm -f "$ETROBO_ROOT/scripts/cygpath"
+fi
 
 # invoke etrobo environment
 cd "$ETROBO_ROOT"
@@ -255,7 +406,11 @@ if [ -z "$ETROBO_ENV" ]; then
     . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 if [ "$ETROBO_ENV" = "available" ]; then
-    if [ "$1" = "shell" ]; then
+    if [ -f ffutil_autoload ]; then
+        . ffutil env
+    fi
+
+    if [ "$1" = "shell" ] || [ -z "`which code`" ]; then
         bash -l
     else
         code .

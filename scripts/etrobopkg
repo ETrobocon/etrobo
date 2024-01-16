@@ -2,10 +2,11 @@
 # etrobo all-in-one package downloader
 #   etrobopkg
 # Author: jtFuruhata
-# Copyright (c) 2020 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
+# check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
     echo "run startetrobo first."
     exit 1
@@ -14,14 +15,36 @@ elif [ ! "$ETROBO_ENV" = "available" ]; then
 fi
 cd "$ETROBO_ROOT"
 
+# hook `sim_public` or `sim_beta` option
+unset sim_select
+if [ "$1" = "sim_public" ] || [ "$1" = "sim_beta" ]; then
+    sim_select="$1"
+fi
+
+# hook `NXT` enabler
+unset nxt
+if [ -f "$ETROBO_ROOT/NXT" ]; then
+    nxt="NXT"
+fi
+
+# hook `unset` option
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
+    unset ETROBO_PUBLIC_VER
+    unset ETROBO_BETA_VER
+    unset ETROBO_COMPETITION_VER
     unset ETROBO_CACHE
     unset ETROBO_HRP3_GCC_VER
     unset ETROBO_HRP3_GCC_URL_BASE
     unset ETROBO_HRP3_GCC_URL
     unset ETROBO_HRP3_GCC_DIR
+    if [ -n "$NXT" ]; then
+        unset ETROBO_NXTOSEK_ROOT
+        unset GNUARM_ROOT
+        unset NEXTTOOL_ROOT
+    fi
 else
+    # prepare envvar (also with `set` option)
     userProfile="$ETROBO_USERPROFILE"
     if [ -z "$userProfile" ]; then
         if [ -n "$HOME_ORG" ]; then
@@ -34,26 +57,43 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2020.06.29a"
+    export ETROBO_MANIFEST_VER="2023.09.20a"
+    export ETROBO_PUBLIC_VER="2023_5.7.99-public"
+    export ETROBO_BETA_VER="2023_6.0.1b"
+    export ETROBO_COMPETITION_VER="2023_5.8.3"
 
     #
     # GNU Arm Embedded Toolchain
     # https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
     #
+    gnuarm="6_1-2017q1"
     export ETROBO_HRP3_GCC_VER="6-2017-q1-update"
-    #export ETROBO_HRP3_GCC_URL_BASE="https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}-"
-    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
+    export ETROBO_HRP3_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/${gnuarm}/gcc-arm-none-eabi-${ETROBO_HRP3_GCC_VER}"
     export ETROBO_HRP3_GCC_DIR="$ETROBO_ROOT/`basename $ETROBO_HRP3_GCC_URL_BASE`"
     export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
+
+    # nxtOSEK envvars
+    if [ -n "$nxt" ]; then
+        export ETROBO_NXTOSEK_ROOT="$userProfile/nxtOSEK"
+        export GNUARM_ROOT="$ETROBO_HRP3_GCC_DIR"
+        export NEXTTOOL_ROOT="$ETROBO_NXTOSEK_ROOT/bin"
+    fi
 fi
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
-    pkgs=("gcc-arm")
-    urls=("$ETROBO_HRP3_GCC_URL")
-    vers=("2020.06.29a")
-    if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
-        sizes=("104170189")
-    else
-        sizes=("100247592")
+    pkgs=()
+    urls=()
+    vers=()
+    sizes=()
+
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("gcc-arm")
+        urls+=("$ETROBO_HRP3_GCC_URL")
+        vers+=("2020.06.29a")
+        if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
+            sizes+=("104170189")
+        else
+            sizes+=("100247592")
+        fi
     fi
 
     #
@@ -61,9 +101,25 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
     #
     pkgs+=("ev3rt")
-    urls+=("https://www.toppers.jp/download.cgi/ev3rt-1.0-release.zip")
-    vers+=("2020.06.29a")
-    sizes+=("13774129")
+    urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
+    case $ETROBO_EV3RT_VER in
+    "1.1" )
+        vers+=("2022.01.08a")
+        sizes+=("14084448")
+        ;;
+    "1.0" )
+        vers+=("2020.06.29a")
+        sizes+=("13774129")
+        ;;
+    "beta7-3" )
+        vers+=("2022.07.18a")
+        sizes+=("17413112")
+        ;;
+    * )
+        vers+=("2022.01.08a")
+        sizes+=("99999999")
+        ;;
+    esac
 
     #
     # EV3RT requirement from:
@@ -71,9 +127,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("mkimage")
-        urls+=("https://dev.toppers.jp/trac_user/ev3pf/attachment/wiki/DevEnvMac/mkimage")
-        vers+=("2020.06.29a")
-        sizes+=("7120")
+        urls+=("https://dev.toppers.jp/trac_user/ev3pf/raw-attachment/wiki/DevEnvMac/mkimage")
+        vers+=("2022.07.14a")
+        sizes+=("18108")
     fi
 
     #
@@ -82,10 +138,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         pkgs+=("gcc-athrill_mac")
-        urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac.tar.gz")
-        vers+=("2020.06.29a")
-        sizes+=("32950726")
-    else
+        if [ "$ETROBO_PLATFORM" = "arm64" ]; then
+            urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac_arm64.tar.gz")
+            vers+=("2021.03.19a")
+            sizes+=("35857495")
+        else
+            urls+=("http://etrobocon.github.io/etroboEV3//athrill-gcc-package-mac_x86_64.tar.gz")
+            vers+=("2021.03.08a")
+            sizes+=("32950726")
+        fi
+    elif [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("gcc-athrill")
         urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")
         vers+=("2020.06.29a")
@@ -98,16 +160,141 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     #
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
         clikintone="macos"
-        size="5305545"
+        size="4342735"
     else
         clikintone="linux"
-        size="5346972"
+        size="4480724"
     fi
-    if [ -n "$clikintone" ]; then
-        pkgs+=("cli-kintone")
-        urls+=("https://github.com/kintone/cli-kintone/releases/download/v0.11.1/${clikintone}-x64.zip")
-        vers+=("2020.06.29a")
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        if [ -n "$clikintone" ]; then
+            pkgs+=("cli-kintone")
+            urls+=("https://github.com/kintone-labs/cli-kintone/releases/download/v0.14.1/${clikintone}-x64.zip")
+            vers+=("2023.04.23a")
+            sizes+=("$size")
+        fi
+    fi
+
+    #
+    # mruby
+    # http://forum.mruby.org/index.html
+    pkgs+=("mruby")
+    urls+=("https://github.com/mruby/mruby/archive/2.0.1.tar.gz")
+    vers+=("2021.03.21a")
+    sizes+=("517932")
+
+    #
+    # tecsgen
+    # https://www.toppers.jp/tecs.html#d-package
+    pkgs+=("tecsgen")
+    urls+=("https://www.toppers.jp/download.cgi/tecsgen-1.8.0.tgz")
+    vers+=("2022.05.24a")
+    sizes+=("2317758")
+
+    if [ -n "$nxt" ]; then
+        #
+        # nxtOSEK
+        # https://lejos-osek.sourceforge.net/jp/index.htm
+        pkgs+=("nxtosek")
+        urls+=("https://sourceforge.net/projects/lejos-osek/files/nxtOSEK_arm_embedded/nxtOSEK_v300.zip")
+        vers+=("2023.04.26b")
+        sizes+=("8642741")
+
+        #
+        # NeXTTool
+        # https://bricxcc.sourceforge.net/
+        pkgs+=("nexttool")
+        urls+=("https://bricxcc.sourceforge.net/nexttool.zip")
+        vers+=("2023.04.26b")
+        sizes+=("142428")
+
+        if [ "$ETROBO_OS" != "win" ]; then
+            #
+            # t2n - Talk to NXT
+            # https://www-verimag.imag.fr/~raymond/home/tools/t2n/
+            pkgs+=("t2n")
+            urls+=("https://www-verimag.imag.fr/~raymond/files/t2n/files/t2n-0.6.src.tgz")
+            vers+=("2023.04.26b")
+            sizes+=("31403")
+        fi
+
+        #
+        # sg.exe from TOPPERS/ATK1
+        # https://www.toppers.jp/atk1-download.html
+        pkgs+=("atk1")
+        urls+=("https://www.toppers.jp/download.cgi/atk1-1.0.lzh")
+        vers+=("2023.04.26b")
+        sizes+=("3914272")
+    fi
+
+    #
+    # UnityETroboSim public version
+    #
+    unset target
+    if [ "$ETROBO_OS" = "chrome" ]; then
+        target="linux"
+    else
+        target="$ETROBO_OS"
+    fi
+    if [ "$target" = "win" ]; then
+        size=33110463
+    elif [ "$target" = "mac" ]; then
+        size=39325206
+    elif [ "$target" = "linux" ]; then
+        size=29207961
+    fi    
+    if [ "$ETROBO_OS" != "raspi" ]; then
+        pkgs+=("etrobosim")
+        urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
+        vers+=("2023.05.03b")
         sizes+=("$size")
+    fi
+
+    #
+    # UnityETroboSim beta version via Kintone
+    #
+    if [ "$sim_select" = "sim_beta" ]; then
+        unset target
+        if [ "$ETROBO_OS" = "chrome" ]; then
+            target="linux"
+        else
+            target="$ETROBO_OS"
+        fi
+        if [ "$target" = "win" ]; then
+            size=42364874
+        elif [ "$target" = "mac" ]; then
+            size=49343736
+        elif [ "$target" = "linux" ]; then
+            size=38234834
+        fi    
+        if [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("etrobosim")
+            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+            vers+=("2023.09.02a")
+            sizes+=("$size")
+        fi
+    else
+    #
+    # UnityETroboSim via Kintone
+    #
+        unset target
+        if [ "$ETROBO_OS" = "chrome" ]; then
+            target="linux"
+        else
+            target="$ETROBO_OS"
+        fi
+        if [ "$target" = "win" ]; then
+            size=38839289
+        elif [ "$target" = "mac" ]; then
+            size=45067636
+        elif [ "$target" = "linux" ]; then
+            size=35175031
+        fi
+        if [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("etrobosim")
+            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+            vers+=("2023.09.20a")
+            sizes+=("$size")
+        fi
     fi
 
     #
@@ -121,6 +308,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     if [ ! -d "$ETROBO_CACHE" ]; then
         rm -f "$ETROBO_CACHE"
         mkdir "$ETROBO_CACHE"
+        if [ "$?" != "0" ]; then
+            echo "*** FATAL ERROR ***"
+            echo "'$ETROBO_USERPROFILE' doesn't exists. please check your user directory location."
+            exit 1
+        fi
     fi
 
     #
@@ -142,9 +334,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         file="$ETROBO_CACHE/$target"
         fileManifest="${file}.manifest"
         distManifest="$ETROBO_ROOT/dist/${target}.manifest"
+        unset manifestVer
+        unset manifestSize
         download=true
         request=true
 
+        # decide to download and to install
         if [ -f "$file" ]; then
             echo
             echo "cached $target ... checking with manifest"
@@ -158,36 +353,96 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 manifestSize=`cat "$fileManifest" | tail -n 1 | awk '{print $2}'`
             fi
             if [ "$manifestVer" = "$ver" ] && [ "$manifestSize" = "$fileSize" ]; then
-                echo "$target is already up to date."
+                echo "$target is already up to date: size=$fileSize"
                 unset download
-                if [ -f "$distManifest" ]; then
-                    if [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
-                        unset request
-                    fi
+                if [ -f "$distManifest" ] && [ `cat "$distManifest" | tail -n 1 | awk '{print $1}'` = $ver ]; then
+                    unset request
+                fi
+                if [ "$manifestSize" = "0" ]; then
+                    unset request
                 fi
             fi
         fi
 
-        echo "$url" > "$fileManifest"
-        echo "$ver $size" >> "$fileManifest"
-
+        # download files to cache
         if [ $download ]; then
             echo "download from $url"
             rm -f "$distManifest"
-            wget "$url" -O "$file"
-            error=$?
-            case $error in
-                0 ) unset error;;
-                1 ) echo "Request error: an error occured with wget execution";;
-                2 ) echo "Command parse error: invalid options for wget";;
-                3 ) echo "File I/O error:";;
-                4 ) echo "Network error: download failed";;
-                5 ) echo "SSL verification error:";;
-                6 ) echo "Username/Password authentication error:";;
-                7 ) echo "Protocol error:";;
-                8 ) echo "Server error: something is wrong with this file server";;
-            esac
+            if [ -z `echo $url | grep ^kintone://` ]; then
+                if [ "$pkg" == "nxtosek" ]; then
+                    wget --no-check-certificate --content-disposition "$url/download" -O "$file"
+                else
+                    wget --no-check-certificate "$url" -O "$file"
+                fi
+                error=$?
+                case $error in
+                    0 ) unset error;;
+                    1 ) echo "Request error: an error occured with wget execution";;
+                    2 ) echo "Command parse error: invalid options for wget";;
+                    3 ) echo "File I/O error:";;
+                    4 ) echo "Network error: download failed";;
+                    5 ) echo "SSL verification error:";;
+                    6 ) echo "Username/Password authentication error:";;
+                    7 ) echo "Protocol error:";;
+                    8 ) echo "Server error: something is wrong with this file server";;
+                esac
+            elif [ "$sim_select" != "sim_public" ]; then
+                query_d=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\1/'`
+                query_a=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\2/'`
+                query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`
+                query_q=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\4/'`
+                clitemp="$ETROBO_ROOT/dist/clitemp"
+                unset downloaded
 
+                echo
+                echo "Download $query_q from cybozu kintone app"
+                echo "Log in to $query_d.cybozu.com ... or hit ENTER key simply to skip download if you don't have such account"
+                read -p "UserName: " username
+                read -p "Password: " -s password
+                echo
+                if [ -n "$username" ] && [ -n "$password" ]; then
+                    echo
+                    rm -rf "$clitemp"
+                    query="--export -a $query_a -d $query_d -u $username -p $password"
+                    fileID=`cli-kintone $query -c "\\\$id" -q "$query_c like \"$query_q\"" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
+                    if [ -z "$fileID" ]; then
+                        echo "*****************"
+                        echo "* W A R N I N G *"
+                        echo "*****************"
+                        echo "failed to log in. Please check your account."
+                    else
+                        echo "authentication succeeded."
+                        echo "downloading now... please wait a minute."
+                        filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
+                        rm -f "$file"
+                        cp -f "$clitemp"/$filePath "$file"
+                        rm -rf "$clitemp"
+                        downloaded="true"
+                    fi
+                fi
+                if [ "$downloaded" != "true" ]; then
+                    echo "manual distribution is selected."
+                    echo "if you want to use simulator for competition, run \`update sim\`."
+                    rm -f "$file"
+                    touch "$file"
+                    size=0
+                    unset manifestSize
+                    unset request
+                fi
+            fi
+
+            # compare downloaded file and manifest file size
+            if [ -z "$error" ]; then
+                fileSize=`wc -c "$file" | awk '{print $1}'`
+                if [ "$fileSize" != "$size" ]; then
+                    echo
+                    echo "ERROR: mismatch file size: file size=$fileSize / manifest size=$size"
+                    echo
+                    error="mismatch"
+                fi
+            fi
+
+            # die when a download error is occured
             if [ $error ]; then
                 echo 
                 echo "please try to re-run later."
@@ -199,9 +454,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
         fi
 
+        # save file manifest
+        if [ "$manifestSize" != "0" ]; then
+            echo "$url" > "$fileManifest"
+            echo "$ver $size" >> "$fileManifest"
+        fi
+
         # install files
         if [ $request ]; then
-            cd "$ETROBO_ROOT"
             case $pkg in
             "gcc-arm" ) 
                 echo
@@ -217,33 +477,49 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
                     rm -rf "$ETROBO_ROOT/workspace_autobackup"
                     cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
-                    rm workspace
+                    rm -rf "$ETROBO_HRP3_WORKSPACE"
                     echo "********"
                     echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."
                     echo "********"
                 fi
 
-                #rm -rf ${target:0:-4}
-                rm -rf ev3rt-1.0-release
-                rm -rf hrp3
-                unzip "$file" > /dev/null
-                #cp ${target:0:-4}/hrp3.tar.xz ./
-                cp ev3rt-1.0-release/hrp3.tar.xz ./
-                tar xvf hrp3.tar.xz > /dev/null 2>&1
-                rm hrp3.tar.xz
-
-                if [ ! -d workspace ]; then
-                    ln -s hrp3/sdk/workspace workspace
+                ev3rt=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
+                kernel="hrp3"
+                if [ -n "`echo $ev3rt | grep beta`" ]; then
+                    kernel="hrp2"
                 fi
-                if [ -z "`cat workspace/Makefile | grep fakemake`" ]; then
-                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> workspace/Makefile
+                rm -rf $ev3rt
+                rm -rf $kernel
+                unzip "$file" > /dev/null
+                cp $ev3rt/$kernel.tar.xz ./
+                tar xvf $kernel.tar.xz > /dev/null 2>&1
+                rm $kernel.tar.xz
+
+                rm -f workspace
+                ln -s $kernel/sdk/workspace workspace
+
+                # build configurator
+                if [ "$kernel" == "hrp2" ]; then
+                    if [ "$ETROBO_OS" == "win" ]; then
+                        mv hrp2/cfg/cfg/cfg.exe hrp2/cfg/cfg/cfg
+                    else
+                        echo
+                        echo "CAUTION: you have to install cfg manually, see"
+                        echo "https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac"
+                        echo
+                    fi
+                fi
+
+                if [ -z "`cat $kernel/sdk/workspace/Makefile | grep fakemake`" ]; then
+                    echo "include \$(ETROBO_SCRIPTS)/Makefile.fakemake" >> $kernel/sdk/workspace/Makefile
                 fi
                 ;;
             "mkimage" )
                 echo 
                 echo "Install mkimage:"
-                mv -f "$file" "$BEERHALL/usr/local/bin"
+                cp -f "$file" "$BEERHALL/usr/local/bin"
+                chmod +x "$BEERHALL/usr/local/bin/$target"
                 ;;
             "gcc-athrill_mac" ) 
                 echo 
@@ -254,21 +530,194 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "gcc-athrill" ) 
                 echo 
                 echo "Install Athrill2 virtual processor powered by TOPPERS/Hakoniwa:"
-                rm -rf ${target:0:-7}
+                rm -rf athrill-gcc-package
                 tar xzvf "$file" > /dev/null
-                cd ${target:0:-7}
+                cd athrill-gcc-package
                 tar xzvf athrill-gcc.tar.gz > /dev/null
+                cd "$ETROBO_ROOT"
                 ;;
             "cli-kintone" ) 
                 echo
                 echo "Install kintone command line tool:"
+                platform=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
                 unzip "$file" > /dev/null
                 rm -f cli-kintone
-                if [ "$ETROBO_OS" = mac ]; then
-                    mv -f build/macos-x64/cli-kintone ./
-                else
-                    mv -f build/${target:0:-4}/cli-kintone ./
+                mv -f build/$platform/cli-kintone ./
+                ;;
+            "mruby" ) 
+                echo
+                echo "Distribute mruby:"
+                cp "$file" "$ETROBO_ROOT/dist/"
+                ;;
+            "tecsgen" ) 
+                echo
+                echo "Distribute tecsgen:"
+                cp "$file" "$ETROBO_ROOT/dist/"
+                ;;
+            "nxtosek" )
+                echo "Install nxtOSEK"
+                if [ -L "$ETROBO_NXTOSEK_ROOT" ]; then
+                    unlink "$ETROBO_NXTOSEK_ROOT"
+                elif [ -d "$ETROBO_NXTOSEK_ROOT" ]; then
+                    rm -rf "${ETROBO_NXTOSEK_ROOT}_autobackup"
+                    cp -rf "$ETROBO_NXTOSEK_ROOT" "${ETROBO_NXTOSEK_ROOT}_autobackup"
+                    rm -rf "$ETROBO_NXTOSEK_ROOT"
+                    echo "********"
+                    echo " NOTICE - your nxtOSEK folder is automatically backuped as 'nxtOSEK_autobackup'"
+                    echo "          this autobackup folder will be deleted in the next time autobackup."
+                    echo "********"
                 fi
+                if [ -L nxtOSEK ]; then
+                    unlink nxtOSEK
+                elif [ -d nxtOSEK ]; then
+                    rm -rf nxtOSEK
+                fi
+                unzip "$file" > /dev/null
+                mv -f nxtOSEK "$ETROBO_USERPROFILE/"
+                mkdir "$ETROBO_NXTOSEK_ROOT/workspace"
+                cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/helloworld" "$ETROBO_NXTOSEK_ROOT/workspace/"
+                cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/rms" "$ETROBO_NXTOSEK_ROOT/workspace/"
+                rm -rf "$ETROBO_NXTOSEK_ROOT/workspace/helloworld/".* > /dev/null 2>&1
+                rm -rf "$ETROBO_NXTOSEK_ROOT/workspace/rms/".* > /dev/null 2>&1
+                ln -s "$ETROBO_NXTOSEK_ROOT" nxtOSEK
+                if [ -f dist/sg.exe ]; then
+                    cp -f dist/sg.exe "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/"
+                fi
+                if [ -f dist/NeXTTool.exe ]; then
+                    cp -f dist/NeXTTool.exe "$ETROBO_NXTOSEK_ROOT/bin/"
+                fi
+                if [ -f dist/t2n ]; then
+                    cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
+                fi
+
+                # replace shift_jis characters and patch for macos
+                cp -f nxtOSEK/ecrobot/ecrobot.mak nxtOSEK/ecrobot/ecrobot.mak.org
+                cp -f nxtOSEK/ecrobot/ecrobot++.mak nxtOSEK/ecrobot/ecrobot++.mak.org
+                rm -f nxtOSEK/ecrobot/ecrobot.mak
+                rm -f nxtOSEK/ecrobot/ecrobot++.mak
+                iconv -f SHIFT_JIS -t UTF-8 nxtOSEK/ecrobot/ecrobot.mak.org \
+                 | sed -E 's/μ/u/g' \
+                 | sed -E 's/¥/\\/g' \
+                 | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
+                 | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 > nxtOSEK/ecrobot/ecrobot.mak
+                iconv -f SHIFT_JIS -t UTF-8 nxtOSEK/ecrobot/ecrobot++.mak.org \
+                 | sed -E 's/μ/u/g' \
+                 | sed -E 's/¥/\\/g' \
+                 | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
+                 | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 > nxtOSEK/ecrobot/ecrobot++.mak
+                ;;
+            "nexttool" )
+                echo "Install NeXTTool"
+                unzip "$file" > /dev/null
+                chmod +x NeXTTool.exe
+                rm -f dist/NeXTTool.exe
+                rm -f "$ETROBO_NXTOSEK_ROOT/bin/NeXTTool.exe"
+                cp -f NeXTTool.exe dist/
+                cp -f NeXTTool.exe "$ETROBO_NXTOSEK_ROOT/bin/"
+                rm -f NeXTTool.exe
+                ;;
+            "atk1" )
+                # install wine(-crossover) if not installed
+                # ToDo: ofcourse we should relocate this code to startetrobo
+                echo "Install Wine(32) to launch sg.exe if necessary"
+                unset i386
+                if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                    i386="mac"
+                else
+                    i386="`sudo dpkg --print-foreign-architectures | grep i386`"
+                fi
+                if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ] || [ -z "$i386" ]; then
+                    if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                        brew install --cask --no-quarantine gcenx/wine/wine-crossover
+                    elif [ "$ETROBO_OS" != "win" ]; then
+                        if [ -z "$i386" ]; then
+                            sudo dpkg --add-architecture i386
+                        fi
+                        sudo apt update
+                        sudo apt -y install wine
+                    fi
+                fi
+
+                # install lhasa if not installed
+                # ToDo: ofcourse we should relocate this code to startetrobo
+                echo "Install Lhasa to deflate sg.exe if necessary"
+                if [ "`lha > /dev/null 2>&1; echo $?`" == "127" ]; then
+                    if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                        brew install lhasa
+                    else
+                        sudo apt update
+                        sudo apt -y install lhasa
+                    fi
+                fi
+
+                echo "Install sg.exe from TOPPERS/ATK1"
+                lha x "$file" > /dev/null
+                rm -f dist/sg.exe
+                rm -f "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/sg.exe"
+                cp -f toppers_atk1/sg/sg.exe dist/
+                chmod +x dist/sg.exe
+                cp -f dist/sg.exe "$ETROBO_NXTOSEK_ROOT/toppers_osek/sg/"
+                rm -rf toppers_atk1
+                ;;
+            "t2n" )
+                echo "Install t2n; Talk To NXT"
+                rm -rf t2n-0.6.src
+                tar xvf "$file" > /dev/null 2>&1
+
+                # install usbutils and libusb-dev if not installed
+                # ToDo: ofcourse we should relocate this code to startetrobo
+                if [ "$ETROBO_KERNEL" == "darwin" ]; then
+                    if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
+                        brew install libusb libusb-compat usbutils
+                    fi
+                elif [ "$ETROBO_KERNEL" == "debian" ]; then
+                    sudo apt update
+                    sudo apt -y install libusb-0.1-4 libusb-dev usbutils
+                fi
+
+                # patch: add feature: -y option
+                cd t2n-0.6.src/src
+                cp t2n.cc t2n.cc.org
+                iconv -f WINDOWS-1252 -t UTF-8 t2n.cc.org \
+                 | sed -E 's/(^\tbool v1, v2, v3;$)/\1\n\tbool yes_flag;/' \
+                 | sed -E 's/(^\tmyargs.add_bool\("-vvv", "gossipy", &v3\);$)/\1\n\tmyargs.add_bool\("-y", "don'\''t ask for confirmation", \&yes_flag\);/' \
+                 | sed -E 's/(^\tif\(v3\) set_verbose_mode\(3\);$)/\1\n\tif\(yes_flag\) set_yes_flag\(\);/' \
+                 > t2n.cc
+                cp errors.h errors.h.org
+                cat errors.h.org \
+                 | sed -E 's/(^extern void set_verbose_mode\(\);$)/\1\nextern void set_yes_flag\(\);/' \
+                 > errors.h
+                cp errors.cc errors.cc.org
+                cat errors.cc.org \
+                | sed -E 's/(^static int VERBOSE = 0;$)/\1\nstatic int YES_FLAG = -1;/' \
+                | sed -E 's/(^void set_verbose_mode\(\)\{ VERBOSE = 1; \}$)/\1\nvoid set_yes_flag\(\)\{ YES_FLAG = 0; \}/' \
+                | sed -E 's/(^\tint s = 1;$)/\1\n\tif \(YES_FLAG\) \{/' \
+                | sed -E 's/(^\t\} while \(\(s != 1\) \|\| \(r == -1\)\);)/\1\n\t\} else \{\n\t\tr = 1;\n\t\}/' \
+                > errors.cc
+
+                # make t2n
+                cd ..
+                cp Makefile Makefile.org
+                cat Makefile.org \
+                 | sed -E 's/(^CFLAGS\+= -I\$\(SRCDIR\) -I\$\(OBJDIR\) -g -Wall$)/\1 -I\$\(BEERHALL\)\/usr\/local\/include/' \
+                 | sed -E 's/(^LDFLAGS\+=$)/\1 -L\$\(BEERHALL\)\/usr\/local\/lib/' \
+                 > Makefile
+                make > /dev/null 2>&1
+                cd "$ETROBO_ROOT"
+                cp -f t2n-0.6.src/obj/t2n dist/
+                cp -f dist/t2n "$ETROBO_NXTOSEK_ROOT/bin/"
+                if [ "$ETROBO_KERNEL" == "debian" ]; then
+                    sudo cp -f t2n-0.6.src/udev/72-lego.rules /etc/udev/rules.d/
+                fi
+                ;;
+            "etrobosim" ) 
+                echo
+                echo "Distribute UnityETroboSim:"
+                cp "$file" "$ETROBO_ROOT/dist/"
                 ;;
             * ) 
                 echo
@@ -282,8 +731,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 ;;
             esac
 
-            echo "$url" > "$distManifest"
-            echo "$ver $size" >> "$distManifest"
+            if [ "$fileSize" != "0" ]; then
+                echo "$url" > "$distManifest"
+                echo "$ver $size" >> "$distManifest"
+            fi
         fi                
     done
 fi

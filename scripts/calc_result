@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2022"
+year="2023"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -26,7 +26,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "  serv    ... run on server which running at </path/to/relayFolder>"
     echo "  ranking ... run on server with the ranking site at </path/to/relayFolder>"
     echo
-    echo "  YEAR(default:'2021'): specify the year of competition rules"
+    echo "  YEAR(default:'2023'): specify the year of competition rules"
     echo
     echo "  CLASS Options:  (default: 'auto')"
     echo "    auto   ... choose in depending on filename prefix(A|P|E)"
@@ -223,8 +223,8 @@ if [ "$coursePrefix" == "R" ]; then
 fi
 
 # define competition rules
-if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
-    # ETrobocon 2021 and 2022
+if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
+    # ETrobocon 2021 and 2022 and 2023
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
@@ -274,12 +274,19 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
             ranking[18]=0
         fi
     else
-        ranking[7]=FALSE    # GATE1 / HalfwayGate1
-        ranking[8]=FALSE    # GATE2 / HalfwayGate2
+        ranking[7]=FALSE    # GATE1 / LAP  / HalfwayGate1
+        ranking[8]=FALSE    # GATE2 / GOAL / HalfwayGate2
         ranking[9]=0        # ENTRY_BONUS / CarryBlocks
     fi
 
-    # time0
+    # time0; csv header for etrobosim
+    gate1="GATE1"
+    gate2="GATE2"
+    if [ "$year" == "2023" ]; then
+        gate1="GATE"
+        gate2="LAP"
+    fi
+
     time0='
     { 
         "Time": "0",
@@ -288,8 +295,8 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
         "TIME": "0",
         "MEASUREMENT_TIME": "0",
         "RUN_TIME": "0",
-        "GATE1": "0",
-        "GATE2": "0",
+        "'$gate1'": "0",
+        "'$gate2'": "0",
         "GOAL": "0",
         "GARAGE_STOP": "0",
         "GARAGE_TIME": "0",
@@ -310,8 +317,8 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
     # start time validation
     unset status
     if [ "`json time0.RUN_TIME`" == "`json start.RUN_TIME`" ] \
-    && [ "`json time0.GATE1`" == "`json start.GATE1`" ] \
-    && [ "`json time0.GATE2`" == "`json start.GATE2`" ] \
+    && [ "`json time0.$gate1`" == "`json start.$gate1`" ] \
+    && [ "`json time0.$gate2`" == "`json start.$gate2`" ] \
     && [ "`json time0.GOAL`" == "`json start.GOAL`" ] \
     && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
     && [ "`json time0.GARAGE_TIME`" == "`json start.GARAGE_TIME`" ] \
@@ -334,90 +341,126 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
         status="eliminated"
     fi
 
-    # calc result time
+    # calc result time/points
     time=120000
     bonus=0
     result="120.0"
     if [ "$status" != "eliminated" ]; then
-        # passed START gate
-        if [ "`json end.RUN_TIME`" != "0" ]; then
-            # passed GATE1 gate
-            if [ "`json end.GATE1`" != "0" ]; then
-                if [ "$class" != "advanced" ]; then
-                    bonus=$(($bonus+2000))
-                    ranking[7]="TRUE"
-                fi
-                # passed GATE2 gate
-                if [ "`json end.GATE2`" != "0" ]; then
+        # for year<2023
+        if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
+            # passed START gate
+            if [ "`json end.RUN_TIME`" != "0" ]; then
+                # passed GATE1 gate
+                if [ "`json end.GATE1`" != "0" ]; then
                     if [ "$class" != "advanced" ]; then
-                        if [ "$year" != "2022" ]; then
-                            bonus=$(($bonus+2000))
-                        fi
-                        ranking[8]="TRUE"
+                        bonus=$(($bonus+2000))
+                        ranking[7]="TRUE"
                     fi
-                    # passed GOAL gate
-                    if [ "`json end.GOAL`" != "0" ]; then
-                        time=$((`json end.MEASUREMENT_TIME`/100*100))
-                        status="goal"
-
-                        # mission bonus for entry class
-                        if [ "$class" == "entry" ]; then
-                            ranking[9]="`json end.ENTRY_BONUS`"
-                            bonus=$(($bonus+(${ranking[9]}*1000)))
-
-                        # mission bonus for primary class
-                        elif [ "$class" == "primary" ]; then
-                            # passed slalom
-                            if [ "`json end.SLALOM`" == "1" ]; then
-                                bonus=$(($bonus+5000))
-                                ranking[10]="TRUE"
-                                # petbottle remains
-                                pets=(0 500 1000 2000 3000 5000 8000)
-                                ranking[11]="`json end.PETBOTTLE`"
-                                bonus=$(($bonus+${pets[${ranking[11]}]}))
+                    # passed GATE2 gate
+                    if [ "`json end.GATE2`" != "0" ]; then
+                        if [ "$class" != "advanced" ]; then
+                            if [ "$year" != "2022" ]; then
+                                bonus=$(($bonus+2000))
                             fi
-                            # garage in
-                            if [ "`json end.GARAGE_STOP`" == "1" ]; then
-                                bonus=$(($bonus+5000))
-                                ranking[12]="TRUE"
-                                # block in
-                                if [ "`json end.BLOCK_IN_GARAGE`" != "0" ]; then
-                                    bonus=$(($bonus+8000))
-                                    ranking[13]="TRUE"
+                            ranking[8]="TRUE"
+                        fi
+                        # passed GOAL gate
+                        if [ "`json end.GOAL`" != "0" ]; then
+                            time=$((`json end.MEASUREMENT_TIME`/100*100))
+                            status="goal"
+                            # mission bonus for entry class
+                            if [ "$class" == "entry" ]; then
+                                ranking[9]="`json end.ENTRY_BONUS`"
+                                bonus=$(($bonus+${ranking[9]}))
+
+                            # mission bonus for primary class
+                            elif [ "$class" == "primary" ]; then
+                                # passed slalom
+                                if [ "`json end.SLALOM`" == "1" ]; then
+                                    bonus=$(($bonus+5000))
+                                    ranking[10]="TRUE"
+                                    # petbottle remains
+                                    pets=(0 500 1000 2000 3000 5000 8000)
+                                    ranking[11]="`json end.PETBOTTLE`"
+                                    bonus=$(($bonus+${pets[${ranking[11]}]}))
                                 fi
-                            fi
+                                # garage in
+                                if [ "`json end.GARAGE_STOP`" == "1" ]; then
+                                    bonus=$(($bonus+5000))
+                                    ranking[12]="TRUE"
+                                    # block in
+                                    if [ "`json end.BLOCK_IN_GARAGE`" != "0" ]; then
+                                        bonus=$(($bonus+8000))
+                                        ranking[13]="TRUE"
+                                    fi
+                                fi
 
-                        # mission bonus for advanced class
-                        elif [ "$class" == "advanced" ]; then
-                            if [ "`json end.BLOCK_YUKOIDO`" != "0" ] || [ "`json end.BLOCK_YUKOIDOC`" != "0" ]; then
-                                # effective movement into block circles
-                                ranking[14]="`json end.BLOCK_YUKOIDO`"
-                                bonus=$(($bonus+(${ranking[14]}*500)))
-                                # effective movement into power spots
-                                ranking[15]="`json end.BLOCK_YUKOIDOP`"
-                                bonus=$(($bonus+(${ranking[15]}*1000)))
-                                # effective movement onto the center mark
-                                ranking[16]="`json end.BLOCK_YUKOIDOC`"
-                                bonus=$(($bonus+(${ranking[16]}*2000)))
-                                # bingos
-                                ranking[17]="`json end.BLOCK_BINGO`"
-                                bonus=$(($bonus+(${ranking[17]}*1000)))
-                                # bingos on power spots
-                                ranking[18]="`json end.BLOCK_BINGOP`"
-                                bonus=$(($bonus+(${ranking[18]}*2000)))
+                            # mission bonus for advanced class
+                            elif [ "$class" == "advanced" ]; then
+                                if [ "`json end.BLOCK_YUKOIDO`" != "0" ] || [ "`json end.BLOCK_YUKOIDOC`" != "0" ]; then
+                                    # effective movement into block circles
+                                    ranking[14]="`json end.BLOCK_YUKOIDO`"
+                                    bonus=$(($bonus+(${ranking[14]}*500)))
+                                    # effective movement into power spots
+                                    ranking[15]="`json end.BLOCK_YUKOIDOP`"
+                                    bonus=$(($bonus+(${ranking[15]}*1000)))
+                                    # effective movement onto the center mark
+                                    ranking[16]="`json end.BLOCK_YUKOIDOC`"
+                                    bonus=$(($bonus+(${ranking[16]}*2000)))
+                                    # bingos
+                                    ranking[17]="`json end.BLOCK_BINGO`"
+                                    bonus=$(($bonus+(${ranking[17]}*1000)))
+                                    # bingos on power spots
+                                    ranking[18]="`json end.BLOCK_BINGOP`"
+                                    bonus=$(($bonus+(${ranking[18]}*2000)))
+                                fi
                             fi
                         fi
                     fi
                 fi
             fi
+            result=$(awk "BEGIN { printf \"%.1f\",($time-$bonus)/1000 }")
+
+        #for year>=2023 (only entry class)
+        else
+            result="0.00"
+            # passed START gate
+            if [ "`json end.RUN_TIME`" != "0" ]; then
+                # passed GATE gate
+                if [ "`json end.GATE`" != "0" ]; then
+                    # passed LAP gate
+                    if [ "`json end.LAP`" != "0" ]; then
+                        ranking[7]="TRUE"
+                        time=$((`json end.MEASUREMENT_TIME`/10*10))
+                        bonus=5
+                        # mission bonus for entry class
+                        if [ "$class" == "entry" ]; then
+                            ranking[9]="`json end.ENTRY_BONUS`"
+                            bonus=$(($bonus+${ranking[9]}))
+                            status="goal"
+                        fi
+                        # passed GOAL gate
+                        if [ "`json end.GOAL`" != "0" ]; then
+                            ranking[8]="TRUE"
+                            bonus=$((bonus+10))
+                            status="goal"
+                        fi
+                    fi
+                fi
+            fi
+            result=$(awk "BEGIN { printf \"%d\",30000-(($time/30000)*30000) }")
+            if [ $result -lt 0 ]; then
+                result=0
+            fi
+            result=$(($result/10))
+            result=$(awk "BEGIN { printf \"%.2f\",($result/100)+$bonus }")
         fi
-        result=$(awk "BEGIN { printf \"%.1f\",($time-$bonus)/1000 }")
     fi
     #echo "Preliminary Result Time: $result secs."
     echo "$result"
 
     # prepare result data
-    ranking[4]=$(awk "BEGIN { printf \"%.1f\",$time/1000 }")
+    ranking[4]=$(awk "BEGIN { printf \"%.2f\",$time/1000 }")
     ranking[5]=$result
     if [ "$status" == "goal" ]; then
         ranking[6]='1'

@@ -255,7 +255,7 @@ elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
         png="`getWinPath \"$png_bash\" $ETROBO_FFMPEG_OS`"
         mp4="`getWinPath \"$mp4_bash\" $ETROBO_FFMPEG_OS`"
         $ETROBO_IM -size 1280x800 xc:white "$png_bash"
-        evaluater='"$ETROBO_FFMPEG" -y -r 30 -loop 1 $enc_hw_opt $enc_hw $enc_hwformat_opt $enc_hwformat -i "$png" -t 1 -pix_fmt yuv420p -c:v $enc_codec -b:v 2M "$mp4"'
+        evaluater='"$ETROBO_FFMPEG" -y -r 30 -loop 1 $enc_hw_opt $enc_hw $enc_hwformat_opt $enc_hwformat -i "$png" -t 1 -pix_fmt nv12 -c:v $enc_codec -b:v 2M "$mp4"'
 
         # encoder settings
         encs='
@@ -396,7 +396,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         [tmp3][lowerright] overlay=shortest=1:x=640:y=400 \
                     " \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     "$destination"
             elif [ "$multiplex" == "demultiplex" ]; then
                 "$ETROBO_FFMPEG" \
@@ -406,7 +406,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     -vf crop=640:400:0:0 \
                     "${destPrefix}_1.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -416,7 +416,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     -vf crop=640:400:640:0 \
                     "${destPrefix}_2.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -426,7 +426,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     -vf crop=640:400:0:400 \
                     "${destPrefix}_3.${destPostfix}"
                 "$ETROBO_FFMPEG" \
@@ -436,7 +436,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     -vf crop=640:400:640:400 \
                     "${destPrefix}_4.${destPostfix}"
             else
@@ -447,7 +447,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     "$destination"
             fi
         fi
@@ -490,7 +490,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -vf tpad=stop=${stretchFrames}:stop_mode=clone \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
-                -pix_fmt yuv420p \
+                -pix_fmt nv12 \
                 "$file_main"
 
             # cut out "SHUTDOWN" animation
@@ -501,7 +501,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -i "$source" \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
-                -pix_fmt yuv420p \
+                -pix_fmt nv12 \
                 "$file_shutdown"
             
             # concat these files
@@ -513,7 +513,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 -filter_complex '[0:v][1:v]concat' \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
                 $loglevel_opt $loglevel \
-                -pix_fmt yuv420p \
+                -pix_fmt nv12 \
                 "$destination"
             
             rm "$filepath/${filebase}_main.$fileext"
@@ -741,7 +741,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -filter_complex "$fc" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
-                    -pix_fmt yuv420p \
+                    -pix_fmt nv12 \
                     "$(getWinPath $destination $ETROBO_FFMPEG_OS)"
 #                    -i "$(getWinPath $filterFile $ETROBO_FFMPEG_OS)" \
             fi

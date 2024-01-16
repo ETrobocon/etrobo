@@ -44,7 +44,7 @@ commonFolder="$relayFolder/common"
 #
 if [ "$1" == "stringifyMasters" ]; then
     # Teams
-    fields=(ID classLetter divisionID LSlalom)
+    fields=(ID classLetter divisionID LSlalom year bibID)
     mapper=""
     for ((i=0; i<${#fields[@]}; i++)); do
         if [ -n "$mapper" ];then
@@ -208,6 +208,9 @@ elif [ "$1" == "overlayPNG" ]; then
 elif [ "$1" == "mmmux" ]; then
     srcDir="$commonFolder/matchmaker/results"
     destDir="$commonFolder/raceserv"
+    if [ ! -d "$destDir/results" ]; then
+        mkdir -p "$destDir/results"
+    fi
 #    ls -1 "$srcDir" \
     combinedIDs=(`ls -1 "$srcDir" | grep '.mp4$' | sed -E 's/^(E[0-9]{3})_.*$/ \1/'`)
     for combinedID in ${combinedIDs[@]}; do
@@ -573,14 +576,24 @@ elif [ "$1" == "assignResults" ]; then
     done
 
 #
-# returnResults /path/to/Results_divisionID_[EPA] <teamID>
+# returnResults [bib] /path/to/Results_divisionID_[EPA] <teamID|bibID>
 #
-# return a teamID's Results file from /path/to/Results_divisionID_[EPA]
+# return a teamID's or a bibID's Results file from /path/to/Results_divisionID_[EPA]
 # /path/to/Results_divisionID_[EPA] have to contain the actual relayFolder at sim/ope-vm
 #
 elif [ "$1" == "returnResults" ]; then
+    unset bibMode
+    if [ "$2" == "bib" ]; then
+        bibMode="$2"
+        shift 1
+    fi
     sourceFolder="$2"
-    teamID="$3"
+    unset teamID
+    if [ -n "$bibMode" ]; then
+        teamID=`echo $Teams | jq -cr ".[]|select(.bibID==\"$3\").ID"`
+    else
+        teamID="$3"
+    fi
     echo $Requests | jq -cr ".[]|select(.teamID==\"$teamID\")" \
     | while read record; do
         classLetter=$(json record.classLetter)

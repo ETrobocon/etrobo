@@ -3,12 +3,11 @@
 # raceserv, ET robocon race server
 #   raceserv 
 # Author: jtFuruhata
-# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-# fp0 ... 2022/07/17 13:00～2022/07/17 16:00
-# fp1 ... 2022/07/25 10:00～2022/07/31 20:00
-# fp2 ... 2022/08/29 10:00～2022/09/08 20:00
+# fp1 ... 2023/07/24 10:00～2023/07/26 20:00
+# fp2 ... 2023/09/20 10:00～2023/09/27 20:00
 #
 if [ "$1" == "--help" ]; then
     echo "usage: raceserv [ver=<SIM_VER>] [vm] [matchmaker|flying] [fp0|fp1|fp2|fpcs|finals|csfinal] [/path/to/raceFolder [/path/to/relayFolder]]" 

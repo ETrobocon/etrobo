@@ -3,7 +3,7 @@
 # Postproduction utilities
 #   prepare_final.sh
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -18,7 +18,7 @@ json () {
     envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
     key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
     if [ -z "$op" ]; then
-        eval "echo \$$envvar | jq -r $key"
+        eval "echo \$$envvar | jq -r $key | grep -v ^null$"
     elif [ "$op" == "=" ]; then
         eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
     fi
@@ -443,7 +443,7 @@ elif [ "$1" == "replaceMovies" ]; then
 
     mode="all"
     unset id
-    groups=(1 2 4 5 6 8 9 12 11 A B C)
+    groups=(1 2 4 5 6 8 9 12 11 14 A B C CS)
     unset teamID
     unset divisionID
     unset classLetter

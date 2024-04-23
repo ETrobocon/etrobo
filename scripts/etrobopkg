@@ -2,7 +2,7 @@
 # etrobo all-in-one package downloader
 #   etrobopkg
 # Author: jtFuruhata
-# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2024 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -57,10 +57,10 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2023.09.20a"
+    export ETROBO_MANIFEST_VER="2024.04.23a"
     export ETROBO_PUBLIC_VER="2023_5.7.99-public"
-    export ETROBO_BETA_VER="2023_6.0.1b"
-    export ETROBO_COMPETITION_VER="2023_5.8.3"
+    export ETROBO_BETA_VER="2023_6.0.2b"
+    export ETROBO_COMPETITION_VER="2023_5.8.4"
 
     #
     # GNU Arm Embedded Toolchain
@@ -260,16 +260,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             target="$ETROBO_OS"
         fi
         if [ "$target" = "win" ]; then
-            size=42364874
+            size=42355855
         elif [ "$target" = "mac" ]; then
-            size=49343736
+            size=49342774
         elif [ "$target" = "linux" ]; then
-            size=38234834
+            size=38231642
         fi    
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
-            vers+=("2023.09.02a")
+            urls+=("kintone://etrobocon/34/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+            vers+=("2024.04.23a")
             sizes+=("$size")
         fi
     else
@@ -283,16 +283,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             target="$ETROBO_OS"
         fi
         if [ "$target" = "win" ]; then
-            size=38839289
+            size=38835395
         elif [ "$target" = "mac" ]; then
-            size=45067636
+            size=45067700
         elif [ "$target" = "linux" ]; then
-            size=35175031
+            size=35175315
         fi
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon/32/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-            vers+=("2023.09.20a")
+            urls+=("kintone://etrobocon/34/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+            vers+=("2024.04.23a")
             sizes+=("$size")
         fi
     fi

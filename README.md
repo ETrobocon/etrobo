@@ -36,29 +36,28 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020-2023 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2024 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
 ### Windows
 
 - x86-64アーキテクチャのCPU
-- Windows 11、またはWindows 10 version 2004以降、またはWindows 10 Enterprise LTSC 2021
-    - version 21H2以降の利用を推奨します。20H2以前をetrobo環境でサポートするのは2023年度が最後です。 
-    - version 1709未満のWindows 10や、Windows 7などでは動作しません。
-    - version 1903/1909のWindows 10でもWSL2で動作しますが、サポート対象外です。
-    - version 1809(LTSC 2019)はWSL1でのみ動作します。
+- Windows 11
+    - version 23H2(WSL September 2023 update)以降の利用を推奨します。
+    - Windows 10 Enterprise LTSC 2021での動作確認も行なっていますが、サポート対象外です。
 - `wsl --install`によりインストールされたUbuntuまたはUbuntu-22.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
-    - Ubuntu-20.04・18.04・16.04、Debian(9/10/11)でも動作するようですが、サポート対象外です。
-    - Windows Services for Linux (WSL1)のサポートも引き続き行いますが、LTSC 2019に限ります。
+    - Ubuntu-24.04はリリースされ次第サポート対象に含めます。
+    - Ubuntu-20.04・18.04・16.04、Debian(9/10/11/12)でも動作するようですが、サポート対象外です。
+    - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
 
 ### Mac
 - x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Venture 13.3.1 / Xcode CLT 14.3
-- macOS Big Sur(11.0)以降
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Sonoma 14.3 / Xcode CLT 15.1
+- macOS Monterey(12.0)以降
     - HomeBrewの動作環境に準じます。これ以前のmacOSでも動作する可能性は高いですが、サポート対象外です。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
@@ -67,18 +66,18 @@ Copyright(C) 2020-2023 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 11 または Ubuntu 22.04
+- Debian GNU/Linux 12 (bookworm) または Ubuntu 22.04
+    - Ubuntu 24.04はリリースされ次第サポート対象に含めます。 
     - 環境のインストールにsudoers権限が必要です。
-    - Debian 11にインストールする場合は、wgetが必要です `sudo apt -y install wget`
-    - Debian 10/Ubuntu 20.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
+    - Debian 11/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール
 
 ### ChromeOS
 - x86-64アーキテクチャのCPU
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
-        - Chrome OS 112.0.5615.134 (Official Build)
-        - Debian GNU/Linux 11 (bullseye)
+        - Chrome OS 123.0.6312.132 (Official Build)
+        - Debian GNU/Linux 12 (bookworm)
 - ChromeOS 102以降
     - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも動作するものと考えていますがサポート対象外です。
     - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。

@@ -2,7 +2,7 @@
 # on-demand Athrill2 deployer for startetrobo
 #   build_athril.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2024 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -15,9 +15,9 @@
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2023.04.23a
-ATHRILL_OFFICIAL_COMMIT="f09d7d551ef947538667bdef7da2d4d48e181112"
-TARGET_OFFICIAL_COMMIT="5e2c4da0d3073d1ec3972dfa67ce610541024f05"
+# the ETrobo official certified commit: Ver.2024.05.08a
+ATHRILL_OFFICIAL_COMMIT="8bf811e76f37a065b4b3e3cae4795b794b4b66f0"
+TARGET_OFFICIAL_COMMIT="f02f4a31c5b3ec45329aad339346943466d64662"
 SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
 
 # mruby environment for UnityETroboSim
@@ -343,20 +343,6 @@ if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
     rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
     cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"
 fi
-# -------------------------------------------------------------------------------------
-
-
-#################################
-#   for 2024                    #
-#     Athrill std_bool hotfix   #
-#################################
-# -------------------------------------------------------------------------------------
-echo "*HOTFIX*"
-cp "$ETROBO_ROOT/athrill/src/main/cpuemu.c" "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup"
-cat "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup" \
-  | sed -E "s/(^.*)static bool(.*$)/\1static std_bool\2/" \
-  > "$ETROBO_ROOT/athrill/src/main/cpuemu.c"
-rm -f "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup" 
 # -------------------------------------------------------------------------------------
 
 #

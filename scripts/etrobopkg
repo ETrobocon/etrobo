@@ -57,10 +57,10 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2024.04.23a"
-    export ETROBO_PUBLIC_VER="2023_5.7.99-public"
+    export ETROBO_MANIFEST_VER="2024.05.08a"
+    export ETROBO_PUBLIC_VER="2024_6.0.9-public"
     export ETROBO_BETA_VER="2023_6.0.2b"
-    export ETROBO_COMPETITION_VER="2023_5.8.4"
+    export ETROBO_COMPETITION_VER="2024_6.1.0"
 
     #
     # GNU Arm Embedded Toolchain
@@ -158,20 +158,20 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # cli-kintone by Cyboze, Inc.
     # https://github.com/kintone/cli-kintone
     #
+    unset target
+    clikintone_ver="1.10.13"
     if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        clikintone="macos"
-        size="4342735"
-    else
-        clikintone="linux"
-        size="4480724"
+        target="macos"
+        size="18762173"
+    elif [ "$ETROBO_OS" != "raspi" ]; then
+        target="linux"
+        size="18681563"
     fi
-    if [ "$ETROBO_OS" != "raspi" ]; then
-        if [ -n "$clikintone" ]; then
-            pkgs+=("cli-kintone")
-            urls+=("https://github.com/kintone-labs/cli-kintone/releases/download/v0.14.1/${clikintone}-x64.zip")
-            vers+=("2023.04.23a")
-            sizes+=("$size")
-        fi
+    if [ -n "$target" ]; then
+        pkgs+=("cli-kintone")
+        urls+=("https://github.com/kintone/cli-kintone/releases/download/v${clikintone_ver}/cli-kintone_v${clikintone_ver}_${target}.zip")
+        vers+=("2024.05.08a")
+        sizes+=("$size")
     fi
 
     #
@@ -236,16 +236,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=33110463
+        size=36107249
     elif [ "$target" = "mac" ]; then
-        size=39325206
+        size=43087318
     elif [ "$target" = "linux" ]; then
-        size=29207961
+        size=31794553
     fi    
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-        vers+=("2023.05.03b")
+        vers+=("2024.05.08a")
         sizes+=("$size")
     fi
 
@@ -268,7 +268,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi    
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon/34/File/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+            urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
             vers+=("2024.04.23a")
             sizes+=("$size")
         fi
@@ -283,16 +283,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             target="$ETROBO_OS"
         fi
         if [ "$target" = "win" ]; then
-            size=38835395
+            size=43059020
         elif [ "$target" = "mac" ]; then
-            size=45067700
+            size=50035264
         elif [ "$target" = "linux" ]; then
-            size=35175315
+            size=38923216
         fi
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon/34/File/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-            vers+=("2024.04.23a")
+            urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+            vers+=("2024.05.08a")
             sizes+=("$size")
         fi
     fi
@@ -387,37 +387,47 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     8 ) echo "Server error: something is wrong with this file server";;
                 esac
             elif [ "$sim_select" != "sim_public" ]; then
-                query_d=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\1/'`
-                query_a=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\2/'`
-                query_c=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\3/'`
-                query_q=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)\/(.*)$/\4/'`
+                base_url=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)$/\1/'`
+                app=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)$/\2/'`
+                file_name=`echo $url | sed -E 's/kintone:\/\/(.*)\/(.*)\/(.*)$/\3/'`
                 clitemp="$ETROBO_ROOT/dist/clitemp"
                 unset downloaded
 
                 echo
-                echo "Download $query_q from cybozu kintone app"
-                echo "Log in to $query_d.cybozu.com ... or hit ENTER key simply to skip download if you don't have such account"
+                echo "Download $file_name from cybozu kintone app"
+                echo "Log in to $base_url ... or hit ENTER key simply to skip download if you don't have such account"
                 read -p "UserName: " username
                 read -p "Password: " -s password
                 echo
                 if [ -n "$username" ] && [ -n "$password" ]; then
                     echo
                     rm -rf "$clitemp"
-                    query="--export -a $query_a -d $query_d -u $username -p $password"
-                    fileID=`cli-kintone $query -c "\\\$id" -q "$query_c like \"$query_q\"" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
-                    if [ -z "$fileID" ]; then
+                    cli-kintone record export --base-url https://$base_url \
+                                --app $app --fields File \
+                                --condition "File like \"$file_name\"" \
+                                --attachments-dir "$clitemp" \
+                                --username $username --password $password
+                    if [ $? -eq 1 ]; then
                         echo "*****************"
                         echo "* W A R N I N G *"
                         echo "*****************"
                         echo "failed to log in. Please check your account."
                     else
                         echo "authentication succeeded."
-                        echo "downloading now... please wait a minute."
-                        filePath=`cli-kintone $query -c "File" -q "\\\$id = $fileID" -b "$clitemp" | tail -n 1 | sed -E 's/^"(.*)"./\1/'`
-                        rm -f "$file"
-                        cp -f "$clitemp"/$filePath "$file"
-                        rm -rf "$clitemp"
-                        downloaded="true"
+                        ls -1 "$clitemp" > /dev/null 2>&1
+                        if [ $? -ne 0 ]; then
+                            echo "*****************"
+                            echo "* W A R N I N G *"
+                            echo "*****************"
+                            echo "failed to download. Please update your environment."
+                        else
+                            fileID=`ls -1 "$clitemp"`
+                            file_name=`ls -1 "$clitemp"/$fileID`
+                            rm -f "$file"
+                            cp -f "$clitemp"/$fileID/$file_name "$file"
+                            rm -rf "$clitemp"
+                            downloaded="true"
+                        fi
                     fi
                 fi
                 if [ "$downloaded" != "true" ]; then
@@ -539,10 +549,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "cli-kintone" ) 
                 echo
                 echo "Install kintone command line tool:"
-                platform=`echo $target | sed -E "s/^(.*)\.zip/\1/"`
+                platform=`echo $target | sed -E "s/^cli-kintone_.*_(.*).zip$/\1/"`
                 unzip "$file" > /dev/null
                 rm -f cli-kintone
-                mv -f build/$platform/cli-kintone ./
+                mv -f cli-kintone-$platform/cli-kintone ./
                 ;;
             "mruby" ) 
                 echo

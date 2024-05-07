@@ -247,9 +247,9 @@ if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
     cp -f "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
     tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
 
-    ##############
-    # 2022 hofix #
-    ##############
+    ###############
+    # 2022 hotfix #
+    ###############
     #------------------------------------------------------------
     target="$ETROBO_MRUBY_ROOT/Rakefile"
     rm -f "$target.backup"
@@ -343,6 +343,20 @@ if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
     rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
     cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"
 fi
+# -------------------------------------------------------------------------------------
+
+
+#################################
+#   for 2024                    #
+#     Athrill std_bool hotfix   #
+#################################
+# -------------------------------------------------------------------------------------
+echo "*HOTFIX*"
+cp "$ETROBO_ROOT/athrill/src/main/cpuemu.c" "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup"
+cat "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup" \
+  | sed -E "s/(^.*)static bool(.*$)/\1static std_bool\2/" \
+  > "$ETROBO_ROOT/athrill/src/main/cpuemu.c"
+rm -f "$ETROBO_ROOT/athrill/src/main/cpuemu.c.backup" 
 # -------------------------------------------------------------------------------------
 
 #

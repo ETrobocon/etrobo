@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2024 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2023"
+year="2024"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -26,7 +26,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "  serv    ... run on server which running at </path/to/relayFolder>"
     echo "  ranking ... run on server with the ranking site at </path/to/relayFolder>"
     echo
-    echo "  YEAR(default:'2023'): specify the year of competition rules"
+    echo "  YEAR(default:'2024'): specify the year of competition rules"
     echo
     echo "  CLASS Options:  (default: 'auto')"
     echo "    auto   ... choose in depending on filename prefix(A|P|E)"
@@ -223,8 +223,9 @@ if [ "$coursePrefix" == "R" ]; then
 fi
 
 # define competition rules
-if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
-    # ETrobocon 2021 and 2022 and 2023
+if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
+   [ "$year" == "2024" ]; then
+    # ETrobocon 2021 and 2022 and 2023 and 2024
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
@@ -282,7 +283,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
     # time0; csv header for etrobosim
     gate1="GATE1"
     gate2="GATE2"
-    if [ "$year" == "2023" ]; then
+    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
         gate1="GATE"
         gate2="LAP"
     fi
@@ -428,11 +429,16 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
             if [ "`json end.RUN_TIME`" != "0" ]; then
                 # passed GATE gate
                 if [ "`json end.GATE`" != "0" ]; then
+                    if [ "$year" == "2023" ]; then
+                        bonus=0
+                    else
+                        bonus=1
+                    fi
                     # passed LAP gate
                     if [ "`json end.LAP`" != "0" ]; then
                         ranking[7]="TRUE"
                         time=$((`json end.MEASUREMENT_TIME`/10*10))
-                        bonus=5
+                        bonus=$((bonus+5))
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
                             ranking[9]="`json end.ENTRY_BONUS`"

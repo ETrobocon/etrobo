@@ -309,6 +309,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
         "BLOCK_YUKOIDOP": "0",
         "BLOCK_YUKOIDOC": "0",
         "BLOCK_BINGOP": "0",
+        "LAP_POLE_TOUCHED": "0",
         "MeasurementMode": "READY"
     }'
     time0="`echo "$time0" | jq -c .`"
@@ -330,7 +331,8 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
     && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
     && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
-    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ]; then
+    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
+    && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ]; then
         if [ "`json end.MeasurementMode`" != "END" ]; then
             status="judgemental retire"
         else
@@ -436,9 +438,17 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
                     fi
                     # passed LAP gate
                     if [ "`json end.LAP`" != "0" ]; then
+                        if [ "$class" == "entry" ]; then
+                            # No collision with the LAP gate
+                            if [ "`json end.LAP_POLE_TOUCHED`" == "0" ]; then
+                                bonus=$((bonus+5))
+                            fi
+                        else
+                            bonus=$((bonus+5))
+                        fi
                         ranking[7]="TRUE"
                         time=$((`json end.MEASUREMENT_TIME`/10*10))
-                        bonus=$((bonus+5))
+                        
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
                             ranking[9]="`json end.ENTRY_BONUS`"

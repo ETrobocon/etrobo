@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2024 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2023"
+year="2024"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -26,7 +26,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "  serv    ... run on server which running at </path/to/relayFolder>"
     echo "  ranking ... run on server with the ranking site at </path/to/relayFolder>"
     echo
-    echo "  YEAR(default:'2023'): specify the year of competition rules"
+    echo "  YEAR(default:'2024'): specify the year of competition rules"
     echo
     echo "  CLASS Options:  (default: 'auto')"
     echo "    auto   ... choose in depending on filename prefix(A|P|E)"
@@ -223,8 +223,9 @@ if [ "$coursePrefix" == "R" ]; then
 fi
 
 # define competition rules
-if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
-    # ETrobocon 2021 and 2022 and 2023
+if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
+   [ "$year" == "2024" ]; then
+    # ETrobocon 2021 and 2022 and 2023 and 2024
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
@@ -248,6 +249,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
         MovedCenter
         MovedBingo
         MovedPowerBingo
+        MidGate
     )
     for ((i=4; i<${#ranking_header[@]}; i++)); do
         ranking[$i]=""
@@ -273,16 +275,21 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
             ranking[17]=0
             ranking[18]=0
         fi
-    else
+    elif [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
         ranking[7]=FALSE    # GATE1 / LAP  / HalfwayGate1
         ranking[8]=FALSE    # GATE2 / GOAL / HalfwayGate2
-        ranking[9]=0        # ENTRY_BONUS / CarryBlocks
+        ranking[9]=0        # ENTRY_BONUS  / CarryBlocks
+    else # 2024
+        ranking[7]=FALSE    # GATE1 / LAP  / LAP  / HalfwayGate1
+        ranking[8]=FALSE    # GATE2 / GOAL / GOAL / HalfwayGate2
+        ranking[9]=0        # ENTRY_BONUS         / CarryBlocks
+        ranking[19]=FALSE   #                GATE / MidGate
     fi
 
     # time0; csv header for etrobosim
     gate1="GATE1"
     gate2="GATE2"
-    if [ "$year" == "2023" ]; then
+    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
         gate1="GATE"
         gate2="LAP"
     fi
@@ -308,6 +315,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
         "BLOCK_YUKOIDOP": "0",
         "BLOCK_YUKOIDOC": "0",
         "BLOCK_BINGOP": "0",
+        "LAP_POLE_TOUCHED": "0",
         "MeasurementMode": "READY"
     }'
     time0="`echo "$time0" | jq -c .`"
@@ -329,7 +337,8 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
     && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
     && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
     && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
-    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ]; then
+    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
+    && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ]; then
         if [ "`json end.MeasurementMode`" != "END" ]; then
             status="judgemental retire"
         else
@@ -344,10 +353,11 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
     # calc result time/points
     time=120000
     bonus=0
-    result="120.0"
+    result="0.00"
     if [ "$status" != "eliminated" ]; then
         # for year<2023
         if [ "$year" == "2021" ] || [ "$year" == "2022" ]; then
+            result="120.0"
             # passed START gate
             if [ "`json end.RUN_TIME`" != "0" ]; then
                 # passed GATE1 gate
@@ -423,16 +433,31 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ]; then
 
         #for year>=2023 (only entry class)
         else
-            result="0.00"
             # passed START gate
             if [ "`json end.RUN_TIME`" != "0" ]; then
                 # passed GATE gate
                 if [ "`json end.GATE`" != "0" ]; then
+                    if [ "$year" == "2023" ]; then
+                        bonus=0
+                    else
+                        ranking[19]="TRUE"
+                        bonus=1
+                    fi
                     # passed LAP gate
                     if [ "`json end.LAP`" != "0" ]; then
                         ranking[7]="TRUE"
                         time=$((`json end.MEASUREMENT_TIME`/10*10))
-                        bonus=5
+                        if [ "$class" == "entry" ]; then
+                            # No collision with the LAP gate
+                            if [ "$year" == "2023" ] || [ "`json end.LAP_POLE_TOUCHED`" == "0" ]; then
+                                bonus=$((bonus+5))
+                            else
+                                ranking[7]="FALSE"
+                            fi
+                        else
+                            bonus=$((bonus+5))
+                        fi
+                        
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
                             ranking[9]="`json end.ENTRY_BONUS`"

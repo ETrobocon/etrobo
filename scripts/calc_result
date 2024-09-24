@@ -445,6 +445,14 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
                     fi
                     # passed LAP gate
                     if [ "`json end.LAP`" != "0" ]; then
+                        if [ "$class" == "entry" ]; then
+                            # No collision with the LAP gate
+                            if [ "`json end.LAP_POLE_TOUCHED`" == "0" ]; then
+                                bonus=$((bonus+5))
+                            fi
+                        else
+                            bonus=$((bonus+5))
+                        fi
                         ranking[7]="TRUE"
                         time=$((`json end.MEASUREMENT_TIME`/10*10))
                         if [ "$class" == "entry" ]; then

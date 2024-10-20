@@ -626,6 +626,98 @@ elif [ "$1" == "returnResults" ]; then
     ETroboSimRunner.Relay.sh return "$relayFolder"
 
 #
+# oneMoreChance [finalChance]
+#
+# re-race the retired teams that be determined from results.csv
+# oneMoreChance re-race all retired races
+# finalChance re-race the teams which both L and R were retired
+#
+elif [ "$1" == "oneMoreChance" ]; then
+    unset chanceType
+    if [ "$2" == "finalChance" ]; then
+        chanceType="$2"
+    else
+        chanceType="$1"
+    fi
+
+    # backup files
+    workFolder="$commonFolder/work"
+    chanceFolder="$workFolder/$chanceType"
+    if [ ! -d "$chanceFolder" ]; then
+        mkdir -p "$chanceFolder/Results_old"
+        mkdir -p "$chanceFolder/common/csv_old"
+        mkdir -p "$chanceFolder/common/matchmaker/csv_old"
+        mkdir -p "$chanceFolder/common/raceserv_old"
+        mkdir -p "$chanceFolder/common/work_old"
+
+        resultsFile_src="$chanceFolder/common/work_old/results.csv"
+        mv "$workFolder/results.csv" "$resultsFile_src"
+    else
+        echo "aborted: no more chance."
+    fi
+
+    resultsFile_tmp="$commonFolder/work/results_tmp.csv"
+    unset resultsFile_dst
+    if [ -z "$finalChance" ]; then
+        echo "** One More Chance **"
+        resultsFile_dst="$commonFolder/work/results_org.csv"
+        if [ -f "$resultsFile_dst" ]; then
+            echo "aborted: no more chance."
+            unset resultsFile_dst
+        else
+            cp -f "$resultsFile_src" "$resultsFile_dst"
+            resultsFile_src="$resultsFile_dst"
+            resultsFile_dst="$commonFolder/work/results_oneMoreChance.csv"
+        fi
+    else
+        echo "** Final Chance **"
+        resultsFile_dst="$commonFolder/work/results_oneMoreChance_org.csv"
+        if [ -f "$resultsFile_dst" ]; then
+            echo "aborted: no more chance."
+            unset resultsFile_dst
+        else
+            cp -f "$resultsFile_src" "$resultsFile_dst"
+            resultsFile_src="$resultsFile_dst"
+            resultsFile_dst="$commonFolder/work/results_finalChance.csv"
+        fi
+    fi
+
+    # determine the teams
+    if [ -n "$resultFile_dst" ]; then
+        while read line; do
+            echo $line;
+        done
+    fi
+elif [ "$1" == "doit" ]; then
+    workFolder="$commonFolder/work"
+    chanceFolder="$workFolder/oneMoreChance"
+    results_old="$chanceFolder/Results_old"
+    csv_old="$chanceFolder/common/csv_old"
+    matchmaker_csv_old="$chanceFolder/common/matchmaker/csv_old"
+    raceserv_old="$chanceFolder/common/raceserv_old"
+    work_old="$chanceFolder/common/work_old"
+    results_src="$relayFolder/Results"
+    csv_src="$relayFolder/common/csv"
+    matchmaker_csv_src="$relayFolder/common/matchmaker/csv"
+    raceserv_src="$relayFolder/common/raceserv"
+    work_src="$chanceFolder/common/work"
+    requestIDs=() # input requestIDs
+    teamIDs=() # input teamIDs
+    courses=() # input courses
+    for ((i=0; i<${#requestIDs[@]}; i++)); do
+        echo "${requestIDs[$i]} - ${teamIDs[$i]}${courses[$1]}"
+        mv "$results_src/E_${requestIDs[$i]}.zip" "$results_old/"
+        mv "$csv_src/E_${requestIDs[$i]}.csv" "$csv_old/"
+        mv "$matchmaker_csv_src/E${teamIDs[$i]}_${courses[$i]}.csv" "$matchmaker_csv_old/"
+        mv "$raceserv_src/E${teamIDs[$i]}_${courses[$i]}.mp4" "$raceserv_old/"
+        mv "$raceserv_src/E${teamIDs[$i]}_${courses[$i]}_1.mp4" "$raceserv_old/"
+        mv "$raceserv_src/E${teamIDs[$i]}_${courses[$i]}_2.mp4" "$raceserv_old/"
+        mv "$raceserv_src/E${teamIDs[$i]}_${courses[$i]}_3.mp4" "$raceserv_old/"
+        mv "$raceserv_src/E${teamIDs[$i]}_${courses[$i]}_4.mp4" "$raceserv_old/"
+        cp "$relayFolder/Requests_org/E_${requestIDs[$i]}.zip" "$relayFolder/Requests/"
+    done
+
+#
 # quickConv <combinedID|bibID> [isCombinedID]
 #
 # convert combinedID to bibID or bibID to combinedID

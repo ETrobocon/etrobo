@@ -608,4 +608,52 @@ elif [ "$1" == "returnResults" ]; then
         fi
     done
     ETroboSimRunner.Relay.sh return "$relayFolder"
+
+#
+# quickConv <combinedID|bibID> [isCombinedID]
+#
+# convert combinedID to bibID or bibID to combinedID
+# if isCombinedID is specified, return true if the first argument is combinedID or empty string if isn't it
+#
+elif [ "$1" == "quickConv" ]; then
+    if [ -n "`echo $2 | grep -E '^[EP]{1}[0-9]{3}$'`" ]; then
+        combinedID="$2"
+        teamID=`echo "$combinedID" | sed -E 's/^[EP]{1}0*([1-9]*).*$/\1/'`
+        bibID=`echo "$Teams" | jq -cr ".[]|select(.ID==\"$teamID\").bibID"`
+        if [ "$3" == "isCombinedID" ]; then
+            echo "true"
+        else
+            echo "$bibID"
+        fi
+    elif [ -n "`echo $2 | grep -E '^[EW]{1}-[0-9]{2}$'`" ]; then
+        bibID="$2"
+        teamID=`echo "$Teams" | jq -cr ".[]|select(.bibID==\"$bibID\").ID"`
+        combinedID="`echo "$Teams" | jq -cr ".[]|select(.ID==\"$teamID\").classLetter"`$(printf "E%03d" $teamID)"
+        if [ "$3" == "isCombinedID" ]; then
+            echo ""
+        else
+            echo "$combinedID"
+        fi
+    fi
+
+#
+# filenamesInto <combinedID|bibID> /path/to/folder
+#
+# convert all filenames into combinedID or bibID
+#
+elif [ "$1" == "filenamesInto" ]; then
+    ls -1 "$3" | \
+    while read line; do
+        id=`echo $line | sed -E 's/^(.{4}).*$/\1/'`
+        footer=`echo $line | sed -E 's/^(.{4})(.*)$/\2/'`
+        isCombinedID=`prepare_final.sh quickConv $id isCombinedID`
+        if [ -n "$isCombinedID" ] && [ "$2" == "bibID" ]; then
+            id=`prepare_final.sh quickConv $id`
+            mv "$3/$line" "$3/${id}${footer}"
+        elif [ -z "$isCombinedID" ] && [ "$2" == "combinedID" ]; then
+            id=`prepare_final.sh quickConv $id`
+            mv "$3/$line" "$3/${id}${footer}"
+        fi
+        echo "$line -> $id$footer"
+    done
 fi

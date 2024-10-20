@@ -262,7 +262,7 @@ elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
         [
             {"name": "nVIDIA CUDA/NVENC",  "codec": "h264_nvenc",        "hw": "cuda", "hwformat": "cuda"},
             {"name": "AMD VCE/AMF",        "codec": "h264_amf",          "hw": "auto", "hwformat": ""    },
-            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": ""    },
+            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": "qsv" },
             {"name": "Apple Video Toolbox","codec": "h264_videotoolbox", "hw": "auto", "hwformat": ""    },
             {"name": "libx264 soft encode","codec": "libx264",           "hw": ""   ,  "hwformat": ""    }
         ]'
@@ -453,71 +453,133 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         fi
 
         # stretch <stretchFrames> frames by last frame
-        # ffutil stretch [bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]
+        # ffutil stretch [simple | bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]
+        # e.g. ffutil stretch simple 30 /path/to/source.mp4  
         if [ "$command" == "stretch" ]; then
+            frameRate=30    # ToDo: get frame rate from the source file
             bitrate="2M"
+            simple="simple"
             if [ "$1" == "bitrate" ]; then
                 bitrate="$2"
                 shift 2
+            else
+                if [ "$1" == "simple" ]; then
+                    shift
+                fi
             fi
             stretchFrames=$(($1 + 1))   # magic number; please adjust if necessary
             source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
-            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
-            filepath=`dirname "$3"`
-            filename=`basename "$3"`
+            destination="$source"
+            filepath=`dirname "$2"`
+            filename=`basename "$2"`
+            if [ -n "$3" ] || [ -z "$simple" ]; then
+                destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+                filepath=`dirname "$3"`
+                filename=`basename "$3"`
+            fi
             filebase=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\1/'`
             fileext=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\2/'`
             file_main="`getWinPath "$filepath/${filebase}_main.$fileext" $ETROBO_FFMPEG_OS`"
             file_shutdown="`getWinPath "$filepath/${filebase}_shutdown.$fileext" $ETROBO_FFMPEG_OS`"
+            file_lastframe="`getWinPath "$filepath/${filebase}_lastframe.png" $ETROBO_FFMPEG_OS`"
 
             loglevel_opt="-loglevel"
-            loglevel="quiet"
+#            loglevel="quiet"
+            loglevel="info"
             if [ -n "$4" ]; then
                 loglevel="$4"
             fi
 
-            # cut off "SHUTDOWN" animation and stretch the last frame
-            "$ETROBO_FFMPEG" -y \
-                -i "$source" \
-                -t 00:01:59.933 \
-                -c copy \
-                $loglevel_opt $loglevel \
-                -f nut - \
-            | "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
-                -f nut -i - \
-                -vf tpad=stop=${stretchFrames}:stop_mode=clone \
-                -c:v $ETROBO_ENC_CODEC -b:v 100M \
-                $loglevel_opt $loglevel \
-                -pix_fmt nv12 \
-                "$file_main"
+            if [ -z "$simple" ]; then
+                # cut off "SHUTDOWN" animation and stretch the last frame
+                "$ETROBO_FFMPEG" -y \
+                    -i "$source" \
+                    -t 00:01:59.933 \
+                    -c copy \
+                    $loglevel_opt $loglevel \
+                    -f nut - \
+                | "$ETROBO_FFMPEG" -y \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -f nut -i - \
+                    -vf tpad=stop=${stretchFrames}:stop_mode=clone \
+                    -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                    $loglevel_opt $loglevel \
+                    -pix_fmt nv12 \
+                    "$file_main"
 
-            # cut out "SHUTDOWN" animation
-            "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
-                -ss 00:02:00.001 \
-                -i "$source" \
-                -c:v $ETROBO_ENC_CODEC -b:v 100M \
-                $loglevel_opt $loglevel \
-                -pix_fmt nv12 \
-                "$file_shutdown"
-            
-            # concat these files
-            "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
-                -i "$file_main" \
-                -i "$file_shutdown" \
-                -filter_complex '[0:v][1:v]concat' \
-                -c:v $ETROBO_ENC_CODEC -b:v 100M \
-                $loglevel_opt $loglevel \
-                -pix_fmt nv12 \
-                "$destination"
-            
-            rm "$filepath/${filebase}_main.$fileext"
-            rm "$filepath/${filebase}_shutdown.$fileext"
+                # cut out "SHUTDOWN" animation
+                "$ETROBO_FFMPEG" -y \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -ss 00:02:00.001 \
+                    -i "$source" \
+                    -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                    $loglevel_opt $loglevel \
+                    -pix_fmt nv12 \
+                    "$file_shutdown"
+                
+                # concat these files
+                "$ETROBO_FFMPEG" -y \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -i "$file_main" \
+                    -i "$file_shutdown" \
+                    -filter_complex '[0:v][1:v]concat' \
+                    -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                    $loglevel_opt $loglevel \
+                    -pix_fmt nv12 \
+                    "$destination"
+                
+                rm "$filepath/${filebase}_main.$fileext"
+                rm "$filepath/${filebase}_shutdown.$fileext"
+
+            # simple stretch
+            else
+                # get the last frame image
+                "$ETROBO_FFMPEG" -y \
+                    -sseof -10 \
+                    -i "$source" \
+                    -update 1 \
+                    -q:v 1 \
+                    -r $frameRate \
+                    -f image2 \
+                    "$file_lastframe"
+
+                # generate the last frame movie
+                "$ETROBO_FFMPEG" -y \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -loop 1 \
+                    -i "$file_lastframe" \
+                    -t $(($stretchFrames/$frameRate)) \
+                    -r $frameRate \
+                    -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                    $loglevel_opt $loglevel \
+                    -pix_fmt nv12 \
+                    "$file_lastframe.$fileext"
+
+                # concat these files
+                "$ETROBO_FFMPEG" -y \
+                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
+                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    -report \
+                    -i "$source" \
+                    -i "$file_lastframe.$fileext" \
+                    -filter_complex "[0:v:0][1:v:0]concat=n=2:v=1[outv]" \
+                    -map "[outv]" \
+                    -r $frameRate \
+                    -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                    $loglevel_opt $loglevel \
+                    -pix_fmt nv12 \
+                    "$destination.mp4"
+
+                
+                #rm "$filepath/${filebase}_lastframe.png"
+                #rm "$filepath/${filebase}_lastframe.png.$fileext"
+                
+                echo "debug: $destination"
+            fi
         fi
         
         # MatchMaker multiplexer
@@ -604,7 +666,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
 
             loglevel_opt="-loglevel"
-            loglevel="quiet"
+#            loglevel="quiet"
+            loglevel="info"
             if [ -n "$1" ]; then
                 loglevel="$1"
             fi

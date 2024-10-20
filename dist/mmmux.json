@@ -4,10 +4,10 @@
             "MatchMaker multiplexing settings using from ffutil",
             "  mmmux.json",
             "Author: jtFuruhata",
-            "Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license",
+            "Copyright (c) 2021-2024 ETロボコン実行委員会, Released under the MIT license",
             "See LICENSE"
         ],
-        "version":                  "2023.entry.0",
+        "version":                  "2024.entry.0",
         "matchMakerScreenWidth":    "1008",
         "matchMakerScreenHeight":   "750",
         "matchMakerFrameRate":      "30",
@@ -30,13 +30,13 @@
             "scale":    ""
         },
         "time": {
-            "width":    "165",
+            "width":    "175",
             "height":   "39",
-            "x":        "428",
+            "x":        "423",
             "y":        "120",
             "toX":      "428",
             "toY":      "38",
-            "scale":    "1.0"
+            "scale":    "0.9"
         }
     },
     "left": {
@@ -60,13 +60,13 @@
                 "scale":    "1.0"
             },
             "teamID": {
-                "width":    "205",
+                "width":    "215",
                 "height":   "70",
-                "x":        "660",
+                "x":        "655",
                 "y":        "650",
                 "toX":      "508",
                 "toY":      "3",  
-                "scale":    "0.5"
+                "scale":    "0.4"
             },
             "goalTime": {
                 "width":    "166",
@@ -106,13 +106,22 @@
             }
         },
         "entry": {
+            "midgate": {
+                "width":    "191",
+                "height":   "34",
+                "x":        "32",
+                "y":        "525",
+                "toX":      "110",
+                "toY":      "300",  
+                "scale":    "1.0"
+            },
             "lapgate": {
                 "width":    "191",
                 "height":   "34",
                 "x":        "32",
                 "y":        "564",
-                "toX":      "30",
-                "toY":      "350",  
+                "toX":      "110",
+                "toY":      "355",  
                 "scale":    "1.0"
             },
             "bonus": {
@@ -259,13 +268,13 @@
                 "scale":    "1.0"
             },
             "teamID": {
-                "width":    "205",
+                "width":    "215",
                 "height":   "70",
-                "x":        "660",
+                "x":        "655",
                 "y":        "650",
                 "toX":      "508",
-                "toY":      "0",  
-                "scale":    "0.5"
+                "toY":      "3",  
+                "scale":    "0.4"
             },
             "goalTime": {
                 "width":    "166",
@@ -305,13 +314,22 @@
             }
         },
         "entry": {
+            "midgate": {
+                "width":    "191",
+                "height":   "34",
+                "x":        "816",
+                "y":        "525",
+                "toX":      "350",
+                "toY":      "300",  
+                "scale":    "1.0"
+            },
             "lapgate": {
                 "width":    "191",
                 "height":   "34",
                 "x":        "816",
                 "y":        "564",
-                "toX":      "450",
-                "toY":      "350",  
+                "toX":      "350",
+                "toY":      "355",  
                 "scale":    "1.0"
             },
             "bonus": {

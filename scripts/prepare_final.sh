@@ -472,8 +472,9 @@ elif [ "$1" == "replaceMovies" ]; then
 
     ls -1 "$sourceFolder" | sed -E 's/^[EAP]_(.*)\.zip/\1/' \
     | while read requestID; do
+        echo "debug: $requestID"
         skip="skip"
-        record=`echo $Requests | jq -cr ".[]|select(.ID==\"$requestID\")"`
+        record=`echo "$Requests" | jq -cr ".[]|select(.ID==\"$requestID\")"`
         if [ "$mode" == "id" ]; then
             if [ "$teamID" == "$(json record.teamID)" ]; then
                 courseLetter=$(json record.courseLetter)
@@ -484,7 +485,7 @@ elif [ "$1" == "replaceMovies" ]; then
             divisionID=$(json record.divisionID)
             classLetter=$(json record.classLetter)
             courseLetter=$(json record.courseLetter)
-            record=`echo $Divisions | jq -cr ".[]|select(.ID==\"$divisionID\")"`
+            record=`echo "$Divisions" | jq -cr ".[]|select(.ID==\"$divisionID\")"`
             if [ "$classLetter" == "A" ]; then
                 targetID=$(json record.blockLetter)
             else
@@ -576,6 +577,21 @@ elif [ "$1" == "assignResults" ]; then
     done
 
 #
+# joinResults
+#
+# join all result files on /path/to/Results_divisionID_[EP] into /path/to/Results_E
+#
+elif [ "$1" == "joinResults" ]; then
+    mkdir -p "$relayFolder/Results_E"
+    ls -1 "$relayFolder" | grep ^Results_.*_E$ \
+    | while read line; do
+        ls -1 "$relayFolder/$line" \
+        | while read file; do
+            cp -f "$relayFolder/$line/$file" "$relayFolder/Results_E/"
+        done
+    done
+
+#
 # returnResults [bib] /path/to/Results_divisionID_[EPA] <teamID|bibID>
 #
 # return a teamID's or a bibID's Results file from /path/to/Results_divisionID_[EPA]
@@ -590,11 +606,11 @@ elif [ "$1" == "returnResults" ]; then
     sourceFolder="$2"
     unset teamID
     if [ -n "$bibMode" ]; then
-        teamID=`echo $Teams | jq -cr ".[]|select(.bibID==\"$3\").ID"`
+        teamID=`echo "$Teams" | jq -cr ".[]|select(.bibID==\"$3\").ID"`
     else
         teamID="$3"
     fi
-    echo $Requests | jq -cr ".[]|select(.teamID==\"$teamID\")" \
+    echo "$Requests" | jq -cr ".[]|select(.teamID==\"$teamID\")" \
     | while read record; do
         classLetter=$(json record.classLetter)
         courseLetter=$(json record.courseLetter)

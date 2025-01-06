@@ -36,7 +36,7 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020-2024 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
@@ -44,12 +44,12 @@ Copyright(C) 2020-2024 ETロボコン実行委員会, All rights reserved.
 
 - x86-64アーキテクチャのCPU
 - Windows 11
-    - version 23H2(WSL September 2023 update)以降の利用を推奨します。
+    - OSビルド26100.2605（December 2024 Update）以降のversion 24H2、または23H2。
+        - 2024年12月アップデートより前に手動インストールした24H2ではWSLが破壊され修復不可能であるとの報告もありますのでご注意ください。 
     - Windows 10 Enterprise LTSC 2021での動作確認も行なっていますが、サポート対象外です。
-- `wsl --install`によりインストールされたUbuntuまたはUbuntu-22.04(WSL2)
+- `wsl --install`によりインストールされたUbuntuまたはUbuntu-24.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
-    - Ubuntu-24.04はリリースされ次第サポート対象に含めます。
-    - Ubuntu-20.04・18.04・16.04、Debian(9/10/11/12)でも動作するようですが、サポート対象外です。
+    - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12)でも動作するようですが、サポート対象外です。
     - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
 

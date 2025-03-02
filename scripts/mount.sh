@@ -4,8 +4,8 @@
 #
 # mount.sh
 #
-# for etrobo environment Ver 2.10a.200621
-# Copyright (c) 2020 jtLab, Hokkaido Information University
+# for etrobo environment Ver 2.11a.250302
+# Copyright (c) 2020-2025 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
@@ -26,13 +26,13 @@ if [ "$ETROBO_OS" = "win" ]; then
     VolumeName=""
     tmpFile=$(mktemp)
 
-    wmic.exe LogicalDisk get Caption,VolumeName > $tmpFile
+    powershell.exe 'Get-WmiObject -Query "SELECT Caption, VolumeName FROM Win32_LogicalDisk" | Select-Object Caption, VolumeName' > $tmpFile
     while read line; do
-        if [ ${line:1:1} = ":"  ]; then
-            if [ "${line:9:5}" = "EV3RT" ]; then
+        if [ "${line:1:1}" = ":"  ]; then
+            if [ "${line:8:5}" = "EV3RT" ]; then
                 Caption="${line:0:2}"
                 physicalDrive=${Caption:0:1}
-                volumeName=`echo ${line:9:-2}`
+                volumeName=`echo ${line:8:-1}`
             fi
         fi
     done < $tmpFile

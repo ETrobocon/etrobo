@@ -3,7 +3,7 @@
 # ' hackspi - HackSPi installer/headless runner'
 # '---------'
 # Author: jtFuruhata
-# Copyright (c) 2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2022-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # this script requires `./repl_client.py` to be executed.
@@ -375,13 +375,13 @@ if [ -n "$install" ]; then
         VolumeName=""
         tmpFile=$(mktemp)
 
-        wmic.exe LogicalDisk get Caption,VolumeName > $tmpFile
+        powershell.exe 'Get-WmiObject -Query "SELECT Caption, VolumeName FROM Win32_LogicalDisk" | Select-Object Caption, VolumeName' > $tmpFile
         while read line; do
-            if [ ${line:1:1} = ":"  ]; then
-                if [ "${line:9:4}" = "boot" ]; then
+            if [ "${line:1:1}" = ":"  ]; then
+                if [ "${line:8:4}" = "boot" ]; then
                     Caption="${line:0:2}"
                     physicalDrive=${Caption:0:1}
-                    volumeName=`echo ${line:9:-2}`
+                    volumeName=`echo ${line:8:-1}`
                 fi
             fi
         done < $tmpFile

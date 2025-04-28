@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-echo '-------------'
-echo ' startetrobo - etrobo all-in-one package installer/invoker'
-echo '-------------'
+echo '-----------------'
+echo ' startetrobo 3.0 - etrobo all-in-one package installer/invoker'
+echo '-----------------'
 # Author: jtFuruhata
-# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -99,9 +99,36 @@ fi
 # cancel etrobo environment disabler
 rm -f "$ETROBO_ROOT/disable"
 
+# recognize target devenv
+unset ETROBO_MODE
+if [ "$1" = "NXT" ]; then
+    export ETROBO_MODE="NXT"
+    shift
+elif [ "$1" = "EV3" ]; then
+    export ETROBO_MODE="EV3"
+    shift
+elif [ "$1" = "SPIKE" ]; then
+    export ETROBO_MODE="SPIKE"
+    shift
+elif
+    if [ -f "$ETROBO_ROOT/NXT" ]; then
+        export ETROBO_MODE="NXT"
+    elif [ -f "$ETROBO_ROOT/EV3" ]; then
+        export ETROBO_MODE="EV3"
+    elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+        export ETROBO_MODE="SPIKE"
+    fi
+fi
+
 # usage
 if [ "$1" = "--help" ]; then
-    echo 'Usage:'
+    echo 'Usage: startetrobo [NXT|EV3|SPIKE] [<option>]'
+    echo '  NXT|EV3|SPIKE ... select your target devenv'
+    echo '  If no target is specified,'
+    echo '    If a file named 'NXT' exists, NXT(nxtOSEK) is selected.'
+    echo '    If 'NXT' does not exist but a file named 'EV3' exists, EV3(EV3RT) is selected.'
+    echo '    If neither exists, SPIKE(RasPike-ART) is selected.'
+    echo
     echo '  startetrobo         ... install and/or open etrobo terminal on VSCode'
     echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
     echo
@@ -240,8 +267,9 @@ if [ "$1" = "clean" ]; then
         if [ "$kernel" = "debian" ]; then
             echo "remove /etc/profile.d/ev3rt.sh"
             sudo rm -f /etc/profile.d/ev3rt.sh
-            echo "remove /opt/gcc-arm-none-eabi*/"
-            sudo rm -rf /opt/gcc-arm-none-eabi*/
+            # This was a requirement for the past EV3RT operation, but it is likely no longer needed.
+            #echo "remove /opt/gcc-arm-none-eabi*/"
+            #sudo rm -rf /opt/gcc-arm-none-eabi*/
             if [ "$host" = "win" ]; then
                 comspec="`which cmd.exe`"
                 if [ -z "$comspec" ]; then
@@ -342,15 +370,16 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
             sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
             sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
         fi
+        # This was a requirement for the past EV3RT operation, but it is likely no longer needed.
         #
         # EV3RT requirement from:
         # http://ev3rt-git.github.io/public/ev3rt-prepare-ubuntu.sh
         #
-        echo
-        echo "Remove binutils-arm-none-eabi and gcc-arm-none-eabi:"
-        sudo apt remove binutils-arm-none-eabi gcc-arm-none-eabi -y
-        echo
-        echo "Install u-boot-tools and lib32stdc++6:"
+        #echo
+        #echo "Remove binutils-arm-none-eabi and gcc-arm-none-eabi:"
+        #sudo apt remove binutils-arm-none-eabi gcc-arm-none-eabi -y
+        #echo
+        #echo "Install u-boot-tools and lib32stdc++6:"
         sudo apt install u-boot-tools lib32stdc++6 -y
     elif [ "$install" = "update" ]; then
         echo
@@ -390,7 +419,7 @@ else
 fi
 
 # prepare as nxtOSEK mode
-if [ -f "$ETROBO_ROOT/NXT" ]; then
+if [ "$ETROBO_MODE" == "NXT" ]; then
     if [ "$host" == "win" ]; then
         cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
     fi

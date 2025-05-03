@@ -100,24 +100,33 @@ fi
 rm -f "$ETROBO_ROOT/disable"
 
 # recognize target devenv
-unset ETROBO_MODE
+unset ETROBO_ENV_MODE
 if [ "$1" = "NXT" ]; then
-    export ETROBO_MODE="NXT"
+    export ETROBO_ENV_MODE="NXT"
+    touch "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE"
     shift
 elif [ "$1" = "EV3" ]; then
-    export ETROBO_MODE="EV3"
+    export ETROBO_ENV_MODE="EV3"
+    rm -rf "$ETROBO_ROOT/NXT"
+    touch "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE"
     shift
 elif [ "$1" = "SPIKE" ]; then
-    export ETROBO_MODE="SPIKE"
+    export ETROBO_ENV_MODE="SPIKE"
+    rm -rf "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    touch "$ETROBO_ROOT/SPIKE"
     shift
-elif
-    if [ -f "$ETROBO_ROOT/NXT" ]; then
-        export ETROBO_MODE="NXT"
-    elif [ -f "$ETROBO_ROOT/EV3" ]; then
-        export ETROBO_MODE="EV3"
-    elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
-        export ETROBO_MODE="SPIKE"
-    fi
+elif [ -f "$ETROBO_ROOT/NXT" ]; then
+    export ETROBO_MODE="NXT"
+elif [ -f "$ETROBO_ROOT/EV3" ]; then
+    export ETROBO_MODE="EV3"
+elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+    export ETROBO_MODE="SPIKE"
+else
+    export ETROBO_MODE="SPIKE"
 fi
 
 # usage
@@ -419,7 +428,7 @@ else
 fi
 
 # prepare as nxtOSEK mode
-if [ "$ETROBO_MODE" == "NXT" ]; then
+if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
     if [ "$host" == "win" ]; then
         cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
     fi

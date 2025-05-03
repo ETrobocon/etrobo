@@ -2,7 +2,7 @@
 # etrobo environment core
 #   etroboenv.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2022 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -17,22 +17,42 @@ if [ "$ETROBO_OS_SUBSYSTEM" == "WSL2" ] || [ -n "`uname -r | grep WSL2`" ]; then
     done
 fi
 
-# select EV3RT kernel version
-ver=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | grep -v beta | tail -n 1 | sed -E "s/^ev3rt-(.*)-release$/\1/"`
-file="$ETROBO_ROOT/select_kernel_version"
-if [ -f "$file" ]; then
-    ver=`cat "$file"`
+# recognize target devenv
+if [ -z "$ETROBO_ENV_MODE" ]; then
+    if [ -f "$ETROBO_ROOT/NXT" ]; then
+        export ETROBO_ENV_MODE="NXT"
+    elif [ -f "$ETROBO_ROOT/EV3" ]; then
+        export ETROBO_ENV_MODE="EV3"
+    elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+        export ETROBO_ENV_MODE="SPIKE"
+    else
+        export ETROBO_ENV_MODE="SPIKE"
+    fi
 fi
-if [ -z "$ver" ]; then
-    ver="1.1"
-fi
-kernel="hrp3"
-if [ -n "`echo $ver | grep beta`" ]; then
-    kernel="hrp2"
+
+# switch workspace
+if [ "$ETROBO_ENV_MODE" = "NXT" ]; then
+    targetWorkspace="$ETROBO_ROOT/nxtOSEK/workspace"
+elif [ "$ETROBO_ENV_MODE" = "EV3" ]; then
+    # select EV3RT kernel version
+    ver=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | grep -v beta | tail -n 1 | sed -E "s/^ev3rt-(.*)-release$/\1/"`
+    file="$ETROBO_ROOT/select_kernel_version"
+    if [ -f "$file" ]; then
+        ver=`cat "$file"`
+    fi
+    if [ -z "$ver" ]; then
+        ver="1.1"
+    fi
+    kernel="hrp3"
+    if [ -n "`echo $ver | grep beta`" ]; then
+        kernel="hrp2"
+    fi
+    targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
+elif [ "$ETROBO_ENV_MODE" = "SPIKE" ]; then
+    targetWorkspace="$ETROBO_ROOT/raspike-athrill-v850e2m/sdk/workspace"
 fi
 currentWorkspace="`ls -la "$ETROBO_ROOT" | grep 'workspace ->' | sed -E 's/.* workspace -> (.*)$/\1/'`"
-targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
-if [ "$kernel" != "`echo $currentWorkspace | awk -F '/' '{print $1}'`" ] && [ -d "$targetWorkspace" ]; then
+if [ "$targetWorkspace" != "$currentWorkspace" ]; then
     rm -f "$ETROBO_ROOT/workspace"
     ln -s "$targetWorkspace" "$ETROBO_ROOT/workspace"
 fi
@@ -42,14 +62,18 @@ if [ "$1" = "unset" ]; then
     . etrobopkg unset
     . etrobopath.sh unset
     unset ETROBO_ENV
+    unset ETROBO_ENV_MODE
     unset ETROBO_ENV_VER
     unset ETROBO_SCRIPTS
     unset ETROBO_ATHRILL_GCC
     unset ETROBO_ATHRILL_TARGET
     unset ETROBO_HRP3_SDK
     unset ETROBO_HRP3_WORKSPACE
+    unset ETROBO_ATHRILL_EV3RT
+    unset ETROBO_ATHRILL_RASPIKE
     unset ETROBO_ATHRILL_SDK
     unset ETROBO_ATHRILL_WORKSPACE
+    unset ETROBO_ATHRILL_DEVICE_CONFIG
     unset ETROBO_SDCARD
     unset ETROBO_OS
     unset ETROBO_OS_SUBSYSTEM
@@ -77,7 +101,14 @@ else
             export ETROBO_HRP3_SDK="$ETROBO_ROOT/$kernel/sdk"
             export ETROBO_HRP3_WORKSPACE="$ETROBO_HRP3_SDK/workspace"
             export ETROBO_ATHRILL_EV3RT="$ETROBO_ROOT/ev3rt-athrill-v850e2m"
-            export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_EV3RT/sdk"
+            export ETROBO_ATHRILL_RASPIKE="$ETROBO_ROOT/raspike-athrill-v850e2m"
+            if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+                export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_EV3RT/sdk"
+                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
+            else
+                export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_RASPIKE/sdk"
+                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_SDK/common/device_config"
+            fi
             export ETROBO_ATHRILL_WORKSPACE="$ETROBO_ATHRILL_SDK/workspace"
             export ETROBO_MRUBY_EV3RT="$ETROBO_ATHRILL_WORKSPACE/mruby-ev3rt"
             export ETROBO_MRUBY_VER="2.0.1"
@@ -145,7 +176,7 @@ else
 
             if [ "$BEERHALL_INVOKER" != "booting" ] && [ -z "$quit" ]; then
                 echo
-                echo "etrobo environment: Ready. (Ver.$ETROBO_ENV_VER)"
+                echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
                 echo
                 echo 'to disable this environment, run `touch $ETROBO_ROOT/disable` and restart terminal'
                 echo
@@ -161,7 +192,7 @@ else
         if [ "$PATH" == "$ETROBO_PATH_ORG" ]; then
             . "$ETROBO_SCRIPTS/etrobopath.sh"
         fi
-        echo "etrobo environment: Ready. (Ver.$ETROBO_ENV_VER)"
+        echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
     fi
 fi
 

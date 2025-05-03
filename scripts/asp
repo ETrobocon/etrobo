@@ -48,20 +48,21 @@ else
     # default filenames for launcher
     athrill2="$ETROBO_ATHRILL_WORKSPACE/athrill2"
     memory_txt="$ETROBO_ATHRILL_SDK/common/memory.txt"
-    device_config_path="$ETROBO_ATHRILL_SDK/common"
     target="$ETROBO_ATHRILL_WORKSPACE/asp"
 
     # search & select a path to device_config.txt
-    # select priority: 
+    # select priority on EV3RT: 
     # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
     # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
     # 3. $ETROBO_ATHRILL_SDK/common
-    if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
-        device_config_path="$ETROBO_HRP3_WORKSPACE/etroboc_common"
-    elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
-        device_config_path="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
+            ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
+        elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
+            ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config"
+        fi
     fi
-    device_config_txt="$device_config_path/device_config.txt"
+    device_config_txt="${ETROBO_ATHRILL_DEVICE_CONFIG}.txt"
 
     # deep flag
     unset deep
@@ -95,7 +96,7 @@ else
         app_prefix="r_"
         app_select="r_app"
         sim_select="right"
-        device_config_txt="$device_config_path/device_config_r.txt"
+        device_config_txt="${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
         shift
     fi
 

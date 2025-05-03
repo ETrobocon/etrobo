@@ -2,7 +2,7 @@
 # on-demand Athrill2 deployer for startetrobo
 #   build_athril.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2024 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -14,12 +14,18 @@
 # https://github.com/toppers/athrill/commits/master
 # https://github.com/toppers/athrill-target-v850e2m/commits/master
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
+# https://github.com/ETrobocon/raspike-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2024.05.08a
+# the ETrobo official certified commit: Ver.2025.05.03a
 ATHRILL_OFFICIAL_COMMIT="8bf811e76f37a065b4b3e3cae4795b794b4b66f0"
 TARGET_OFFICIAL_COMMIT="f02f4a31c5b3ec45329aad339346943466d64662"
-SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
-
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
+    SAMPLE_AUTHOR="toppers"
+else
+    SAMPLE_OFFICIAL_COMMIT="4b0cadf003d111cf4a0bf9a61fcd633d585bcf91"
+    SAMPLE_AUTHOR="ETrobocon"
+fi
 # mruby environment for UnityETroboSim
 # Powered by mruby Forum
 # http://forum.mruby.org/
@@ -71,34 +77,51 @@ fi
 
 #
 # change repositories and check installation
-if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
-    cd "$ETROBO_ATHRILL_EV3RT"
-    CURRENT_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-    CURRENT_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
-    if [ "$CURRENT_BRANCH" = "master" ]; then
-        CURRENT_COMMIT="HEAD"
-    else
-        CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
-        CURRENT_BRANCH="master"
-    fi
-    if [ -d "$ETROBO_MRUBY_EV3RT" ]; then
-        cd "$ETROBO_MRUBY_EV3RT"
-        MRUBY_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
-        MRUBY_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
-        if [ "$MRUBY_BRANCH" = "master" ]; then
-            MRUBY_COMMIT="HEAD"
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    if [ -d "$ETROBO_ATHRILL_EV3RT" ]; then
+        cd "$ETROBO_ATHRILL_EV3RT"
+        CURRENT_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
+        CURRENT_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
+        if [ "$CURRENT_BRANCH" = "master" ]; then
+            CURRENT_COMMIT="HEAD"
         else
-            MRUBY_COMMIT=`echo "$MRUBY_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
-            MRUBY_BRANCH="master"
+            CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
+            CURRENT_BRANCH="master"
+        fi
+        if [ -d "$ETROBO_MRUBY_EV3RT" ]; then
+            cd "$ETROBO_MRUBY_EV3RT"
+            MRUBY_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
+            MRUBY_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
+            if [ "$MRUBY_BRANCH" = "master" ]; then
+                MRUBY_COMMIT="HEAD"
+            else
+                MRUBY_COMMIT=`echo "$MRUBY_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
+                MRUBY_BRANCH="master"
+            fi
+        else
+            MRUBY_AUTHOR="NOT"
+            MRUBY_COMMIT="INSTALLED"
+            MRUBY_BRANCH="YET"
         fi
     else
-        MRUBY_AUTHOR="NOT"
-        MRUBY_COMMIT="INSTALLED"
-        MRUBY_BRANCH="YET"
+        CHECK="skip clean"
+        unset CURRENT_AUTHOR
     fi
 else
-    CHECK="skip clean"
-    unset CURRENT_AUTHOR
+    if [ -d "$ETROBO_ATHRILL_RASPIKE" ]; then
+        cd "$ETROBO_ATHRILL_RASPIKE"
+        CURRENT_AUTHOR=`git remote -v | head -n 1 | sed -E "s/^.*github.com\/(.*)\/.*$/\1/"`
+        CURRENT_BRANCH=`git branch | grep ^* | sed -E 's/^\* (.*)$/\1/'`
+        if [ "$CURRENT_BRANCH" = "master" ]; then
+            CURRENT_COMMIT="HEAD"
+        else
+            CURRENT_COMMIT=`echo "$CURRENT_BRANCH" | sed -E 's/^.*\(HEAD detached at (.*)\)$/\1/'`
+            CURRENT_BRANCH="master"
+        fi
+    else
+        CHECK="skip clean"
+        unset CURRENT_AUTHOR
+    fi
 fi
 
 unset ETROBO_ATHRILL_TARGET_ROOT
@@ -142,19 +165,25 @@ if [ "$1" = "show" ]; then
     show_mruby="mruby"
     official_athrill="official"
     official_mruby="official"
-    if [ "$2" = "mruby" ]; then
-        unset show_athrill
-    elif [ "$2" = "athrill" ]; then
+    mode="ev3rt"
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        if [ "$2" = "mruby" ]; then
+            unset show_athrill
+        elif [ "$2" = "athrill" ]; then
+            unset show_mruby
+        fi
+    else
+        mode="raspike"
         unset show_mruby
     fi
     echo "Current status of this Athrill-related repositories:"
     if [ -n "$show_athrill" ]; then
         echo "       athrill: $ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH"
         echo "athrill-target: $TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH"
-        echo " ev3rt-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
+        echo " $mode-athrill: $CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH"
         if [ "$ATH2_AUTHOR/$ATH2_COMMIT/$ATH2_BRANCH" = "$ATHRILL_AUTHOR/${ATHRILL_OFFICIAL_COMMIT:0:${#ATH2_COMMIT}}/$ATHRILL_BRANCH" ] \
         && [ "$TARGET_AUTHOR/$TARGET_COMMIT/$TARGET_BRANCH" = "$ATHRILL_AUTHOR/${TARGET_OFFICIAL_COMMIT:0:${#TARGET_COMMIT}}/$ATHRILL_BRANCH" ] \
-        && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$ATHRILL_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:${#CURRENT_COMMIT}}/$ATHRILL_BRANCH" ]; then
+        && [ "$CURRENT_AUTHOR/$CURRENT_COMMIT/$CURRENT_BRANCH" = "$SAMPLE_AUTHOR/${SAMPLE_OFFICIAL_COMMIT:0:${#CURRENT_COMMIT}}/$ATHRILL_BRANCH" ]; then
             official_athrill="official"
         else
             unset official_athrill
@@ -209,20 +238,30 @@ cd "$ETROBO_ROOT"
 # switch into dev repos
 if [ "$1" = "dev" ]; then
     GIT_AUTHOR=$DEV_AUTHOR
+    GIT_SAMPLE_AUTHOR=$DEV_AUTHOR
 else
     GIT_AUTHOR=$ATHRILL_AUTHOR
+    GIT_SAMPLE_AUTHOR=$SAMPLE_AUTHOR
 fi
 
 #
 # clone athrill repositories
-if [ "$GIT_AUTHOR" != "$CURRENT_AUTHOR" ]; then
+if [ "$GIT_SAMPLE_AUTHOR" != "$CURRENT_AUTHOR" ]; then
     echo "make Athrill repositories clean"
     rm -rf "$ETROBO_ROOT/athrill"
     rm -rf "$ETROBO_ATHRILL_TARGET_ROOT"
-    rm -rf "$ETROBO_ATHRILL_EV3RT"
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        rm -rf "$ETROBO_ATHRILL_EV3RT"
+    else
+        rm -rf "$ETROBO_ATHRILL_RASPIKE"
+    fi
     git clone https://github.com/${GIT_AUTHOR}/athrill.git
     git clone --recursive https://github.com/${GIT_AUTHOR}/athrill-target-v850e2m.git
-    git clone https://github.com/${GIT_AUTHOR}/ev3rt-athrill-v850e2m.git
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        git clone https://github.com/${GIT_SAMPLE_AUTHOR}/ev3rt-athrill-v850e2m.git
+    else
+        git clone --recursive https://github.com/${GIT_SAMPLE_AUTHOR}/raspike-athrill-v850e2m.git
+    fi
 
     #
     # memory.txt hotfix
@@ -239,42 +278,44 @@ fi
 
 #
 # clone and build mruby-ev3rt
-cd "$ETROBO_ATHRILL_WORKSPACE"
-if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
-    echo "Download mruby-ev3rt"
-    git clone https://github.com/mruby-Forum/mruby-ev3rt.git
-    rm -rf "$ETROBO_MRUBY_ROOT"
-    cp -f "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
-    tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
-
-    ###############
-    # 2022 hotfix #
-    ###############
-    #------------------------------------------------------------
-    target="$ETROBO_MRUBY_ROOT/Rakefile"
-    rm -f "$target.backup"
-    cp -f "$target" "$target.backup"
-    rm -f "$target"
-    cat "$target.backup" | sed -E "s/^(  FileUtils.*)opts$/\1\*\*opts/" > "$target"
-    #------------------------------------------------------------
-fi
-
-if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
-    echo "Build mruby-ev3rt"
-    cd "$ETROBO_MRUBY_EV3RT"
-    cat build_config_ev3rt_sim.rb \
-    | sed -E "s/^EV3RT_PATH\ =\ \"(.*)\"$/EV3RT_PATH = \"\$ETROBO_ATHRILL_EV3RT\"/" \
-    | sed -E "s/^GNU_TOOL_PREFX\ =\ \"(.*)\"$/GNU_TOOL_PREFX = \"\$ETROBO_ATHRILL_GCC\/bin\/v850-elf-\"/" \
-    > build_config_ev3rt_sim_etrobo.rb
-    cd $ETROBO_MRUBY_ROOT
-    rm -rf build
-    MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
-    if [ "$?" != "0" ]; then
-        rm -rf "$ETROBO_MRUBY_EV3RT"
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    cd "$ETROBO_ATHRILL_WORKSPACE"
+    if [ ! -d "$ETROBO_MRUBY_EV3RT" ]; then
+        echo "Download mruby-ev3rt"
+        git clone https://github.com/mruby-Forum/mruby-ev3rt.git
         rm -rf "$ETROBO_MRUBY_ROOT"
-        echo
-        echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
-        echo
+        cp -f "$ETROBO_ROOT/dist/$ETROBO_MRUBY_VER.tar.gz" ./
+        tar xvf "$ETROBO_MRUBY_VER.tar.gz" >/dev/null 2>&1
+
+        ###############
+        # 2022 hotfix #
+        ###############
+        #------------------------------------------------------------
+        target="$ETROBO_MRUBY_ROOT/Rakefile"
+        rm -f "$target.backup"
+        cp -f "$target" "$target.backup"
+        rm -f "$target"
+        cat "$target.backup" | sed -E "s/^(  FileUtils.*)opts$/\1\*\*opts/" > "$target"
+        #------------------------------------------------------------
+    fi
+
+    if [ "`build_athrill.sh show mruby > /dev/null; echo $?`" == "1" ]; then
+        echo "Build mruby-ev3rt"
+        cd "$ETROBO_MRUBY_EV3RT"
+        cat build_config_ev3rt_sim.rb \
+        | sed -E "s/^EV3RT_PATH\ =\ \"(.*)\"$/EV3RT_PATH = \"\$ETROBO_ATHRILL_EV3RT\"/" \
+        | sed -E "s/^GNU_TOOL_PREFX\ =\ \"(.*)\"$/GNU_TOOL_PREFX = \"\$ETROBO_ATHRILL_GCC\/bin\/v850-elf-\"/" \
+        > build_config_ev3rt_sim_etrobo.rb
+        cd $ETROBO_MRUBY_ROOT
+        rm -rf build
+        MRUBY_CONFIG="$ETROBO_MRUBY_EV3RT/build_config_ev3rt_sim_etrobo.rb" rake
+        if [ "$?" != "0" ]; then
+            rm -rf "$ETROBO_MRUBY_EV3RT"
+            rm -rf "$ETROBO_MRUBY_ROOT"
+            echo
+            echo ' *** FATAL ERROR *** mruby: build failed.  try `~/startetrobo update`'
+            echo
+        fi
     fi
 fi
 
@@ -303,59 +344,63 @@ if [ -n "$1" ]; then
     if [ "$1" = "official" ] || [ "$1" = "init" ]; then
         git checkout $SAMPLE_OFFICIAL_COMMIT
     fi
-    if [ -d sdk/workspace/mruby-ev3rt ]; then
-        cd sdk/workspace/mruby-ev3rt
-        git checkout .
-        git checkout master
-        git pull
-        if [ "$1" = "official" ] || [ "$1" = "init" ]; then
-            git checkout $MRUBY_OFFICIAL_COMMIT
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        if [ -d sdk/workspace/mruby-ev3rt ]; then
+            cd sdk/workspace/mruby-ev3rt
+            git checkout .
+            git checkout master
+            git pull
+            if [ "$1" = "official" ] || [ "$1" = "init" ]; then
+                git checkout $MRUBY_OFFICIAL_COMMIT
+            fi
         fi
     fi
 fi
 
-#########################
-#   for 2022            #
-#     Ruby 3.x hotfix   #
-#########################
-# -------------------------------------------------------------------------------------
-target="$ETROBO_HRP3_SDK/../cfg/pass1.rb"
-if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
-    cp -f "$target" "$target.backup"
-    rm -f "$target"
-    cat "$target.backup" \
-    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
-fi
-target="$ETROBO_ATHRILL_SDK/../cfg/pass1.rb"
-if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
-    cp -f "$target" "$target.backup"
-    rm -f "$target"
-    cat "$target.backup" \
-    | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
-fi
-if [ -f "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ]; then
-    cd "$ETROBO_ATHRILL_SDK/../"
-    cp "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ./
-    rm -rf "tecsgen-1.8.0"
-    tar xvf "tecsgen-1.8.0.tgz" > /dev/null
-fi
-if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
-    rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
-    cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"
-fi
-# -------------------------------------------------------------------------------------
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    #########################
+    #   for 2022            #
+    #     Ruby 3.x hotfix   #
+    #########################
+    # -------------------------------------------------------------------------------------
+    target="$ETROBO_HRP3_SDK/../cfg/pass1.rb"
+    if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
+        cp -f "$target" "$target.backup"
+        rm -f "$target"
+        cat "$target.backup" \
+        | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
+    fi
+    target="$ETROBO_ATHRILL_SDK/../cfg/pass1.rb"
+    if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
+        cp -f "$target" "$target.backup"
+        rm -f "$target"
+        cat "$target.backup" \
+        | sed -E "s/\{ (skip_blanks: true, skip_lines: \/\^\#\/ )\}/\1/" > "$target"
+    fi
+    if [ -f "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ]; then
+        cd "$ETROBO_ATHRILL_SDK/../"
+        cp "$ETROBO_ROOT/dist/tecsgen-1.8.0.tgz" ./
+        rm -rf "tecsgen-1.8.0"
+        tar xvf "tecsgen-1.8.0.tgz" > /dev/null
+    fi
+    if [ -d "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0" ]; then
+        rm -rf "$ETROBO_ATHRILL_SDK/../tecsgen"
+        cp -rf "$ETROBO_ATHRILL_SDK/../tecsgen-1.8.0/tecsgen" "$ETROBO_ATHRILL_SDK/../"
+    fi
+    # -------------------------------------------------------------------------------------
 
-#
-# modify Makefile.inc for mruby
-cd "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby"
-if [ -z "`cat Makefile.inc | grep ETROBO_MRUBY`" ]; then
-    echo "modify \$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby/Makefile.inc"
-    cat Makefile.inc \
-    | sed -E "s/^APPL_LIBS\ \+=\ (.*libmruby.a)(.*)$/APPL_LIBS += \$(ETROBO_MRUBY_LIB)\2/" \
-    | sed -E "s/^INCLUDES\ \+=\ -I(.*\/mruby-$ETROBO_MRUBY_VER\/include\/)(.*)$/INCLUDES += -I\$(ETROBO_MRUBY_ROOT)\/include\/\2/" \
-    > Makefile.inc.mod
-    mv -f Makefile.inc.mod Makefile.inc
-    cp -rf "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby" "$ETROBO_HRP3_WORKSPACE/"
+    #
+    # modify Makefile.inc for mruby
+    cd "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby"
+    if [ -z "`cat Makefile.inc | grep ETROBO_MRUBY`" ]; then
+        echo "modify \$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby/Makefile.inc"
+        cat Makefile.inc \
+        | sed -E "s/^APPL_LIBS\ \+=\ (.*libmruby.a)(.*)$/APPL_LIBS += \$(ETROBO_MRUBY_LIB)\2/" \
+        | sed -E "s/^INCLUDES\ \+=\ -I(.*\/mruby-$ETROBO_MRUBY_VER\/include\/)(.*)$/INCLUDES += -I\$(ETROBO_MRUBY_ROOT)\/include\/\2/" \
+        > Makefile.inc.mod
+        mv -f Makefile.inc.mod Makefile.inc
+        cp -rf "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby" "$ETROBO_HRP3_WORKSPACE/"
+    fi
 fi
 
 #

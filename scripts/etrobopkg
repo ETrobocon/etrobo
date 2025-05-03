@@ -2,7 +2,7 @@
 # etrobo all-in-one package downloader
 #   etrobopkg
 # Author: jtFuruhata
-# Copyright (c) 2020-2024 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -57,8 +57,8 @@ else
     #
     # ETrobo package download manifest
     #
-    export ETROBO_MANIFEST_VER="2024.09.17a"
-    export ETROBO_PUBLIC_VER="2024_6.0.9-public"
+    export ETROBO_MANIFEST_VER="2025.05.03a"
+    export ETROBO_PUBLIC_VER="2025_7.0.1-public"
     export ETROBO_BETA_VER="2023_6.0.2b"
     export ETROBO_COMPETITION_VER="2024_6.1.4"
 
@@ -85,54 +85,71 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     vers=()
     sizes=()
 
-    if [ "$ETROBO_OS" != "raspi" ]; then
-        pkgs+=("gcc-arm")
-        urls+=("$ETROBO_HRP3_GCC_URL")
-        vers+=("2020.06.29a")
-        if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
-            sizes+=("104170189")
-        else
-            sizes+=("100247592")
+    if [ "$ETROBO_ENV_MODE" != "SPIKE" ]; then
+        if [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("gcc-arm")
+            urls+=("$ETROBO_HRP3_GCC_URL")
+            vers+=("2020.06.29a")
+            if [ "$ETROBO_KERNEL_POSTFIX" = "mac" ]; then
+                sizes+=("104170189")
+            else
+                sizes+=("100247592")
+            fi
         fi
+
+        #
+        # TOPPERS/EV3RT
+        # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
+        #
+        pkgs+=("ev3rt")
+        urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
+        case $ETROBO_EV3RT_VER in
+        "1.1" )
+            vers+=("2022.01.08a")
+            sizes+=("14084448")
+            ;;
+        "1.0" )
+            vers+=("2020.06.29a")
+            sizes+=("13774129")
+            ;;
+        "beta7-3" )
+            vers+=("2022.07.18a")
+            sizes+=("17413112")
+            ;;
+        * )
+            vers+=("2022.01.08a")
+            sizes+=("99999999")
+            ;;
+        esac
+
+        #
+        # EV3RT requirement from:
+        # https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac
+        #
+        if [ "$ETROBO_KERNEL" = "darwin" ]; then
+            pkgs+=("mkimage")
+            urls+=("https://dev.toppers.jp/trac_user/ev3pf/raw-attachment/wiki/DevEnvMac/mkimage")
+            vers+=("2022.07.14a")
+            sizes+=("18108")
+        fi
+
+        #
+        # mruby
+        # http://forum.mruby.org/index.html
+        pkgs+=("mruby")
+        urls+=("https://github.com/mruby/mruby/archive/2.0.1.tar.gz")
+        vers+=("2021.03.21a")
+        sizes+=("517932")
+
+        #
+        # tecsgen
+        # https://www.toppers.jp/tecs.html#d-package
+        pkgs+=("tecsgen")
+        urls+=("https://www.toppers.jp/download.cgi/tecsgen-1.8.0.tgz")
+        vers+=("2022.05.24a")
+        sizes+=("2317758")
     fi
 
-    #
-    # TOPPERS/EV3RT
-    # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
-    #
-    pkgs+=("ev3rt")
-    urls+=("https://www.toppers.jp/download.cgi/ev3rt-$ETROBO_EV3RT_VER-release.zip")
-    case $ETROBO_EV3RT_VER in
-    "1.1" )
-        vers+=("2022.01.08a")
-        sizes+=("14084448")
-        ;;
-    "1.0" )
-        vers+=("2020.06.29a")
-        sizes+=("13774129")
-        ;;
-    "beta7-3" )
-        vers+=("2022.07.18a")
-        sizes+=("17413112")
-        ;;
-    * )
-        vers+=("2022.01.08a")
-        sizes+=("99999999")
-        ;;
-    esac
-
-    #
-    # EV3RT requirement from:
-    # https://dev.toppers.jp/trac_user/ev3pf/wiki/DevEnvMac
-    #
-    if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        pkgs+=("mkimage")
-        urls+=("https://dev.toppers.jp/trac_user/ev3pf/raw-attachment/wiki/DevEnvMac/mkimage")
-        vers+=("2022.07.14a")
-        sizes+=("18108")
-    fi
-
-    #
     # Athrill Toolchain from TOPPERS/Hakoniwa
     # https://toppers.github.io/hakoniwa/
     #
@@ -173,22 +190,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         vers+=("2024.05.08a")
         sizes+=("$size")
     fi
-
-    #
-    # mruby
-    # http://forum.mruby.org/index.html
-    pkgs+=("mruby")
-    urls+=("https://github.com/mruby/mruby/archive/2.0.1.tar.gz")
-    vers+=("2021.03.21a")
-    sizes+=("517932")
-
-    #
-    # tecsgen
-    # https://www.toppers.jp/tecs.html#d-package
-    pkgs+=("tecsgen")
-    urls+=("https://www.toppers.jp/download.cgi/tecsgen-1.8.0.tgz")
-    vers+=("2022.05.24a")
-    sizes+=("2317758")
 
     if [ -n "$nxt" ]; then
         #

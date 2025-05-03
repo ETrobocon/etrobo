@@ -2,7 +2,7 @@
 # etrobo all-in-one package installer/updater
 #   setup.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -101,31 +101,32 @@ fi
 
 #
 # distribute etroboc_common
-src="$ETROBO_ROOT/dist/etroboc_common"
-dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
-if [ ! -d "$dst" ]; then
-    echo
-    echo "Install etroboc_common to workspace"
-    cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"
-elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
-    echo
-    echo "Update etroboc_ext.h"
-    rm -f "$dst/etroboc_ext.h"
-    cp -f "$src/etroboc_ext.h" "$dst/"
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    src="$ETROBO_ROOT/dist/etroboc_common"
+    dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+    if [ ! -d "$dst" ]; then
+        echo
+        echo "Install etroboc_common to workspace"
+        cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"
+    elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
+        echo
+        echo "Update etroboc_ext.h"
+        rm -f "$dst/etroboc_ext.h"
+        cp -f "$src/etroboc_ext.h" "$dst/"
+    fi
 fi
 
-device_config="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
 # prepare device_config_r.txt
-if [ -f "${device_config}.txt" ]; then
-    if [ ! -f "${device_config}_r.txt" ]; then
+if [ -f "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" ]; then
+    if [ ! -f "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt" ]; then
         echo
-        echo "Prepare ${device_config}_r.txt"
-        cat "${device_config}.txt" \
+        echo "Prepare ${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
+        cat "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" \
         | sed -E "s/^DEVICE_CONFIG_UART_BASENAME(.*)$/DEVICE_CONFIG_UART_BASENAME\1_r/" \
         | sed -E "s/^DEVICE_CONFIG_BT_BASENAME(.*)$/DEVICE_CONFIG_BT_BASENAME\1_r/" \
         | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
         | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
-        > "${device_config}_r.txt"
+        > "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
     fi
 fi
 
@@ -170,20 +171,22 @@ if [ "$ETROBO_OS" != "raspi" ]; then
     fi
 fi
 
-if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
-    installProcess="${installProcess}sample_c4 "
-    echo
-    echo "Install workspace/sample_c4:"
-    git checkout .
-    cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
-fi
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
+        installProcess="${installProcess}sample_c4 "
+        echo
+        echo "Install workspace/sample_c4:"
+        git checkout .
+        cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
+    fi
 
-if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_mruby" ]; then
-    installProcess="${installProcess}sample_mruby "
-    echo
-    echo "Install workspace/sample_mruby:"
-    git checkout .
-    cp -rf "$ETROBO_ROOT/dist/sample_mruby" "$ETROBO_HRP3_WORKSPACE/"
+    if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_mruby" ]; then
+        installProcess="${installProcess}sample_mruby "
+        echo
+        echo "Install workspace/sample_mruby:"
+        git checkout .
+        cp -rf "$ETROBO_ROOT/dist/sample_mruby" "$ETROBO_HRP3_WORKSPACE/"
+    fi
 fi
 
 if [ -n "$update" ]; then

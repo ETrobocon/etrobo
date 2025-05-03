@@ -7,7 +7,14 @@
 # See LICENSE
 #
 
-cd "$ETROBO_HRP3_WORKSPACE"
+# select workspace
+unset workspace
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    workspace="$ETROBO_HRP3_WORKSPACE"
+else
+    workspace="$ETROBO_ATHRILL_WORKSPACE"
+fi
+cd "$workspace"
 
 # no-fake invoke on `make upload`
 if [ "$1" = "upload" ]; then
@@ -27,6 +34,9 @@ unset skiphrp3
 if [ "$1" = "skiphrp3" ]; then
     skiphrp3="$1"
     shift
+fi
+if [ "$ETROBO_ENV_MODE" != "EV3" ]; then
+    skiphrp3="skiphrp3"
 fi
 
 # `make strip` strips symbols
@@ -97,9 +107,12 @@ if [ "$1" = "sample" ]; then
     elif [ "$2" = "mruby" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_mruby" sim up
-    else
+    elif [ "$ETROBO_ENV_MODE" == "EV3" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_c4" sim up
+    else
+        cd "$ETROBO_ROOT"
+        make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="sample_c5_spike" sim up
     fi
     exit 0
 fi
@@ -231,8 +244,10 @@ fi
 
 # invoke make for HRP3/EV3
 echo invoke: make $arg_app_prefix $args
-echo >> "$incFile"
-echo "COPTS += -DMAKE_EV3" >> "$incFile"
+if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    echo >> "$incFile"
+    echo "COPTS += -DMAKE_EV3" >> "$incFile"
+fi
 if [ -z "$skiphrp3" ]; then
     make $arg_app_prefix $args
     makeResult=$?
@@ -249,7 +264,7 @@ if [ -z "$skiphrp3" ]; then
         exit 1
     fi
 else
-    cd "$ETROBO_HRP3_WORKSPACE"
+    cd "$workspace"
     echo "app=$proj" > currentapp
 fi
 
@@ -261,14 +276,18 @@ if [ -n "$build_asp3" ]; then
     fi
 
     # invoke make for ASP3/Athrill
-    rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
-    mv -f "${incFile}.base" "${incFile}"
-    cp -rH "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
-    mv -f "${incFile}.org" "$incFile"
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
+        mv -f "${incFile}.base" "${incFile}"
+        cp -rH "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
+        mv -f "${incFile}.org" "$incFile"
+    fi
 
     cd "$ETROBO_ATHRILL_WORKSPACE"
-    echo >> "$incFile"
-    echo "COPTS += -DSYSLOG_IMPLEMENT_AS_PRINTF -DMAKE_SIM" >> "$incFile"
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        echo >> "$incFile"
+        echo "COPTS += -DSYSLOG_IMPLEMENT_AS_PRINTF -DMAKE_SIM" >> "$incFile"
+    fi
     make img="$proj"
     if [ $? -eq 0 ]; then
         mv -f "${incFile}.org" "$incFile"

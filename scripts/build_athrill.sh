@@ -337,14 +337,14 @@ if [ -n "$1" ]; then
         git checkout $TARGET_OFFICIAL_COMMIT
         git submodule update --init --recursive
     fi
-    cd ../ev3rt-athrill-v850e2m
-    git checkout .
-    git checkout master
-    git pull
-    if [ "$1" = "official" ] || [ "$1" = "init" ]; then
-        git checkout $SAMPLE_OFFICIAL_COMMIT
-    fi
     if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+        cd ../ev3rt-athrill-v850e2m
+        git checkout .
+        git checkout master
+        git pull
+        if [ "$1" = "official" ] || [ "$1" = "init" ]; then
+            git checkout $SAMPLE_OFFICIAL_COMMIT
+        fi
         if [ -d sdk/workspace/mruby-ev3rt ]; then
             cd sdk/workspace/mruby-ev3rt
             git checkout .
@@ -353,6 +353,14 @@ if [ -n "$1" ]; then
             if [ "$1" = "official" ] || [ "$1" = "init" ]; then
                 git checkout $MRUBY_OFFICIAL_COMMIT
             fi
+        fi
+    else
+        cd ../raspike-athrill-v850e2m
+        git checkout .
+        git checkout master
+        git pull
+        if [ "$1" = "official" ] || [ "$1" = "init" ]; then
+            git checkout $SAMPLE_OFFICIAL_COMMIT
         fi
     fi
 fi

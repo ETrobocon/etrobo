@@ -21,12 +21,6 @@ if [ "$1" = "sim_public" ] || [ "$1" = "sim_beta" ]; then
     sim_select="$1"
 fi
 
-# hook `NXT` enabler
-unset nxt
-if [ -f "$ETROBO_ROOT/NXT" ]; then
-    nxt="NXT"
-fi
-
 # hook `unset` option
 if [ "$1" == "unset" ]; then
     unset ETROBO_MANIFEST_VER
@@ -38,7 +32,7 @@ if [ "$1" == "unset" ]; then
     unset ETROBO_HRP3_GCC_URL_BASE
     unset ETROBO_HRP3_GCC_URL
     unset ETROBO_HRP3_GCC_DIR
-    if [ -n "$NXT" ]; then
+    if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
         unset ETROBO_NXTOSEK_ROOT
         unset GNUARM_ROOT
         unset NEXTTOOL_ROOT
@@ -73,7 +67,7 @@ else
     export ETROBO_HRP3_GCC_URL="${ETROBO_HRP3_GCC_URL_BASE}-${ETROBO_KERNEL_POSTFIX}.tar.bz2"
 
     # nxtOSEK envvars
-    if [ -n "$nxt" ]; then
+    if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
         export ETROBO_NXTOSEK_ROOT="$userProfile/nxtOSEK"
         export GNUARM_ROOT="$ETROBO_HRP3_GCC_DIR"
         export NEXTTOOL_ROOT="$ETROBO_NXTOSEK_ROOT/bin"
@@ -96,7 +90,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 sizes+=("100247592")
             fi
         fi
+    fi
 
+    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
         #
         # TOPPERS/EV3RT
         # https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT
@@ -150,48 +146,48 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         sizes+=("2317758")
     fi
 
-    # Athrill Toolchain from TOPPERS/Hakoniwa
-    # https://toppers.github.io/hakoniwa/
-    #
-    if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        pkgs+=("gcc-athrill_mac")
-        if [ "$ETROBO_PLATFORM" = "arm64" ]; then
-            urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac_arm64.tar.gz")
-            vers+=("2021.03.19a")
-            sizes+=("35857495")
-        else
-            urls+=("http://etrobocon.github.io/etroboEV3//athrill-gcc-package-mac_x86_64.tar.gz")
-            vers+=("2021.03.08a")
-            sizes+=("32950726")
+    if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
+        # Athrill Toolchain from TOPPERS/Hakoniwa
+        # https://toppers.github.io/hakoniwa/
+        #
+        if [ "$ETROBO_KERNEL" = "darwin" ]; then
+            pkgs+=("gcc-athrill_mac")
+            if [ "$ETROBO_PLATFORM" = "arm64" ]; then
+                urls+=("https://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac_arm64.tar.gz")
+                vers+=("2021.03.19a")
+                sizes+=("35857495")
+            else
+                urls+=("http://etrobocon.github.io/etroboEV3//athrill-gcc-package-mac_x86_64.tar.gz")
+                vers+=("2021.03.08a")
+                sizes+=("32950726")
+            fi
+        elif [ "$ETROBO_OS" != "raspi" ]; then
+            pkgs+=("gcc-athrill")
+            urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")
+            vers+=("2020.06.29a")
+            sizes+=("236202431")
         fi
-    elif [ "$ETROBO_OS" != "raspi" ]; then
-        pkgs+=("gcc-athrill")
-        urls+=("https://github.com/toppers/athrill-gcc-v850e2m/releases/download/v1.1/athrill-gcc-package.tar.gz")
-        vers+=("2020.06.29a")
-        sizes+=("236202431")
-    fi
 
-    #
-    # cli-kintone by Cyboze, Inc.
-    # https://github.com/kintone/cli-kintone
-    #
-    unset target
-    clikintone_ver="1.10.13"
-    if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        target="macos"
-        size="18762173"
-    elif [ "$ETROBO_OS" != "raspi" ]; then
-        target="linux"
-        size="18681563"
-    fi
-    if [ -n "$target" ]; then
-        pkgs+=("cli-kintone")
-        urls+=("https://github.com/kintone/cli-kintone/releases/download/v${clikintone_ver}/cli-kintone_v${clikintone_ver}_${target}.zip")
-        vers+=("2024.05.08a")
-        sizes+=("$size")
-    fi
-
-    if [ -n "$nxt" ]; then
+        #
+        # cli-kintone by Cyboze, Inc.
+        # https://github.com/kintone/cli-kintone
+        #
+        unset target
+        clikintone_ver="1.10.13"
+        if [ "$ETROBO_KERNEL" = "darwin" ]; then
+            target="macos"
+            size="18762173"
+        elif [ "$ETROBO_OS" != "raspi" ]; then
+            target="linux"
+            size="18681563"
+        fi
+        if [ -n "$target" ]; then
+            pkgs+=("cli-kintone")
+            urls+=("https://github.com/kintone/cli-kintone/releases/download/v${clikintone_ver}/cli-kintone_v${clikintone_ver}_${target}.zip")
+            vers+=("2024.05.08a")
+            sizes+=("$size")
+        fi
+    else
         #
         # nxtOSEK
         # https://lejos-osek.sourceforge.net/jp/index.htm
@@ -227,33 +223,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         sizes+=("3914272")
     fi
 
-    #
-    # UnityETroboSim public version
-    #
-    unset target
-    if [ "$ETROBO_OS" = "chrome" ]; then
-        target="linux"
-    else
-        target="$ETROBO_OS"
-    fi
-    if [ "$target" = "win" ]; then
-        size=36355097
-    elif [ "$target" = "mac" ]; then
-        size=43089544
-    elif [ "$target" = "linux" ]; then
-        size=31796928
-    fi    
-    if [ "$ETROBO_OS" != "raspi" ]; then
-        pkgs+=("etrobosim")
-        urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-        vers+=("2025.05.03a")
-        sizes+=("$size")
-    fi
-
-    #
-    # UnityETroboSim beta version via Kintone
-    #
-    if [ "$sim_select" = "sim_beta" ]; then
+    if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
+        #
+        # UnityETroboSim public version
+        #
         unset target
         if [ "$ETROBO_OS" = "chrome" ]; then
             target="linux"
@@ -261,40 +234,65 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             target="$ETROBO_OS"
         fi
         if [ "$target" = "win" ]; then
-            size=42355855
+            size=36355097
         elif [ "$target" = "mac" ]; then
-            size=49342774
+            size=43089544
         elif [ "$target" = "linux" ]; then
-            size=38231642
+            size=31796928
         fi    
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
-            vers+=("2024.04.23a")
+            urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
+            vers+=("2025.05.03a")
             sizes+=("$size")
         fi
-    else
-    #
-    # UnityETroboSim via Kintone
-    #
-        unset target
-        if [ "$ETROBO_OS" = "chrome" ]; then
-            target="linux"
+
+        #
+        # UnityETroboSim beta version via Kintone
+        #
+        if [ "$sim_select" = "sim_beta" ]; then
+            unset target
+            if [ "$ETROBO_OS" = "chrome" ]; then
+                target="linux"
+            else
+                target="$ETROBO_OS"
+            fi
+            if [ "$target" = "win" ]; then
+                size=42355855
+            elif [ "$target" = "mac" ]; then
+                size=49342774
+            elif [ "$target" = "linux" ]; then
+                size=38231642
+            fi    
+            if [ "$ETROBO_OS" != "raspi" ]; then
+                pkgs+=("etrobosim")
+                urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_BETA_VER}_${target}.tar.gz")
+                vers+=("2024.04.23a")
+                sizes+=("$size")
+            fi
         else
-            target="$ETROBO_OS"
-        fi
-        if [ "$target" = "win" ]; then
-            size=42213316
-        elif [ "$target" = "mac" ]; then
-            size=49114096
-        elif [ "$target" = "linux" ]; then
-            size=38202378
-        fi
-        if [ "$ETROBO_OS" != "raspi" ]; then
-            pkgs+=("etrobosim")
-            urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-            vers+=("2024.09.17a")
-            sizes+=("$size")
+        #
+        # UnityETroboSim via Kintone
+        #
+            unset target
+            if [ "$ETROBO_OS" = "chrome" ]; then
+                target="linux"
+            else
+                target="$ETROBO_OS"
+            fi
+            if [ "$target" = "win" ]; then
+                size=42213316
+            elif [ "$target" = "mac" ]; then
+                size=49114096
+            elif [ "$target" = "linux" ]; then
+                size=38202378
+            fi
+            if [ "$ETROBO_OS" != "raspi" ]; then
+                pkgs+=("etrobosim")
+                urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+                vers+=("2024.09.17a")
+                sizes+=("$size")
+            fi
         fi
     fi
 

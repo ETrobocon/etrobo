@@ -120,14 +120,15 @@ elif [ "$1" = "SPIKE" ]; then
     touch "$ETROBO_ROOT/SPIKE"
     shift
 elif [ -f "$ETROBO_ROOT/NXT" ]; then
-    export ETROBO_MODE="NXT"
+    export ETROBO_ENV_MODE="NXT"
 elif [ -f "$ETROBO_ROOT/EV3" ]; then
-    export ETROBO_MODE="EV3"
+    export ETROBO_ENV_MODE="EV3"
 elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
-    export ETROBO_MODE="SPIKE"
+    export ETROBO_ENV_MODE="SPIKE"
 else
-    export ETROBO_MODE="SPIKE"
+    export ETROBO_ENV_MODE="SPIKE"
 fi
+echo "entering $ETROBO_ENV_MODE mode"
 
 # usage
 if [ "$1" = "--help" ]; then

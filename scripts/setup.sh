@@ -91,7 +91,7 @@ else
     fi
 fi
 
-if [ "$option" = "athrill" ] && [ "$ETROBO_OS" != "raspi" ]; then
+if [ "$option" = "athrill" ] && [ "$ETROBO_OS" != "raspi" ] && [ "$ETROBO_ENV_MODE" != "NXT" ]; then
     echo
     echo "Build Athrill2 with the ETrobo official certified commit"
     "$ETROBO_SCRIPTS/build_athrill.sh" official
@@ -132,7 +132,7 @@ fi
 
 #
 # distribute UnityETroboSim
-if [ "$ETROBO_OS" != "raspi" ]; then
+if [ "$ETROBO_OS" != "raspi" ] && [ "$ETROBO_ENV_MODE" != "NXT" ]; then
     cd "$ETROBO_ROOT/dist"
     . sim env
     echo "Bundled Simulator: $ETROBO_SIM_VER"

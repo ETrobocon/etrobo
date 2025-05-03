@@ -237,16 +237,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         target="$ETROBO_OS"
     fi
     if [ "$target" = "win" ]; then
-        size=36107249
+        size=36355097
     elif [ "$target" = "mac" ]; then
-        size=43087318
+        size=43089544
     elif [ "$target" = "linux" ]; then
-        size=31794553
+        size=31796928
     fi    
     if [ "$ETROBO_OS" != "raspi" ]; then
         pkgs+=("etrobosim")
         urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-        vers+=("2024.05.08a")
+        vers+=("2025.05.03a")
         sizes+=("$size")
     fi
 

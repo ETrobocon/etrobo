@@ -1,5 +1,5 @@
 # etrobo all-in-one installer/builder/launcher environment
-[ETロボコン](https://etrobo.jp/)のEV3/シミュレータ双方に対応する開発環境です。
+基本的には、[ETロボコン](https://etrobo.jp/)のシミュレータ競技向け開発環境です。
 
 see INSTALL that is written by english language
 
@@ -7,6 +7,7 @@ see INSTALL that is written by english language
 
 etrobo環境は、以下のソフトウェアおよび成果物の一部を利用し構成され、etroboパッケージはこれらを自動的に取得しインストールします。
 - [ETロボコンシミュレータ](https://etrobo.jp/)
+- [TOPPERS/EV3RT for Athrill SPIKE APIバージョン](https://github.com/ETrobocon/raspike-athrill-v850e2m)
 - [TOPPERS/EV3RT](https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT)
 - [TOPPERS/箱庭](https://toppers.github.io/hakoniwa/)
 - [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
@@ -19,9 +20,11 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 ## 主な特徴
 
 - Visual Studio Code（VSCode）以外のインストールを完全自動化
-- Windows/Mac/Linuxで同一の操作による開発を実現
-- Mindstorms EV3実機向けのEV3RT/HRP3と、ETロボコンシミュレータ向けのAthrill/ASP3が、単一のソースで一度にビルド可能
-- USB接続のEV3RT App Loader向けユーティリティを搭載、ビルド時に自動でプロジェクト名をファイル名として転送可能
+- Windows/Mac/Linux/ChromeOSで同一の操作による開発を実現
+- SPIKEモード（デフォルト）では、RasPike-ART向けETロボコンSPIKE APIのコードをETロボコンシミュレータ向けのAthrill/ASP3にビルド可能
+- EV3モードでは、Mindstorms EV3実機向けのEV3RT/HRP3と、ETロボコンシミュレータ向けのAthrill/ASP3が、単一のソースで一度にビルド可能
+- NXTモードでは、Mindstorms NXT実機向けnxtOSEKアプリをビルド可能
+- USB接続のEV3RT App Loader向けユーティリティおよびNXT拡張ファーム向けアップローダを搭載、ビルド時に自動でプロジェクト名をファイル名として転送可能
 - ビルドからシミュレータの実行まで１コマンドで自動処理
 - サンプルコースとサンプルコードを同梱
 
@@ -56,8 +59,8 @@ Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 ### Mac
 - x86-64アーキテクチャのCPU、またはApple Silicon
     - 動作確認は、以下のMacで行っています：
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Sonoma 14.3 / Xcode CLT 15.1
-- macOS Monterey(12.0)以降
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Sequoia 15.4.1 / Xcode CLT 16.3
+- macOS Ventura(13.0)以降
     - HomeBrewの動作環境に準じます。これ以前のmacOSでも動作する可能性は高いですが、サポート対象外です。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
@@ -76,7 +79,7 @@ Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 - x86-64アーキテクチャのCPU
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
-        - Chrome OS 123.0.6312.132 (Official Build)
+        - Chrome OS 126.0.6478.222 (Official Build)
         - Debian GNU/Linux 12 (bookworm)
 - ChromeOS 102以降
     - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも動作するものと考えていますがサポート対象外です。
@@ -98,6 +101,9 @@ etrobo環境が起動しましたら、ターミナルを開いて（Windows:`Ct
 etrobo環境は様々なコマンドを提供していますが、これらは原則としてetrobo環境の初期ディレクトリ（`~/etrobo`）上で発給してください。
 もしも迷子になった場合は、`cd "$ETROBO_ROOT"`でどこからでも戻ることができます。
 
+デフォルトではSPIKE(RasPike)モードにて動作します。初期ディレクトリで`touch NXT`すると、NXT(nxtOSEK)モードで動作し、`touch EV3`すると、EV3(EV3RT)モードで動作します。
+初期ディレクトリ直下の`workspace`シンボリックリンクは、それぞれのモードに応じて適切なworkspaceにリンクを張ります。
+
 HackEVの実機をお持ちの方は、USBポートにさして電源を入れ、`make app=helloev3 up`と入力してみてください。これだけで`app=`の値をファイル名としたモジュールのビルドと転送ができます。この時、Windowsではマウントにsudoers権限が必要であるため、たまにパスワードを聞かれます。その時はログインパスワードを入力してください。
 
 一度`app=`を指定してビルドすると、2回目以降はこれを省略し、`make up`だけでビルドと転送が可能です。
@@ -117,7 +123,7 @@ Athrill/ASP3向けも、あえてEV3RT/HRP3向けのビルドも行っていま�
 
 このように、`~/etrobo`から使用する`make`コマンドには特殊な仕様が仕込まれていますが、それ以外のディレクトリで叩く`make`は通常通り動作します。
 
-## etrobo環境の詳細説明(整備中)
+`make nxt app=helloworld up`とすると、nxtOSEK上でビルドを行い、Mindstorms NXTにバイナリを転送します。
 
 ### etrobo環境の無効化/有効化
 etrobo環境はログインシェルで起動すると自動的に読み込まれます。しかし、サンドボックスを組んでいるMac版は大丈夫ですが、Windows(WSL)/Linux版では他の用途で利用する時に不都合が生じる可能性も高いので、そのような場合には無効化してください。

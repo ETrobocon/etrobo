@@ -69,8 +69,7 @@ Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 12 (bookworm) または Ubuntu 22.04
-    - Ubuntu 24.04はリリースされ次第サポート対象に含めます。 
+- Debian GNU/Linux 12 (bookworm) または Ubuntu 24.04
     - 環境のインストールにsudoers権限が必要です。
     - Debian 11/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール

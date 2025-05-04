@@ -99,36 +99,12 @@ fi
 # cancel etrobo environment disabler
 rm -f "$ETROBO_ROOT/disable"
 
-# recognize target devenv
-unset ETROBO_ENV_MODE
-if [ "$1" = "NXT" ]; then
-    export ETROBO_ENV_MODE="NXT"
-    touch "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE"
+# recognize target devenv option
+unset opt_devenv
+if [ "$1" == "NXT" ] || [ "$1" == "EV3" ] || [ "$1" == "SPIKE" ]; then
+    opt_devenv="$1"
     shift
-elif [ "$1" = "EV3" ]; then
-    export ETROBO_ENV_MODE="EV3"
-    rm -rf "$ETROBO_ROOT/NXT"
-    touch "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE"
-    shift
-elif [ "$1" = "SPIKE" ]; then
-    export ETROBO_ENV_MODE="SPIKE"
-    rm -rf "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    touch "$ETROBO_ROOT/SPIKE"
-    shift
-elif [ -f "$ETROBO_ROOT/NXT" ]; then
-    export ETROBO_ENV_MODE="NXT"
-elif [ -f "$ETROBO_ROOT/EV3" ]; then
-    export ETROBO_ENV_MODE="EV3"
-elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
-    export ETROBO_ENV_MODE="SPIKE"
-else
-    export ETROBO_ENV_MODE="SPIKE"
 fi
-echo "entering $ETROBO_ENV_MODE mode"
 
 # usage
 if [ "$1" = "--help" ]; then
@@ -415,6 +391,32 @@ if [ "$install" = "install" ] && [ -z "$branch" ]; then
         exit 1
     fi
 fi
+
+# determine target devenv
+unset ETROBO_ENV_MODE
+if [ "$opt_devenv" = "NXT" ]; then
+    touch "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "EV3" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    touch "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "SPIKE" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    touch "$ETROBO_ROOT/SPIKE"
+fi
+if [ -f "$ETROBO_ROOT/NXT" ]; then
+    export ETROBO_ENV_MODE="NXT"
+elif [ -f "$ETROBO_ROOT/EV3" ]; then
+    export ETROBO_ENV_MODE="EV3"
+elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+    export ETROBO_ENV_MODE="SPIKE"
+else
+    export ETROBO_ENV_MODE="SPIKE"
+fi
+echo "entering $ETROBO_ENV_MODE mode"
 
 # download package
 if [ -d "$ETROBO_ROOT" ]; then

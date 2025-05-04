@@ -9,7 +9,9 @@
 
 # select workspace
 unset workspace
-if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
+    workspace="$ETROBO_ROOT/nxtOSEK/workspace"
+elif [ "$ETROBO_ENV_MODE" == "EV3" ]; then
     workspace="$ETROBO_HRP3_WORKSPACE"
 else
     workspace="$ETROBO_ATHRILL_WORKSPACE"
@@ -99,8 +101,9 @@ fi
 
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
-    if [ -n "$nxt" ]; then
-        fakemake.sh nxt app="helloworld" up
+    if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
+        cd "$ETROBO_ROOT"
+        make nxt app="helloworld" up
     elif [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up

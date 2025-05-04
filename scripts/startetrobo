@@ -312,6 +312,21 @@ if [ "$kernel" = "debian" ]; then
     echo
 fi
 
+# remount /mnt/c with metadata option
+# and add automount entry with metadata option into /etc/wsl.conf
+if [ "$host" = "win" ]; then
+    if [ -z "`mount | grep '/mnt/c.*metadata'`" ]; then
+        echo "remount /mnt/c and add automount entry with metadata option"
+        echo 'Please enter your login password as sudoers if [sudo] ask you'
+        sudo umount /mnt/c
+        sudo mount -t drvfs C: /mnt/c -o metadata
+    fi
+    if [ -z "`cat /etc/wsl.conf 2>&1 | grep metadata`" ]; then
+        echo '[automount]' | sudo tee -a /etc/wsl.conf
+        echo 'options = "metadata"' | sudo tee -a /etc/wsl.conf
+    fi
+fi
+
 # repair mode
 unset repair
 if [ "$1" = "repair" ]; then

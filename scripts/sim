@@ -21,7 +21,7 @@ if [ "$1" == "unitydev" ]; then
 fi
 
 #
-# `sim prefs` returns prefernces
+# `sim prefs` returns preferences
 # `sim export` writes preferences into settings.json at run time
 #  (you should use `export launch` for export file into simdist/projName)
 unset prefs
@@ -541,7 +541,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
             fi
 
-            # load prefernces from settings.json
+            # load preferences from settings.json
             if [ -n "$load_prefs" ] && [ -f "$ETROBO_SIM_DIST/$projName/settings.json" ] && [ "$comm_ready" == "ready" ]; then
                 req="`cat \"$ETROBO_SIM_DIST/$projName/settings.json\" | jq -M -c .`"
                 if [ -n "$req" ]; then
@@ -648,7 +648,11 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
                 done
                 if [ -n "$loop" ]; then
-                    echo "[ launcher: EV3RT is booted up, got it ]" | tee $console
+                    if [ $status -eq 3 ]; then
+                        echo "[ launcher: EV3RT is booted up...maybe... ]" | tee $console
+                    else
+                        echo "[ launcher: EV3RT is booted up, got it ]" | tee $console
+                    fi
                 fi
 
                 counter=0

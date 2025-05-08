@@ -168,6 +168,7 @@ else
                 echo "    0   ASP_TERMINATED"
                 echo "    1   ASP_EV3RT_BOOTED"
                 echo "    2   ASP_EV3RT_WITH_BT"
+                echo "    3   ASP_EV3RT_DETECTION_SKIPPED"
             fi
             cat "$ETROBO_SIM_DIST/${app_select}.status" | tail -n 1 | awk '{print $1}'
             exit 0

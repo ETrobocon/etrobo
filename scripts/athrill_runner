@@ -96,7 +96,12 @@ stdbuf -o 0 ${athrill2} -c1 -m ${memory_txt} -d ${device_config_txt} -t -1 "$tar
                 echo "-2 $SECONDS" >> "$status"
             elif [[ $line = athrill_device_func_call* ]]; then
                 echo "[ $app_select runner: Athrill2 is booted up ]" | tee $console
-                echo "-1 $SECONDS" >> "$status"
+                # skip EV3RT boot detection on SPIKE mode
+                if [ "$ETROBO_ENV_MODE" == "SPIKE" ]; then
+                    echo "3 $SECONDS" >> "$status"
+                else
+                    echo "-1 $SECONDS" >> "$status"
+                fi
             elif [[ $line = Initialization\ is\ completed* ]]; then
                 echo "[ $app_select runner: EV3RT is booted up ]" | tee $console
                 echo "[ $app_select runner: EV3RT boot time: $SECONDS secs. ]" | tee $console

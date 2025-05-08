@@ -289,7 +289,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
             if [ "$ETROBO_OS" != "raspi" ]; then
                 pkgs+=("etrobosim")
-                urls+=("kintone://etrobocon.cybozu.com/34/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+                urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
                 vers+=("2025.05.08a")
                 sizes+=("$size")
             fi

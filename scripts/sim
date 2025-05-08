@@ -631,10 +631,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ "$comm_ready" == "ready" ]; then
                 # wait for EV3RT is ready
                 counter=0
-                status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
+                status=`"$ETROBO_SCRIPTS/asp" status $app_select`
                 while [ $status -lt 1 ] && [ -n "$loop" ]; do
                     if [ $status -eq 0 ]; then
-                        echo "[ launcher: runner was already dead. ]" | tee $console
+                        echo "[ launcher: runner was already dead. ] " | tee $console
                         unset loop
                         kill -s SIGINT $$
                     fi
@@ -645,7 +645,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                         kill -s SIGINT $$
                     fi
                     sleep 0.1
-                    status="`\"$ETROBO_SCRIPTS/asp\" status $app_select`"
+                    status=`"$ETROBO_SCRIPTS/asp" status $app_select`
                 done
                 if [ -n "$loop" ]; then
                     if [ $status -eq 3 ]; then
@@ -748,7 +748,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             sleep 0.1
             json=`curl -m 1 -s -X GET $ETROBO_SIM_COMM`
             if [ -n "$json" ]; then
-                if [ "`echo $json | jq -r .measurement.mode`" == "END" ] || [ "`\"$ETROBO_SCRIPTS/asp\" check`" == ":" ]; then
+                if [ "`echo $json | jq -r .measurement.mode`" == "END" ] || [ `"$ETROBO_SCRIPTS/asp" check` == ":" ]; then
                     echo "[ launcher: end of this race ]" | tee $console
                     echo "$json" | jq . > result.json
                     if [ -z "$unitydev" ] && [ -n "`sim check sim`" ]; then
@@ -769,19 +769,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 if [ -n "$start_gate" ] && [ -z "$gate1" ]; then
                     if [ "`echo $json | jq -r .${sim_select}Measurement.GATE1`" == "1" ]; then
-                        echo "[ launcher: $sim_select: passed Gate 4 ]"
-                        gate1="Gate4"
-                    elif [ "`echo $json | jq -r .${sim_select}Measurement.GATE`" == "1" ]; then
                         echo "[ launcher: $sim_select: passed Mid Gate ]"
                         gate1="MidGate"
                     fi
                 fi
-                #if [ -n "$gate1" ] && [ -z "$gate2" ] \
-                #&& [ "`echo $json | jq -r .${sim_select}Measurement.GATE2`" == "1" ]; then
-                #    echo "[ launcher: $sim_select: passed Gate 2 ]"
-                #    gate2="passed"
-                #fi
-                #if [ -n "$gate2" ] && [ -z "$goal" ] \
                 if [ -n "$gate1" ] && [ -z "$goal" ]; then
                     if [ "$gate1" != "MidGate" ]; then
                         if [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
@@ -790,7 +781,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                             echo "[ launcher: $sim_select: GOAL! Goal Time: $goal ]"
                         fi
                     else
-                        if [ "`echo $json | jq -r .${sim_select}Measurement.LAP`" == "1" ]; then
+                        if [ "`echo $json | jq -r .${sim_select}Measurement.GATE2`" == "1" ]; then
                             measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
                             goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
                             echo "[ launcher: $sim_select: passed LAP Gate  Lap Time: $goal ]"

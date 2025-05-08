@@ -281,7 +281,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 target="$ETROBO_OS"
             fi
             if [ "$target" = "win" ]; then
-                size=44564236 
+                size=44228903
             elif [ "$target" = "mac" ]; then
                 size=51273298
             elif [ "$target" = "linux" ]; then

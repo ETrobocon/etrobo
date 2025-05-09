@@ -569,8 +569,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     unlink "$ETROBO_NXTOSEK_ROOT"
                 elif [ -d "$ETROBO_NXTOSEK_ROOT" ]; then
                     rm -rf "${ETROBO_NXTOSEK_ROOT}_autobackup"
-                    cp -rf "$ETROBO_NXTOSEK_ROOT" "${ETROBO_NXTOSEK_ROOT}_autobackup"
-                    rm -rf "$ETROBO_NXTOSEK_ROOT"
+                    mv -f "$ETROBO_NXTOSEK_ROOT" "${ETROBO_NXTOSEK_ROOT}_autobackup"
                     echo "********"
                     echo " NOTICE - your nxtOSEK folder is automatically backuped as 'nxtOSEK_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."
@@ -583,7 +582,12 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 unzip "$file" > /dev/null
                 mv -f nxtOSEK "$ETROBO_USERPROFILE/"
-                mkdir "$ETROBO_NXTOSEK_ROOT/workspace"
+                if [ -d "${ETROBO_NXTOSEK_ROOT}_autobackup/workspace" ]; then
+                echo "debug: copy back"
+                    cp -rf "${ETROBO_NXTOSEK_ROOT}_autobackup/workspace" "$ETROBO_NXTOSEK_ROOT/"
+                else
+                    mkdir "$ETROBO_NXTOSEK_ROOT/workspace"
+                fi
                 cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/helloworld" "$ETROBO_NXTOSEK_ROOT/workspace/"
                 cp -rf "$ETROBO_NXTOSEK_ROOT/samples_c/rms" "$ETROBO_NXTOSEK_ROOT/workspace/"
                 rm -rf "$ETROBO_NXTOSEK_ROOT/workspace/helloworld/".* > /dev/null 2>&1

@@ -109,8 +109,8 @@ else
 
     # determine the target file
     projName="$1"
-    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+    if [ -z "$projName" ] && [ -f "$ETROBO_SIM_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_SIM_WORKSPACE/currentapp"`
         projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
     fi
     target="${app_prefix}${projName}.asp"

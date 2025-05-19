@@ -87,7 +87,12 @@ else
             unset ETROBO_SIM_LOG
         fi
     fi
-    export ETROBO_SIM_DIST="$ETROBO_HRP3_WORKSPACE/simdist"
+    if [ "$ETROBO_ENV_MODE" = "EV3" ]; then
+        export ETROBO_SIM_WORKSPACE="$ETROBO_HRP3_WORKSPACE"
+    else
+        export ETROBO_SIM_WORKSPACE="$ETROBO_ATHRILL_WORKSPACE"
+    fi
+    export ETROBO_SIM_DIST="$ETROBO_SIM_WORKSPACE/simdist"
     . "$ETROBO_SCRIPTS/asp" env
 
     # determine URL of UIcomm and athrillHost
@@ -355,7 +360,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     # nextgen `sim launch` launches athrill apps via asp/athrill_runner.
     # `sim launchws` is no longer working.
     #
-    # $ETROBO_ATHRILL_WORKSPACE
+    # $ETROBO_SIM_WORKSPACE <-ETROBO_ATHRILL_WORKSPACE
     #   |- athrill2
     # $ETROBO_SIM_DIST
     #   |- [projName]
@@ -387,8 +392,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
     unset projName
     projName="$2"
-    if [ -z "$projName" ] && [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-        currentapp=`head -n 1 "$ETROBO_HRP3_WORKSPACE/currentapp"`
+    if [ -z "$projName" ] && [ -f "$ETROBO_SIM_WORKSPACE/currentapp" ]; then
+        currentapp=`head -n 1 "$ETROBO_SIM_WORKSPACE/currentapp"`
         projName=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
     fi
     unset target

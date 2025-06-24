@@ -583,7 +583,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 unzip "$file" > /dev/null
                 mv -f nxtOSEK "$ETROBO_USERPROFILE/"
                 if [ -d "${ETROBO_NXTOSEK_ROOT}_autobackup/workspace" ]; then
-                echo "debug: copy back"
                     cp -rf "${ETROBO_NXTOSEK_ROOT}_autobackup/workspace" "$ETROBO_NXTOSEK_ROOT/"
                 else
                     mkdir "$ETROBO_NXTOSEK_ROOT/workspace"

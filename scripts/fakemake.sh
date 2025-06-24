@@ -24,11 +24,13 @@ if [ "$1" = "upload" ]; then
     exit $?
 fi
 
-# `make nxt` enters into nxtOSEK mode
+# `make nxt` enters into nxtOSEK mode, left for compatibility
 unset nxt
 if [ "$1" = "nxt" ]; then
     nxt="$1"
     shift
+elif [ "$ETROBO_ENV_MODE" = "NXT" ]; then
+    nxt="nxt"
 fi
 
 # `make skiphrp3` skips building for HRP3
@@ -101,9 +103,9 @@ fi
 
 # sugar command for noobs
 if [ "$1" = "sample" ]; then
-    if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
+    if [ -n "$nxt" ]; then
         cd "$ETROBO_ROOT"
-        make nxt app="helloworld" up
+        make app="helloworld" up
     elif [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up

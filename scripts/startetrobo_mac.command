@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.26a.250627"
+export BEERHALL_VER="5.30a.250627"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -231,113 +231,67 @@ fi
 if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew update
     brew upgrade
-    brew install bash
-
-    # unlink md5sha1sum for old BeerHall
-    # (that is included in coreutils)
-    if [ "`brew list | grep md5sha1sum`" ]; then
-        brew unlink md5sha1sum
-    fi
-
-    # install kegs
-
-    # openjdk (for gettext)
-    brew install openjdk
-    brew link openjdk --force
-    # pkg-config (for subversion)
-    brew install pkg-config
-    # gdbm (for subversion)
-    brew install gdbm
-    # openssl@1.1 (for subversion)
-    brew install openssl@1.1
-    brew link openssl@1.1 --force
-    # readline (for subversion)
-    brew install readline
-    brew link readline --force
-    # sqlite (for subversion)
-    brew install sqlite
-    brew link sqlite --force
-    # xz (for subversion)
-    brew install xz
-    # mpdecimal (for python)
-    brew install mpdecimal
-    # tcl-tk (for python)
-    brew install tcl-tk
-    brew link tcl-tk --force
-    # python@3.10 (for scons)
-    brew install python@3.10
-    brew link python@3.10 --force
-    # scons (for subversion)
-    brew install scons
-    # pcre (for subversion)
-    brew install pcre
-    # swig (for subversion)
-    brew install swig
-    # apr (for subversion)
-    brew install apr
-    brew link apr --force
-    # apr-util (for subversion)
-    brew install apr-util
-    brew link apr-util --force
-    # gettext (for subversion)
-    brew install gettext
-    # lz4 (for subversion)
-    brew install lz4
-    # berkeley-db (for perl)
-    brew install berkeley-db
-    # perl (for subversion)
-    brew install perl
-    # utf8proc (for subversion)
-    brew install utf8proc
-    # subversion (for homebrew core)
-    brew install subversion
-    export HOMEBREW_SVN="$HOMEBREW_PREFIX/bin/svn"
-
-    # libyaml (for ruby@2.7)
-    brew install libyaml
-    # libunistring (for wget)
-    brew install libunistring
-    # libidn2 (for wget)
-    brew install libidn2
-    # help2man (for flex)
-    brew install help2man
-    # pcre2 (for git)
-    brew install pcre2
-    # lzip (for make)
-    brew install lzip
-    # oniguruma (for jq)
-    brew install oniguruma
-    # brotli (for curl)
-    brew install brotli
-    # libmetalink (for curl)
-    brew install libmetalink
-    # libssh2 (for curl)
-    brew install libssh2
-    # c-ares (for curl)
-    brew install c-ares
-    # jemalloc (for curl)
-    brew install jemalloc
-    # libev (for curl)
-    brew install libev
-    # libnghttp2 (for nghttp2)
-    brew install libnghttp2
-    # nghttp2 (for curl)
-    brew install nghttp2
-    # openldap (for curl)
-    brew install openldap
-    brew link openldap --force
-    # rtmpdump (for curl)
-    brew install rtmpdump
-    # zstd (for curl)
-    brew install zstd
 
     # install BeerHall (for etrobo) formulae
 
-    brew install bash-completion coreutils findutils wget git ruby@3.2 flex make jq curl
+    brew install pkgconf            # for nvurses
+    brew install ncurses            # for bash
+    brew install bash
+    brew install bash-completion@2
+
+    brew install gmp                # for coreutils
+    brew install coreutils  
+    brew install findutils
+
+    brew install libunistring       # for gettext
+    brew install gettext            # for wget
+    brew install libidn2            # for wget
+    brew install ca-certificates    # for wget
+    brew install openssl@3          # for wget
+    brew install wget
+
+    brew install pcre2              # for git
+    brew install git
+
+    brew install libyaml            # for ruby@3.2
+    brew install readline           # for ruby@3.2
+    brew install m4                 # for ruby@3.2
+    brew install autoconf           # for ruby@3.2
+    brew install bison              # for ruby@3.2
+    brew install libssh2            # for ruby@3.2
+    brew install libgit2            # for ruby@3.2
+    brew install mpdecimal          # for ruby@3.2
+    brew install sqlite             # for ruby@3.2
+    brew install xz                 # for ruby@3.2
+    brew install python@3.13        # for ruby@3.2
+    brew install z3                 # for ruby@3.2
+    brew install lz4                # for ruby@3.2
+    brew install zstd               # for ruby@3.2
+    brew install llvm               # for ruby@3.2
+    brew install rust               # for ruby@3.2
+    brew install ruby@3.2
+
+    brew install berkeley-db@5      # for flex
+    brew install gdbm               # for flex
+    brew install perl               # for flex
+    brew install help2man           # for flex
+    brew install flex
+
+    brew install lzip               # for make
+    brew install make
+
+    brew install oniguruma          # for jq
+    brew install jq
+
+    brew install brotli             # for curl
+    brew install libnghttp2         # for curl
+    brew install rtmpdump           # for curl
+    brew install curl
+
     brew install esolitos/ipa/sshpass iproute2mac
-    brew link ruby@3.2 --force
-    brew link flex --force
-    brew link curl --force
+    #brew link ruby@3.2 --force
+    #brew link flex --force
+    #brew link curl --force
     gem install shell -E
 
     # install additional kegs for athrill-gcc-package-mac_arm64
@@ -357,12 +311,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/coreutils/libexec/gnubin"
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/findutils/libexec/gnubin"
 
-#    echo "modify gcc@7 filenames"
     cd "$HOMEBREW_PREFIX/bin"
-#    ls | grep 7$ | while read line; do
-#        fileName=`echo "$line" | sed -E 's/(.*)-7/\1/'`
-#        mv "$line" "$fileName"
-#    done
 fi
 
 # check and install modifiers

@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.30c.250628"
+export BEERHALL_VER="5.30d.250628"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -238,7 +238,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
 
     brew install pkgconf            # for ncurses
     brew install ncurses            # for bash (keg only)
-    brew link --force ncurces
+    brew link --force ncurses
     brew install bash
     brew install bash-completion@2
 

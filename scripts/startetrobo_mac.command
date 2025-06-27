@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.30b.250628"
+export BEERHALL_VER="5.30c.250628"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -36,18 +36,20 @@ if [ "$1" = "clean" ]; then
     if [ -z "$BEERHALL" ]; then
         BEERHALL="$(cd "$(dirname "$0")"; pwd)/BeerHall"
     fi
-    ls $BEERHALL/usr/local/opt/flex/lib |
-    while read line; do
-        sudo rm -f "/usr/local/lib/$line"
-        if [ -e "/usr/local/lib/$line.BeerHallTmp" ]; then
-            sudo mv "/usr/local/lib/$line.BeerHallTmp" "/usr/local/lib/$line"
-        fi
-    done
+    if [ -d "$BEERHALL/usr/local/opt/flex/lib" ]; then
+        ls $BEERHALL/usr/local/opt/flex/lib |
+        while read line; do
+            sudo rm -f "/usr/local/lib/$line"
+            if [ -e "/usr/local/lib/$line.BeerHallTmp" ]; then
+                sudo mv "/usr/local/lib/$line.BeerHallTmp" "/usr/local/lib/$line"
+            fi
+        done
+    fi
 
     sudo rm -f /etc/bashrc_BeerHall
 
     targetFile=/etc/bashrc_vscode
-    touch $targetFile
+    sudo touch $targetFile
     unset removeFlag
     bashrc=$(mktemp)
     cat $targetFile | 
@@ -215,7 +217,7 @@ if [ -z "$BEERHALL" ]; then
     ln -s "$HOME/Applications" Applications
     ln -s "$HOME/Library" Library
 
-    echo "install HomeBrew, please wait a *few hours*"
+    echo "install HomeBrew, please wait about an hour"
     cd "$BEERHALL/usr"
     curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C local
     makeBeerHall="install"

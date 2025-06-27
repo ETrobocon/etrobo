@@ -1,5 +1,5 @@
 #!/bin/bash
-export BEERHALL_VER="5.30a.250627"
+export BEERHALL_VER="5.30b.250628"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
@@ -234,8 +234,9 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
 
     # install BeerHall (for etrobo) formulae
 
-    brew install pkgconf            # for nvurses
-    brew install ncurses            # for bash
+    brew install pkgconf            # for ncurses
+    brew install ncurses            # for bash (keg only)
+    brew link --force ncurces
     brew install bash
     brew install bash-completion@2
 
@@ -254,14 +255,18 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install git
 
     brew install libyaml            # for ruby@3.2
-    brew install readline           # for ruby@3.2
-    brew install m4                 # for ruby@3.2
+    brew install readline           # for ruby@3.2 (keg only)
+    brew link --force readline
+    brew install m4                 # for ruby@3.2 (keg only)
+    brew link --force m4
     brew install autoconf           # for ruby@3.2
-    brew install bison              # for ruby@3.2
+    brew install bison              # for ruby@3.2 (keg only)
+    brew link --force bison
     brew install libssh2            # for ruby@3.2
     brew install libgit2            # for ruby@3.2
     brew install mpdecimal          # for ruby@3.2
-    brew install sqlite             # for ruby@3.2
+    brew install sqlite             # for ruby@3.2 (keg only)
+    brew link --force sqlite
     brew install xz                 # for ruby@3.2
     brew install python@3.13        # for ruby@3.2
     brew install z3                 # for ruby@3.2
@@ -269,13 +274,16 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install zstd               # for ruby@3.2
     brew install llvm               # for ruby@3.2
     brew install rust               # for ruby@3.2
-    brew install ruby@3.2
+    brew install ruby@3.2                         #(keg only)
+    brew link --force ruby@3.2
 
-    brew install berkeley-db@5      # for flex
+    brew install berkeley-db@5      # for flex (keg only)
+    brew link --force berkeley-db@5
     brew install gdbm               # for flex
     brew install perl               # for flex
     brew install help2man           # for flex
-    brew install flex
+    brew install flex                         #(keg only)
+    brew link --force flex
 
     brew install lzip               # for make
     brew install make
@@ -286,12 +294,10 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install brotli             # for curl
     brew install libnghttp2         # for curl
     brew install rtmpdump           # for curl
-    brew install curl
+    brew install curl                         #(keg only)
+    brew link --force curl
 
     brew install esolitos/ipa/sshpass iproute2mac
-    #brew link ruby@3.2 --force
-    #brew link flex --force
-    #brew link curl --force
     gem install shell -E
 
     # install additional kegs for athrill-gcc-package-mac_arm64

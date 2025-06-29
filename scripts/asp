@@ -55,7 +55,7 @@ else
     # 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
     # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
     # 3. $ETROBO_ATHRILL_SDK/common
-    if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+    if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
         if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
             ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
         elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then

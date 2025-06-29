@@ -16,14 +16,14 @@
 # https://github.com/toppers/ev3rt-athrill-v850e2m/commits/master
 # https://github.com/ETrobocon/raspike-athrill-v850e2m/commits/master
 #
-# the ETrobo official certified commit: Ver.2025.06.24a
+# the ETrobo official certified commit: Ver.2025.06.29a
 ATHRILL_OFFICIAL_COMMIT="8bf811e76f37a065b4b3e3cae4795b794b4b66f0"
 TARGET_OFFICIAL_COMMIT="dff01d79d13a4625dab6c86e82710e7eaebed4ef"
 if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
     SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
     SAMPLE_AUTHOR="toppers"
 else
-    SAMPLE_OFFICIAL_COMMIT="95c20715c84f408d3156c50ab5f3b00b68bfc1d5"
+    SAMPLE_OFFICIAL_COMMIT="a57b9ca07288e70be14cc57b488c824ba7a242b3"
     SAMPLE_AUTHOR="ETrobocon"
 fi
 # mruby environment for UnityETroboSim

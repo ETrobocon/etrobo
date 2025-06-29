@@ -49,7 +49,8 @@ elif [ "$ETROBO_ENV_MODE" = "EV3" ]; then
     fi
     targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
 elif [ "$ETROBO_ENV_MODE" = "SPIKE" ]; then
-    targetWorkspace="$ETROBO_ROOT/raspike-athrill-v850e2m/sdk/workspace"
+    kernel="raspike-athrill-v850e2m"
+    targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
 fi
 currentWorkspace="`ls -la "$ETROBO_ROOT" | grep 'workspace ->' | sed -E 's/.* workspace -> (.*)$/\1/'`"
 if [ "$targetWorkspace" != "$currentWorkspace" ]; then

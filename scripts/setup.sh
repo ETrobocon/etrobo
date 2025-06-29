@@ -101,7 +101,7 @@ fi
 
 #
 # distribute etroboc_common
-if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
     src="$ETROBO_ROOT/dist/etroboc_common"
     dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
     if [ ! -d "$dst" ]; then

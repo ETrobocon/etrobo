@@ -116,6 +116,17 @@ if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
     fi
 fi
 
+#
+# add include path to etroboc_common into Makefile.img
+if [ "$ETROBO_ENV_MODE" == "SPIKE" ] \
+&& [ -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" ] \
+&& [ -z "`cat \"$ETROBO_ATHRILL_SDK/common/Makefile.img\" | grep 'etroboc_common'`" ]; then
+    mv -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" "$ETROBO_ATHRILL_SDK/common/Makefile.img.org"
+    cat "$ETROBO_ATHRILL_SDK/common/Makefile.img.org" \
+    | sed -E 's/^\t-I\$\(LIBRASPIKE-ART_DIR\)\/include$/\t-I\$(LIBRASPIKE-ART_DIR)\/include \\\n\t-I\$(ETROBO_ATHRILL_WORKSPACE)\/etroboc_common/' \
+    > "$ETROBO_ATHRILL_SDK/common/Makefile.img"
+fi
+
 # prepare device_config_r.txt
 if [ -f "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" ]; then
     if [ ! -f "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt" ]; then

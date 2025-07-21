@@ -224,31 +224,34 @@ fi
 
 # define competition rules
 if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
-   [ "$year" == "2024" ]; then
-    # ETrobocon 2021 and 2022 and 2023 and 2024
+   [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
+    # ETrobocon 2021 and 2022 and 2023 and 2024 and 2025
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
     ranking_header=(
-        Id
-        TeamId
-        CategoryCode
-        CourseKubun
-        RunTime
-        ResultTime
-        StatusCode
-        HalfwayGate1
-        HalfwayGate2
-        CarryBlocks
-        PassedSlalom
-        AvoidObstacles
-        GarageIn
-        BringInBlock
-        MovedBlocks
-        MovedPowerSpots
-        MovedCenter
-        MovedBingo
-        MovedPowerBingo
+        Id                  # 0
+        TeamId              # 1
+        CategoryCode        # 2
+        CourseKubun         # 3
+        RunTime             # 4
+        ResultTime          # 5
+        StatusCode          # 6
+        HalfwayGate1        # 7
+        HalfwayGate2        # 8
+        CarryBlocks         # 9
+        PassedSlalom        # 10
+        AvoidObstacles      # 11
+        GarageIn            # 12
+        BringInBlock        # 13
+        MovedBlocks         # 14
+        MovedPowerSpots     # 15
+        MovedCenter         # 16
+        MovedBingo          # 17
+        MovedPowerBingo     # 18
+        CarryBlockMove      # 19
+        SmartCarry          # 20
+        GoalAreaStop        # 21
     )
     for ((i=4; i<${#ranking_header[@]}; i++)); do
         ranking[$i]=""
@@ -260,6 +263,9 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
             ranking[7]=FALSE
             ranking[8]=FALSE
             ranking[9]=0
+            ranking[19]=FALSE
+            ranking[20]=FALSE
+            ranking[21]=FALSE
         elif [ "$class" == "primary" ]; then
             ranking[7]=FALSE
             ranking[8]=FALSE
@@ -283,7 +289,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     # time0; csv header for etrobosim
     gate1="GATE1"
     gate2="GATE2"
-    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
+    if [ "$year" == "2023" ] || [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
         gate1="GATE"
         gate2="LAP"
     fi
@@ -310,6 +316,9 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
         "BLOCK_YUKOIDOC": "0",
         "BLOCK_BINGOP": "0",
         "LAP_POLE_TOUCHED": "0",
+        "CARRY_BLOCK_MOVE": "0",
+        "SMART_CARRY": "0",
+        "GOAL_AREA_STOP": "0",
         "MeasurementMode": "READY"
     }'
     time0="`echo "$time0" | jq -c .`"
@@ -332,7 +341,10 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
     && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
     && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
-    && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ]; then
+    && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ] \
+    && [ "`json time0.CARRY_BLOCK_MOVE`" == "`json start.CARRY_BLOCK_MOVE`" ] \
+    && [ "`json time0.SMART_CARRY`" == "`json start.SMART_CARRY`" ] \
+    && [ "`json time0.GOAL_AREA_STOP`" == "`json start.GOAL_AREA_STOP`" ]; then
         if [ "`json end.MeasurementMode`" != "END" ]; then
             status="judgemental retire"
         else
@@ -442,6 +454,8 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
                             # No collision with the LAP gate
                             if [ "`json end.LAP_POLE_TOUCHED`" == "0" ]; then
                                 bonus=$((bonus+5))
+                            else
+                                bonus=$((bonus-30))
                             fi
                         else
                             bonus=$((bonus+5))
@@ -451,14 +465,30 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
                         
                         # mission bonus for entry class
                         if [ "$class" == "entry" ]; then
-                            ranking[9]="`json end.ENTRY_BONUS`"
+                            if [ "$year" == "2025" ]; then
+                                ranking[9]="`json end.SMART_CARRY`"
+                            else
+                                ranking[9]="`json end.ENTRY_BONUS`"
+                            fi
                             bonus=$(($bonus+${ranking[9]}))
                             status="goal"
                         fi
-                        # passed GOAL gate
+                        # moved CARRY BLOCK 1pt
+                        if [ "`json end.CARRY_BLOCK_MOVE`" != "0" ]; then
+                            ranking[19]="TRUE"
+                            bonus=$((bonus+1))
+                            status="goal"
+                        fi
+                        # passed GOAL gate 4pt
                         if [ "`json end.GOAL`" != "0" ]; then
                             ranking[8]="TRUE"
-                            bonus=$((bonus+10))
+                            bonus=$((bonus+4))
+                            status="goal"
+                        fi
+                        # stopped GOAL Area 6pt
+                        if [ "`json end.GOAL_AREA_STOP`" != "0" ]; then
+                            ranking[21]="TRUE"
+                            bonus=$((bonus+6))
                             status="goal"
                         fi
                     fi

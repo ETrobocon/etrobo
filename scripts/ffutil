@@ -3,7 +3,7 @@
 # Multi-platform movie utilities that run with ffmpeg and ImageMagick
 #   ffutil
 # Author: jtFuruhata
-# Copyright (c) 2020-2021 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -14,13 +14,26 @@
 #
 # Notice:
 #   "tpad filter" doesn't work on Ubuntu 18.04 because the version of ffmpeg official package is 3.4.8.
+#   This utility works only with ffmpeg 5.1 filter complexes.
+#   This utility works only with ImageMagick 6 because the command use `convert` instead of `magick`.
 #
 # Further Information: See https://ffmpeg.org/
 #
 
 # ffmpeg for windows constants
 ffmpeg_win_root="$ETROBO_USERPROFILE/etrobosim"
-ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+# newest version
+#ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"  # 7.0.2
+#ffmpeg_brew_formulae="ffmpeg"          # 7.1.1
+#im_debian_package="imagemagick"        # 7.1.1
+#im_brew_foumulae="imagemagick"         # 7.1.2
+
+# version lock
+ffmpeg_win_url="https://etrobocon.github.io/etroboEV3/ffmpeg-5.1.1-essentials_build.zip"
+ffmpeg_brew_formulae="ffmpeg@5"         # 5.1.6
+im_debian_package="imagemagick-6.q16"   # 6.9.11
+im_brew_foumulae="imagemagick@6"        # 6.9.13
 
 # show usage
 if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
@@ -148,7 +161,7 @@ elif [ "$1" == "install" ]; then
         sudo apt -y update
         sudo apt -y upgrade
         echo "install ImageMagick"
-        sudo apt -y install imagemagick
+        sudo apt -y install $im_debian_package
         echo "done."
     elif [ "$ETROBO_OS" == "mac" ]; then
         echo "install ffmpeg"

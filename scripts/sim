@@ -559,7 +559,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             # sim controller
             if [ "$ctl_command" == "get" ]; then
-                if [ "$ctl_key" == "status" ] || [ -z "$ctl_key" ]; then
+                if [ "$ctl_key" == "status" ]; then
                     json="`curl -m 1 -s -X GET $ETROBO_SIM_COMM`"
                     ctl_key=$ctl_val
                 else

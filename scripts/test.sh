@@ -41,9 +41,9 @@ reassembleFields=( \
     SMART_CARRY \
     GOAL_AREA_STOP \
 )
-
+course="left"
 for ((i=0; i<${#reassembleFields[@]}; i++)); do
-    resultJson="$(echo "$resultJson" | jq ".${course}${reassembleFields[i]}|=\"$(echo "$raceJson" | jq -r ".[0].${reassembleFields[i]}")\"")"
+    resultJson="$(echo "$resultJson" | jq ".${course}Measurement.${reassembleFields[i]}|=\"$(echo "$raceJson" | jq -r ".[0].${reassembleFields[i]}")\"")"
 done
 
 echo "$resultJson"

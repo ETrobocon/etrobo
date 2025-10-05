@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2024 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2024"
+year="2025"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -137,7 +137,8 @@ if [ "$class" == "auto" ]; then
         categoryCode="E"
     elif [ -n "$teamID" ]; then
         # stringify 'Teams' lookup CSV file to JSON
-        fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+        # fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+        fields=(ID classLetter divisionID LSlalom year bibID)
         mapper=""
         for ((i=0; i<${#fields[@]}; i++)); do
             if [ -n "$mapper" ];then

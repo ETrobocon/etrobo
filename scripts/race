@@ -787,7 +787,7 @@ else
     )
 
     for ((i=0; i<${#reassembleFields[@]}; i++)); do
-        json="$(echo "$json" | jq ".${course}${reassembleFields[i]}|=\"$(echo "$raceJson" | jq -r ".[0].${reassembleFields[i]}")\"")"
+        json="$(echo "$json" | jq ".${course}Measurement.${reassembleFields[i]}|=\"$(echo "$raceJson" | jq -r ".[0].${reassembleFields[i]}")\"")"
     done
 
     echo $json | jq -M . > result.json

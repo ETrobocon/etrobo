@@ -88,7 +88,7 @@ unset ranking
 # get requestID & lookup teamID
 unset requestID
 unset classPrefix
-if [ -n serv ]; then
+if [ -n "$serv" ]; then
     classPrefix=`echo $csv_filename | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
     case "$classPrefix" in
         "A" ) class="advanced" ;;
@@ -290,7 +290,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     # time0; csv header for etrobosim
     gate1="GATE1"
     gate2="GATE2"
-    if [ "$year" == "2023" ] || [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
+    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
         gate1="GATE"
         gate2="LAP"
     fi

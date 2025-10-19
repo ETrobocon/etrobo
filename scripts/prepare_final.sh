@@ -443,7 +443,7 @@ elif [ "$1" == "replaceMovies" ]; then
 
     mode="all"
     unset id
-    groups=(1 2 4 5 6 8 9 12 11 14 A B C CS)
+    groups=(1 2 3 4 5 6 7 8 9 10 12 11 13 14 15 A B C CS)
     unset teamID
     unset divisionID
     unset classLetter
@@ -514,7 +514,7 @@ elif [ "$1" == "replaceMovies" ]; then
             cd "${destinationFolder}_${targetID}_${classLetter}"
             mkdir "$innerFolder"
             echo "replace: $raceID"
-            cp "$relayFolder/common/matchmaker/results/${combinedID}_リザルト.png" "${innerFolder}/"
+            cp "$relayFolder/common/matchmaker/results/${combinedID}_リザルト.png" "${innerFolder}/${combinedID}_result.png"
             cp "$relayFolder/common/raceserv/results/$raceID.mp4" "${innerFolder}/"
             cp "$relayFolder/common/matchmaker/csv/$raceID.csv" "${innerFolder}/"
             zip "$target" -d $innerFolder/$innerFolder.csv $innerFolder/$innerFolder.mp4 $innerFolder/result.json

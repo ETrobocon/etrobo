@@ -4,12 +4,12 @@
             "MatchMaker multiplexing settings using from ffutil",
             "  mmmux.json",
             "Author: jtFuruhata",
-            "Copyright (c) 2021-2023 ETロボコン実行委員会, Released under the MIT license",
+            "Copyright (c) 2021-2025 ETロボコン実行委員会, Released under the MIT license",
             "See LICENSE"
         ],
-        "version":                  "2023.entry.0",
-        "matchMakerScreenWidth":    "1008",
-        "matchMakerScreenHeight":   "750",
+        "version":                  "2025.entry.0",
+        "matchMakerScreenWidth":    "1024",
+        "matchMakerScreenHeight":   "768",
         "matchMakerFrameRate":      "30",
         "etrobosim": {
             "width":    "640",
@@ -21,7 +21,7 @@
             "scale":    "0.775"
         },
         "banner": {
-            "width":    "1008",
+            "width":    "1024",
             "height":   "82",
             "x":        "0",
             "y":        "0",
@@ -30,107 +30,143 @@
             "scale":    ""
         },
         "time": {
-            "width":    "165",
+            "width":    "133",
             "height":   "39",
-            "x":        "428",
-            "y":        "120",
-            "toX":      "428",
-            "toY":      "38",
+            "x":        "447",
+            "y":        "112",
+            "toX":      "438",
+            "toY":      "44",
             "scale":    "1.0"
         }
     },
     "left": {
         "common": {
             "teamInfo": {
-                "width":    "500",
-                "height":   "45",
-                "x":        "4",
-                "y":        "82",
-                "toX":      "4",
-                "toY":      "0",
+                "width":    "383",
+                "height":   "21",
+                "x":        "64",
+                "y":        "84",
+                "toX":      "72",
+                "toY":      "8",
                 "scale":    "1.0"
             },
             "teamName": {
-                "width":    "400",
-                "height":   "45",
-                "x":        "10",
-                "y":        "128",
-                "toX":      "14",
+                "width":    "433",
+                "height":   "48",
+                "x":        "14",
+                "y":        "118",
+                "toX":      "72",
                 "toY":      "45",
-                "scale":    "1.0"
+                "scale":    "0.7"
             },
             "teamID": {
-                "width":    "205",
-                "height":   "70",
-                "x":        "660",
-                "y":        "650",
+                "width":    "40",
+                "height":   "14",
+                "x":        "22",
+                "y":        "88",
                 "toX":      "508",
                 "toY":      "3",  
-                "scale":    "0.5"
+                "scale":    "2.0"
             },
             "goalTime": {
-                "width":    "166",
-                "height":   "41",
-                "x":        "289",
-                "y":        "368",
+                "width":    "120",
+                "height":   "30",
+                "x":        "0",
+                "y":        "185",
                 "toX":      "320",
-                "toY":      "92",  
+                "toY":      "94",  
                 "scale":    "0.5"
             },
             "goalTimeArea": {
-                "width":    "166",
-                "height":   "65",
-                "x":        "289",
-                "y":        "353",
+                "width":    "100",
+                "height":   "30",
+                "x":        "0",
+                "y":        "185",
                 "toX":      "",
                 "toY":      "",  
                 "scale":    ""
             },
             "goalStatus": {
-                "width":    "166",
-                "height":   "41",
-                "x":        "286",
-                "y":        "440",
+                "width":    "120",
+                "height":   "38",
+                "x":        "0",
+                "y":        "234",
                 "toX":      "320",
                 "toY":      "115",  
-                "scale":    "0.5"
+                "scale":    "0.45"
             },
             "goalStatusArea": {
-                "width":    "166",
-                "height":   "65",
-                "x":        "286",
-                "y":        "425",
+                "width":    "95",
+                "height":   "38",
+                "x":        "10",
+                "y":        "234",
                 "toX":      "",
                 "toY":      "",  
                 "scale":    ""
             }
         },
         "entry": {
-            "lapgate": {
-                "width":    "191",
-                "height":   "34",
-                "x":        "32",
-                "y":        "564",
-                "toX":      "30",
+            "midgate": {
+                "width":    "112",
+                "height":   "22",
+                "x":        "5",
+                "y":        "308",
+                "toX":      "70",
                 "toY":      "350",  
                 "scale":    "1.0"
             },
-            "bonus": {
-                "width":    "168",
-                "height":   "34",
-                "x":        "32",
-                "y":        "231",
-                "toX":      "5",
-                "toY":      "5",  
+            "lapgate": {
+                "width":    "107",
+                "height":   "22",
+                "x":        "5",
+                "y":        "330",
+                "toX":      "70",
+                "toY":      "325",  
                 "scale":    "1.0"
             },
             "goalgate": {
+                "width":    "41",
+                "height":   "22",
+                "x":        "5",
+                "y":        "353",
+                "toX":      "70",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "stopAfterGoal": {
+                "width":    "135",
+                "height":   "22",
+                "x":        "5",
+                "y":        "376",
+                "toX":      "70",
+                "toY":      "85",  
+                "scale":    "1.0"
+            },
+            "smartcarry": {
                 "width":    "104",
-                "height":   "34",
-                "x":        "372",
-                "y":        "231",
-                "toX":      "175",
-                "toY":      "50",  
+                "height":   "22",
+                "x":        "5",
+                "y":        "422",
+                "toX":      "30",
+                "toY":      "160",  
+                "scale":    "1.0"
+            },
+            "pointLandingSC": {
+                "width":    "223",
+                "height":   "22",
+                "x":        "60",
+                "y":        "469",
+                "toX":      "70",
+                "toY":      "185",  
+                "scale":    "1.0"
+            },
+            "moveCarryBlock": {
+                "width":    "140",
+                "height":   "22",
+                "x":        "60",
+                "y":        "514",
+                "toX":      "70",
+                "toY":      "210",  
                 "scale":    "1.0"
             }
         },
@@ -241,95 +277,131 @@
     "right": {
         "common": {
             "teamInfo": {
-                "width":    "500",
-                "height":   "45",
-                "x":        "4",
-                "y":        "82",
-                "toX":      "4",
-                "toY":      "0",
+                "width":    "383",
+                "height":   "21",
+                "x":        "64",
+                "y":        "84",
+                "toX":      "72",
+                "toY":      "8",
                 "scale":    "1.0"
             },
             "teamName": {
-                "width":    "400",
-                "height":   "45",
-                "x":        "10",
-                "y":        "128",
-                "toX":      "14",
+                "width":    "433",
+                "height":   "48",
+                "x":        "14",
+                "y":        "118",
+                "toX":      "72",
                 "toY":      "45",
-                "scale":    "1.0"
+                "scale":    "0.7"
             },
             "teamID": {
-                "width":    "205",
-                "height":   "70",
-                "x":        "660",
-                "y":        "650",
+                "width":    "40",
+                "height":   "14",
+                "x":        "22",
+                "y":        "88",
                 "toX":      "508",
-                "toY":      "0",  
-                "scale":    "0.5"
+                "toY":      "3",  
+                "scale":    "2.0"
             },
             "goalTime": {
-                "width":    "166",
-                "height":   "41",
-                "x":        "555",
-                "y":        "368",
-                "toX":      "237",
-                "toY":      "92",  
+                "width":    "120",
+                "height":   "30",
+                "x":        "504",
+                "y":        "185",
+                "toX":      "320",
+                "toY":      "94",  
                 "scale":    "0.5"
             },
             "goalTimeArea": {
-                "width":    "166",
-                "height":   "65",
-                "x":        "555",
-                "y":        "353",
+                "width":    "100",
+                "height":   "30",
+                "x":        "504",
+                "y":        "185",
                 "toX":      "",
                 "toY":      "",  
                 "scale":    ""
             },
             "goalStatus": {
-                "width":    "166",
-                "height":   "41",
-                "x":        "551",
-                "y":        "440",
-                "toX":      "236",
+                "width":    "120",
+                "height":   "38",
+                "x":        "504",
+                "y":        "234",
+                "toX":      "320",
                 "toY":      "115",  
-                "scale":    "0.5"
+                "scale":    "0.45"
             },
             "goalStatusArea": {
-                "width":    "166",
-                "height":   "65",
-                "x":        "561",
-                "y":        "425",
+                "width":    "100",
+                "height":   "38",
+                "x":        "504",
+                "y":        "234",
                 "toX":      "",
                 "toY":      "",  
                 "scale":    ""
             }
         },
         "entry": {
-            "lapgate": {
-                "width":    "191",
-                "height":   "34",
-                "x":        "816",
-                "y":        "564",
-                "toX":      "450",
+            "midgate": {
+                "width":    "112",
+                "height":   "22",
+                "x":        "517",
+                "y":        "308",
+                "toX":      "458",
                 "toY":      "350",  
                 "scale":    "1.0"
             },
-            "bonus": {
-                "width":    "168",
-                "height":   "34",
-                "x":        "808",
-                "y":        "231",
-                "toX":      "467",
-                "toY":      "5",  
+            "lapgate": {
+                "width":    "107",
+                "height":   "22",
+                "x":        "517",
+                "y":        "330",
+                "toX":      "463",
+                "toY":      "325",  
                 "scale":    "1.0"
             },
             "goalgate": {
+                "width":    "41",
+                "height":   "22",
+                "x":        "517",
+                "y":        "353",
+                "toX":      "529",
+                "toY":      "60",  
+                "scale":    "1.0"
+            },
+            "stopAfterGoal": {
+                "width":    "135",
+                "height":   "22",
+                "x":        "517",
+                "y":        "376",
+                "toX":      "435",
+                "toY":      "85",  
+                "scale":    "1.0"
+            },
+            "smartcarry": {
                 "width":    "104",
-                "height":   "34",
-                "x":        "532",
-                "y":        "231",
-                "toX":      "361",
-                "toY":      "50",  
+                "height":   "22",
+                "x":        "517",
+                "y":        "422",
+                "toX":      "506",
+                "toY":      "160",  
+                "scale":    "1.0"
+            },
+            "pointLandingSC": {
+                "width":    "223",
+                "height":   "22",
+                "x":        "572",
+                "y":        "469",
+                "toX":      "347",
+                "toY":      "185",  
+                "scale":    "1.0"
+            },
+            "moveCarryBlock": {
+                "width":    "140",
+                "height":   "22",
+                "x":        "572",
+                "y":        "514",
+                "toX":      "430",
+                "toY":      "210",  
                 "scale":    "1.0"
             }
         },

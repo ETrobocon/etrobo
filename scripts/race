@@ -742,55 +742,53 @@ else
     fi
 
     # update result.json
-    record="`cat "$result/$dest.csv" | tail -n 1 | sed -E 's/\r//g'`"
-    csvTime="`echo "$record" | awk -F ',' '{print $1}'`"
-    csvCounter="`echo "$record" | awk -F ',' '{print $2}'`"
-    csvFilename="`echo "$record" | awk -F ',' '{print $3}'`"
-    csvTIME="`echo "$record" | awk -F ',' '{print $4}'`"
-    csvMEASUREMENT_TIME="`echo "$record" | awk -F ',' '{print $5}'`"
-    csvRUN_TIME="`echo "$record" | awk -F ',' '{print $6}'`"
-    csvGATE1="`echo "$record" | awk -F ',' '{print $7}'`"
-    csvGATE2="`echo "$record" | awk -F ',' '{print $8}'`"
-    csvGOAL="`echo "$record" | awk -F ',' '{print $9}'`"
-    csvGARAGE_STOP="`echo "$record" | awk -F ',' '{print $10}'`"
-    csvGARAGE_TIME="`echo "$record" | awk -F ',' '{print $11}'`"
-    csvSLALOM="`echo "$record" | awk -F ',' '{print $12}'`"
-    csvPETBOTTLE="`echo "$record" | awk -F ',' '{print $13}'`"
-    csvBLOCK_IN_GARAGE="`echo "$record" | awk -F ',' '{print $14}'`"
-    csvBLOCK_YUKOIDO="`echo "$record" | awk -F ',' '{print $15}'`"
-    csvCARD_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $16}'`"
-    csvBLOCK_NUMBER_CIRCLE="`echo "$record" | awk -F ',' '{print $17}'`"
-    csvBLOCK_BINGO="`echo "$record" | awk -F ',' '{print $18}'`"
-    csvENTRY_BONUS="`echo "$record" | awk -F ',' '{print $19}'`"
-    csvBLOCK_YUKOIDOP="`echo "$record" | awk -F ',' '{print $20}'`"
-    csvBLOCK_YUKOIDOC="`echo "$record" | awk -F ',' '{print $21}'`"
-    csvBLOCK_BINGOP="`echo "$record" | awk -F ',' '{print $22}'`"
-    csvMeasurementMode="`echo "$record" | awk -F ',' '{print $23}'`"
+    fields=(`cat "$result/$dest.csv" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+    mapper=""
+    for ((i=0; i<${#fields[@]}; i++)); do
+        if [ -n "$mapper" ];then
+            mapper="$mapper,"
+        fi
+        mapper="${mapper}\"${fields[$i]}\":.[$i]"
+    done
+    raceJson=`cat "$result/$dest.csv" | tail -n 1 | sed -E 's/\r//g' \
+    | jq -csR 'split("\n")|map(split(","))|map({'$mapper'})|del(.[][]|nulls)' \
+    | sed -E 's/,\{\}//' | jq -c .`
 
     if [ -f result.json ]; then
         json="`cat result.json`"
     else
         json="{}"
     fi
-    json="`echo \"$json\" | jq \".${course}Measurement.TIME|=\\\"$csvTIME\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.MEASUREMENT_TIME|=\\\"$csvMEASUREMENT_TIME\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.RUN_TIME|=\\\"$csvRUN_TIME\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.GATE1|=\\\"$csvGATE1\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.GATE2|=\\\"$csvGATE2\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.GOAL|=\\\"$csvGOAL\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.GARAGE_STOP|=\\\"$csvGARAGE_STOP\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.GARAGE_TIME|=\\\"$csvGARAGE_TIME\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.SLALOM|=\\\"$csvSLALOM\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.PETBOTTLE|=\\\"$csvPETBOTTLE\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_IN_GARAGE|=\\\"$csvBLOCK_IN_GARAGE\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDO|=\\\"$csvBLOCK_YUKOIDO\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.CARD_NUMBER_CIRCLE|=\\\"$csvCARD_NUMBER_CIRCLE\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_NUMBER_CIRCLE|=\\\"$csvBLOCK_NUMBER_CIRCLE\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGO|=\\\"$csvBLOCK_BINGO\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.ENTRY_BONUS|=\\\"$csvENTRY_BONUS\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOP|=\\\"$csvBLOCK_YUKOIDOP\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_YUKOIDOC|=\\\"$csvBLOCK_YUKOIDOC\\\"\"`"
-    json="`echo \"$json\" | jq \".${course}Measurement.BLOCK_BINGOP|=\\\"$csvBLOCK_BINGOP\\\"\"`"
+
+    reassembleFields=( \
+        TIME \
+        MEASUREMENT_TIME \
+        RUN_TIME \
+        GATE1 \
+        GATE2 \
+        GOAL \
+        GARAGE_STOP \
+        GARAGE_TIME \
+        SLALOM \
+        PETBOTTLE \
+        BLOCK_IN_GARAGE \
+        BLOCK_YUKOIDO \
+        CARD_NUMBER_CIRCLE \
+        BLOCK_NUMBER_CIRCLE \
+        BLOCK_BINGO \
+        ENTRY_BONUS \
+        BLOCK_YUKOIDOP \
+        BLOCK_YUKOIDOC \
+        BLOCK_BINGOP \
+        LAP_POLE_TOUCHED \
+        CARRY_BLOCK_MOVE \
+        SMART_CARRY \
+        GOAL_AREA_STOP \
+    )
+
+    for ((i=0; i<${#reassembleFields[@]}; i++)); do
+        json="$(echo "$json" | jq ".${course}Measurement.${reassembleFields[i]}|=\"$(echo "$raceJson" | jq -r ".[0].${reassembleFields[i]}")\"")"
+    done
 
     echo $json | jq -M . > result.json
 

@@ -200,11 +200,17 @@ elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
         ffmpeg_win_path="$ffmpeg_win_root/ffmpeg/bin"
         checker="$ffmpeg_win_path/ffmpeg.exe"
         if [ -f "$checker" ]; then
+            if [ ! -x "$checker" ]; then
+                sudo chmod +x "$checker"
+            fi
             export ETROBO_FFMPEG="$checker"
             export ETROBO_FFMPEG_OS="win"
         fi
         checker="$ffmpeg_win_path/ffprobe.exe"
         if [ -f "$checker" ]; then
+            if [ ! -x "$checker" ]; then
+                sudo chmod +x "$checker"
+            fi
             export ETROBO_FFPROBE="$checker"
             export ETROBO_FFPROBE_OS="win"
         fi
@@ -275,7 +281,7 @@ elif [ "$ETROBO_FFUTIL_READY" != "ready" ]; then
         [
             {"name": "nVIDIA CUDA/NVENC",  "codec": "h264_nvenc",        "hw": "cuda", "hwformat": "cuda"},
             {"name": "AMD VCE/AMF",        "codec": "h264_amf",          "hw": "auto", "hwformat": ""    },
-            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": ""    },
+            {"name": "Intel QSV",          "codec": "h264_qsv",          "hw": "qsv",  "hwformat": "qsv" },
             {"name": "Apple Video Toolbox","codec": "h264_videotoolbox", "hw": "auto", "hwformat": ""    },
             {"name": "libx264 soft encode","codec": "libx264",           "hw": ""   ,  "hwformat": ""    }
         ]'

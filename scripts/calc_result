@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2024 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2025 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2024"
+year="2025"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -88,7 +88,7 @@ unset ranking
 # get requestID & lookup teamID
 unset requestID
 unset classPrefix
-if [ -n serv ]; then
+if [ -n "$serv" ]; then
     classPrefix=`echo $csv_filename | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
     case "$classPrefix" in
         "A" ) class="advanced" ;;
@@ -137,7 +137,8 @@ if [ "$class" == "auto" ]; then
         categoryCode="E"
     elif [ -n "$teamID" ]; then
         # stringify 'Teams' lookup CSV file to JSON
-        fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+        # fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
+        fields=(ID classLetter divisionID LSlalom year bibID)
         mapper=""
         for ((i=0; i<${#fields[@]}; i++)); do
             if [ -n "$mapper" ];then
@@ -289,7 +290,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     # time0; csv header for etrobosim
     gate1="GATE1"
     gate2="GATE2"
-    if [ "$year" == "2023" ] || [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
+    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
         gate1="GATE"
         gate2="LAP"
     fi

@@ -393,11 +393,25 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             if [ -n "$4" ]; then
                 loglevel="$4"
             fi
+
+            # Prefer software decode for multiplex/demultiplex.
+            # These paths use CPU filters (scale/crop/overlay) and force-hwaccel decode
+            # is fragile across environments.
+            enc_hw_opt="$ETROBO_ENC_HW_OPT"
+            enc_hw="$ETROBO_ENC_HW"
+            enc_hwformat_opt="$ETROBO_ENC_HWFORMAT_OPT"
+            enc_hwformat="$ETROBO_ENC_HWFORMAT"
+            if [ "$multiplex" == "multiplex" ] || [ "$multiplex" == "demultiplex" ]; then
+                unset enc_hw_opt
+                unset enc_hw
+                unset enc_hwformat_opt
+                unset enc_hwformat
+            fi
             if [ "$multiplex" == "multiplex" ]; then
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "${srcPrefix}_mmmux.${srcPostfix}" \
                     -i "${srcPrefix}_2.${srcPostfix}" \
                     -i "${srcPrefix}_3.${srcPostfix}" \
@@ -420,8 +434,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             elif [ "$multiplex" == "demultiplex" ]; then
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
@@ -430,8 +444,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     "${destPrefix}_1.${destPostfix}"
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
@@ -440,8 +454,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     "${destPrefix}_2.${destPostfix}"
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
@@ -450,8 +464,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     "${destPrefix}_3.${destPostfix}"
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
@@ -461,8 +475,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             else
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $enc_hw_opt $enc_hw \
+                    $enc_hwformat_opt $enc_hwformat \
                     -i "$source" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     $loglevel_opt $loglevel \
@@ -643,11 +657,42 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             # generate filter complex
             #
 
+            # mmmux may use hardware encoder, but the filter graph is mostly CPU filters.
+            # Keep input hwaccel options local to this command.
+            mmux_hw_opt="$ETROBO_ENC_HW_OPT"
+            mmux_hw="$ETROBO_ENC_HW"
+            mmux_hwformat_opt="$ETROBO_ENC_HWFORMAT_OPT"
+            mmux_hwformat="$ETROBO_ENC_HWFORMAT"
+
+            # QSV: force-hwaccel decode is fragile across environments.
+            # Prefer software decode + QSV encode for compatibility.
+            if [ "$ETROBO_ENC_CODEC" == "h264_qsv" ]; then
+                unset mmux_hw_opt
+                unset mmux_hw
+                unset mmux_hwformat_opt
+                unset mmux_hwformat
+            fi
+
+            # When inputs are decoded as CUDA hwframes (-hwaccel_output_format cuda),
+            # most of the filters used by mmmux (fps/crop/overlay/scale/colorkey)
+            # are CPU filters. Download hwframes once at the beginning to avoid
+            # hwframe<->sw auto-conversion failures.
+            mmux_in0_prefix=""
+            mmux_in1_prefix=""
+            mmux_in_threads_opt=""
+            if [ "$mmux_hwformat" == "cuda" ]; then
+                mmux_in0_prefix="hwdownload,format=nv12,"
+                mmux_in1_prefix="hwdownload,format=nv12,"
+                # NVDEC can fail when too many decode surfaces are requested.
+                # Reducing decoder threads mitigates this on some environments.
+                mmux_in_threads_opt="-threads 1"
+            fi
+
             if [ -n "$setfilter" ]; then
                 fc="$setfilter"
             else
                 # split MatchMaker source
-                fc="[0:v]setpts=PTS/$(calc $(json global.matchMakerFrameRate)/$frameRate),fps=$frameRate[src];"
+                fc="[0:v]${mmux_in0_prefix}setpts=PTS/$(calc $(json global.matchMakerFrameRate)/$frameRate),fps=$frameRate[src];"
                 for info in ${informations[@]}; do
                     if [ -n "$(json common.$info.scale)" ]; then
                         fc="${fc}[src]split[src][${info}Src];"
@@ -690,7 +735,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 done
 
                 # make and split difference stream
-                fc="${fc}[1:v]fps=$frameRate[body];"
+                fc="${fc}[1:v]${mmux_in1_prefix}fps=$frameRate[body];"
 #                fc="${fc}[2:v]fps=$frameRate[filter];"
 #                fc="${fc}color=c=black:s=$(json global.matchMakerScreenWidth)x$(json global.matchMakerScreenHeight):r=$frameRate,split[bk1][bk2];"
 #                fc="${fc}[filterSrc][filter]blend=all_mode=grainextract,lutyuv=val-128[mask];"
@@ -753,9 +798,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo "now multiplexing..."
                 "$ETROBO_FFMPEG" \
                     -y -r $frameRate \
-                    $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                    $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
+                    $mmux_hw_opt $mmux_hw \
+                    $mmux_hwformat_opt $mmux_hwformat \
+                    $mmux_in_threads_opt \
                     -i "$(getWinPath $matchmakerFile $ETROBO_FFMPEG_OS)" \
+                    $mmux_hw_opt $mmux_hw \
+                    $mmux_hwformat_opt $mmux_hwformat \
+                    $mmux_in_threads_opt \
                     -i "$(getWinPath $raceservFile $ETROBO_FFMPEG_OS)" \
                     -filter_complex "$fc" \
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \

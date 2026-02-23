@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 echo '-----------------'
-echo ' startetrobo 3.0 - etrobo all-in-one package installer/invoker'
+echo ' startetrobo 3.1 - etrobo all-in-one package installer/invoker'
 echo '-----------------'
 # Author: jtFuruhata
-# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -101,19 +101,20 @@ rm -f "$ETROBO_ROOT/disable"
 
 # recognize target devenv option
 unset opt_devenv
-if [ "$1" == "NXT" ] || [ "$1" == "EV3" ] || [ "$1" == "SPIKE" ]; then
+if [ "$1" == "NXT" ] || [ "$1" == "EV3" ] || [ "$1" == "SPIKE" ] || [ "$1" == "SPIKE-RT" ]; then
     opt_devenv="$1"
     shift
 fi
 
 # usage
 if [ "$1" = "--help" ]; then
-    echo 'Usage: startetrobo [NXT|EV3|SPIKE] [<option>]'
-    echo '  NXT|EV3|SPIKE ... select your target devenv'
+    echo 'Usage: startetrobo [NXT|EV3|SPIKE-RT|SPIKE] [<option>]'
+    echo '  NXT|EV3|SPIKE-RT|SPIKE ... select your target devenv'
     echo '  If no target is specified,'
     echo '    If a file named 'NXT' exists, NXT(nxtOSEK) is selected.'
-    echo '    If 'NXT' does not exist but a file named 'EV3' exists, EV3(EV3RT) is selected.'
-    echo '    If neither exists, SPIKE(RasPike-ART) is selected.'
+    echo '    If a file named 'EV3' exists, EV3(EV3RT) is selected.'
+    echo '    If a file named 'SPIKE-RT' exists, SPIKE-RT is selected.'
+    echo '    If none of the files exist, SPIKE(etrobosim/RasPike-ART) is selected.'
     echo
     echo '  startetrobo         ... install and/or open etrobo terminal on VSCode'
     echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
@@ -412,20 +413,30 @@ unset ETROBO_ENV_MODE
 if [ "$opt_devenv" = "NXT" ]; then
     touch "$ETROBO_ROOT/NXT"
     rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
     rm -rf "$ETROBO_ROOT/SPIKE"
 elif [ "$opt_devenv" = "EV3" ]; then
     rm -rf "$ETROBO_ROOT/NXT"
     touch "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "SPIKE-RT" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    touch "$ETROBO_ROOT/SPIKE-RT"
     rm -rf "$ETROBO_ROOT/SPIKE"
 elif [ "$opt_devenv" = "SPIKE" ]; then
     rm -rf "$ETROBO_ROOT/NXT"
     rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
     touch "$ETROBO_ROOT/SPIKE"
 fi
 if [ -f "$ETROBO_ROOT/NXT" ]; then
     export ETROBO_ENV_MODE="NXT"
 elif [ -f "$ETROBO_ROOT/EV3" ]; then
     export ETROBO_ENV_MODE="EV3"
+elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+    export ETROBO_ENV_MODE="SPIKE-RT"
 elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
     export ETROBO_ENV_MODE="SPIKE"
 else

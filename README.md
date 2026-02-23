@@ -22,6 +22,7 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 - Visual Studio Code（VSCode）以外のインストールを完全自動化
 - Windows/Mac/Linux/ChromeOSで同一の操作による開発を実現
 - SPIKEモード（デフォルト）では、RasPike-ART向けETロボコンSPIKE APIのコードをETロボコンシミュレータ向けのAthrill/ASP3にビルド可能
+- SPIKE-RTモードでは、SPIKE-RT向けETロボコンSPIKE APIのコードを実機向けにビルド可能
 - EV3モードでは、Mindstorms EV3実機向けのEV3RT/HRP3と、ETロボコンシミュレータ向けのAthrill/ASP3が、単一のソースで一度にビルド可能
 - NXTモードでは、Mindstorms NXT実機向けnxtOSEKアプリをビルド可能
 - USB接続のEV3RT App Loader向けユーティリティおよびNXT拡張ファーム向けアップローダを搭載、ビルド時に自動でプロジェクト名をファイル名として転送可能
@@ -39,7 +40,7 @@ etrobo環境は、以下のソフトウェアおよび成果物の一部を利�
 
 (ご不明な点は、[ETロボコン 本部事務局](https://www.etrobo.jp/)までお問合せください)
 
-Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
+Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 
 ## 動作環境
 
@@ -47,20 +48,21 @@ Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 
 - x86-64アーキテクチャのCPU
 - Windows 11
-    - OSビルド26100.2605（December 2024 Update）以降のversion 24H2、または23H2。
+    - version 25H2、またはOSビルド26100.2605（December 2024 Update）以降のversion 24H2。
         - 2024年12月アップデートより前に手動インストールした24H2ではWSLが破壊され修復不可能であるとの報告もありますのでご注意ください。 
     - Windows 10 Enterprise LTSC 2021での動作確認も行なっていますが、サポート対象外です。
-- `wsl --install`によりインストールされたUbuntuまたはUbuntu-24.04(WSL2)
     - インストールにWindowsの管理者権限が必要です。
-    - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12)でも動作するようですが、サポート対象外です。
+- `wsl --install`によりインストールされたUbuntuまたはUbuntu-24.04(WSL2)
+    - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12/13)でも動作するようですが、サポート対象外です。
+    - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
 
 ### Mac
-- x86-64アーキテクチャのCPU、またはApple Silicon
+- Apple Silicon、またはx86-64アーキテクチャのCPU
     - 動作確認は、以下のMacで行っています：
-        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Sequoia 15.4.1 / Xcode CLT 16.3
-- macOS Ventura(13.0)以降
+        - MacBook Air (M1, 2020) 8GB-7GPU / macOS Tahoe 26.3 / Xcode CLT 26.2.0
+- macOS Sonoma(14.0)以降
     - HomeBrewの動作環境に準じます。これ以前のmacOSでも動作する可能性は高いですが、サポート対象外です。
     - 環境のインストールに管理者権限が必要です。
 - Apple Silicon機の場合、Rossetaのインストール
@@ -69,9 +71,10 @@ Copyright(C) 2020-2025 ETロボコン実行委員会, All rights reserved.
 
 ### Linux
 - x86-64アーキテクチャのCPU
-- Debian GNU/Linux 12 (bookworm) または Ubuntu 24.04
+- Debian GNU/Linux 13 (trixie) または Ubuntu 24.04
     - 環境のインストールにsudoers権限が必要です。
-    - Debian 11/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
+    - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
+    - Debian 12/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール
 
 ### ChromeOS

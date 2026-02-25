@@ -1,5 +1,5 @@
 # etrobo all-in-one installer/builder/launcher environment
-基本的には、[ETロボコン](https://etrobo.jp/)のシミュレータ競技向け開発環境です。
+基本的には、[ETロボコン](https://etrobo.jp/)のシミュレータ部門エントリークラスおよびフィジカル部門ベーシッククラス向けの開発環境です。アプライドクラス向けのRasPike-ARTは別途[こちら](https://github.com/ETrobocon/RasPike-ART)からインストールしてください。
 
 see INSTALL that is written by english language
 

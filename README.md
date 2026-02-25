@@ -7,6 +7,7 @@ see INSTALL that is written by english language
 
 etrobo環境は、以下のソフトウェアおよび成果物の一部を利用し構成され、etroboパッケージはこれらを自動的に取得しインストールします。
 - [ETロボコンシミュレータ](https://etrobo.jp/)
+- [SPIKE-RT ETロボコン拡張](https://github.com/spike-rt/spike-rt)
 - [TOPPERS/EV3RT for Athrill SPIKE APIバージョン](https://github.com/ETrobocon/raspike-athrill-v850e2m)
 - [TOPPERS/EV3RT](https://dev.toppers.jp/trac_user/ev3pf/wiki/WhatsEV3RT)
 - [TOPPERS/箱庭](https://toppers.github.io/hakoniwa/)
@@ -53,7 +54,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
     - Windows 10 Enterprise LTSC 2021での動作確認も行なっていますが、サポート対象外です。
     - インストールにWindowsの管理者権限が必要です。
 - `wsl --install`によりインストールされたUbuntuまたはUbuntu-24.04(WSL2)
-    - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12/13)でも動作するようですが、サポート対象外です。
+    - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12/13)でも動作するようですが、サポート対象外です。なお、Debianにインストールする場合はまず`sudo apt install wget`してください。
     - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
@@ -72,7 +73,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 ### Linux
 - x86-64アーキテクチャのCPU
 - Debian GNU/Linux 13 (trixie) または Ubuntu 24.04
-    - 環境のインストールにsudoers権限が必要です。
+    - 環境のインストールにはsudoers権限の付与が必要です。
     - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - Debian 12/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール
@@ -82,15 +83,16 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
         - Chrome OS 126.0.6478.222 (Official Build)
-        - Debian GNU/Linux 12 (bookworm)
+        - Debian GNU/Linux 13 (trixie)
 - ChromeOS 102以降
     - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも動作するものと考えていますがサポート対象外です。
     - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。
     - 78以前では、localhostのポート制限により動作しない可能性が高いものと認識していますが、未確認です。
 - 「Linux開発環境」のインストール
+    - 教育委員会等によって無効化されている場合は素直に諦めてください。
     - etroboパッケージのインストール手順等はLinux版をご覧ください。
 - Visual Studio Codeのインストール
-    - ダウンロードファイルを2本指タップし、「Linux(ベータ版)でのインストール」を選択します。
+    - `Linuxにインストール`がエラーになる場合は、ダウンロードファイルをLinuxに移動し、`sudo apt install ダウンロードファイル名`でインストールしてください。
 - 制限事項：ChromeOS 101以前のDebian 10向けLinuxコンテナにて、
 `Crostini GPU Support`有効の状態ではETロボコンシミュレータが起動しません。
 ChromeOS 102以降のDebian 11向けLinuxコンテナでは有効にできますが、それでも実用的なパフォーマンスは期待できません。

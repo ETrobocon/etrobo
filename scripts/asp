@@ -149,11 +149,20 @@ else
 
         # prepare course specific settings
         selector="DEVICE_CONFIG_UART_BASENAME"
-        uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        uart_select="__ev3rt_uart"
+        if [ -f "$device_config_txt" ]; then
+            uart_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        fi
         selector="DEVICE_CONFIG_BT_BASENAME"
-        bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        bt_select="__ev3rt_bt"
+        if [ -f "$device_config_txt" ]; then
+            bt_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        fi
         selector="DEVICE_CONFIG_VIRTFS_TOP"
-        fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        fs_select="__ev3rtfs"
+        if [ -f "$device_config_txt" ]; then
+            fs_select="`cat \"$device_config_txt\" | grep $selector | sed -E \"s/$selector[ $(echo $'\t')]*(.*)$/\1/\"`"
+        fi
         fs_basename="`echo $fs_select | sed -E 's/^(.*)_r$/\1/'`"
 
         #

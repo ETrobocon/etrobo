@@ -108,7 +108,7 @@ else
                 export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
             else
                 export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_RASPIKE/sdk"
-                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_SDK/common/device_config"
+                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_SDK/workspace/etroboc_common/device_config"
             fi
             export ETROBO_ATHRILL_WORKSPACE="$ETROBO_ATHRILL_SDK/workspace"
             export ETROBO_MRUBY_EV3RT="$ETROBO_ATHRILL_WORKSPACE/mruby-ev3rt"

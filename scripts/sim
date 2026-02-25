@@ -310,7 +310,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # stop btcat
         if [ -z "$2" ] || [ "$2" == "bt" ]; then
             shift
-            "$ETROBO_SCRIPTS/asp" stop r_app
+            "$ETROBO_SCRIPTS/asp" stop bt
         fi
         exit 0
     fi

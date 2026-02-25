@@ -114,6 +114,17 @@ if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
         rm -f "$dst/etroboc_ext.h"
         cp -f "$src/etroboc_ext.h" "$dst/"
     fi
+    dst="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+    if [ ! -d "$dst" ]; then
+        echo
+        echo "Install etroboc_common to workspace"
+        cp -rf "$src" "$ETROBO_ATHRILL_WORKSPACE/"
+    elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
+        echo
+        echo "Update etroboc_ext.h"
+        rm -f "$dst/etroboc_ext.h"
+        cp -f "$src/etroboc_ext.h" "$dst/"
+    fi
 fi
 
 #

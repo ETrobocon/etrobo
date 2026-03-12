@@ -133,6 +133,28 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             git clone -b "$ETROBO_SPIKE_RT_GIT_BRANCH" "https://github.com/$ETROBO_SPIKE_RT_GIT_AUTHOR/$ETROBO_SPIKE_RT_GIT_REPOSITORY.git" "$ETROBO_SPIKE_RT_ROOT"
         fi
 
+        if [ "$ETROBO_OS" == "win" ] && [ $(powershell.exe 'usbipd list' > /dev/null 2>&1; echo $?) -ne 0 ]; then
+            #
+            # usbipd-win
+            # https://github.com/dorssel/usbipd-win
+            #
+            pkgs+=("usbipd-win")
+            version="5.3.0"
+            vers+=("2026.03.03a")
+            unset arch
+            if [ "$arch" = "aarch64" ]; then
+                arch="arm64"
+                size="4448256"
+            else
+                arch="x64"
+                size="4501504"
+            fi
+            sizes+=("$size")
+            url=("https://github.com/dorssel/usbipd-win/releases/download/v${version}/usbipd-win_${version}_${arch}.msi")
+            urls+=("$url")
+            rm -f "$ETROBO_ROOT/dist/$(basename $url).manifest"
+        fi
+
         #
         # CMake
         # https://cmake.org/
@@ -557,6 +579,17 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 mkdir -p "$ETROBO_TARGET_GCC"
                 tar -xf "$file" -C "$ETROBO_TARGET_GCC" --strip-components=1 > /dev/null 2>&1
+                ;;
+            "usbipd-win" )
+                echo
+                echo "Install usbipd-win:"
+                powershell.exe -NoProfile -Command "Start-Process msiexec.exe -ArgumentList '/i \"$(wslpath -w "$file")\" /qn' -Verb RunAs"
+                echo
+                echo "*** To start using usbipd, you must restart this environment. ***"
+                echo "*** Please re-run \"Start ETrobo.cmd\" after closing this terminal and VSCode. ***"
+                echo
+                read -p "Press ENTER key to continue..." dummy
+                exit 0
                 ;;
             "cmake" )
                 echo

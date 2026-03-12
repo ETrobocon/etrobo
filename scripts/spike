@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# SPIKE utility for SPIKE-RT
+#
+# spike
+#
+# for etrobo environment Ver 1.00a.260312
+# Copyright (c) 2026 jtLab, Hokkaido Information University
+# by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
+# Released under the MIT license
+# https://opensource.org/licenses/mit-license.php
+#
+# This utility uses etrobo environment variables:
+# 
+
+
+# command recognition
+unset command
+if [ -n "$1" ]; then
+    command="$1"
+    shift
+fi
+if [ "$command" == "--help" ] || [ "$command" == "usage" ]; then
+    echo "Usage: spike [options]"
+    echo "Options:"
+    echo "  unset   Unset environment variables"
+    return 0
+fi
+
+#
+# unset - unset environment variables
+#
+if [ "$command" = "unset" ]; then
+    unset ETROBO_SPIKE_TTY
+    unset ETROBO_SPIKE_DRIVER
+    return 0
+fi
+
+#
+# driver - check USB serial driver availability and set environment variables
+#
+if [ "$command" == "driver" ]; then
+    # check USB serial driver availability and set environment variables
+    unset ETROBO_SPIKE_DRIVER
+    if [ "$ETROBO_OS" == "win" ]; then
+        if [ $(powershell.exe 'usbipd list' > /dev/null 2>&1; echo $?) -eq 0 ]; then
+            export ETROBO_SPIKE_DRIVER="usbip-win"
+        fi
+    elif [ "$ETROBO_OS" == "mac" ]; then
+        if [ -n "$(brew list --versions libusb)" ]; then
+            export ETROBO_SPIKE_DRIVER="homebrew"
+        fi
+    else
+        export ETROBO_SPIKE_DRIVER="debian"
+    fi
+    if [ -n "$ETROBO_SPIKE_DRIVER" ] && [ $(lsusb) -ne 127 ]; then
+        export ETROBO_SPIKE_DRIVER="available"
+    fi
+fi
+

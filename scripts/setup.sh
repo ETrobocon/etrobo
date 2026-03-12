@@ -2,7 +2,7 @@
 # etrobo all-in-one package installer/updater
 #   setup.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -72,6 +72,15 @@ if [ -n "$update" ]; then
             sim_select="sim_public"
         fi
     fi
+    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ] && [ -d "$ETROBO_SPIKE_RT_ROOT" ]; then
+        echo "attempt to update SPIKE-RT environment"
+        cd "$ETROBO_SPIKE_RT_ROOT"
+        git pull --ff-only
+        cd ..
+        rm -rf "$ETROBO_SPIKE_RT_TOOLS/cmake"
+        rm -rf "$ETROBO_SPIKE_RT_TOOLS/doxygen"
+        rm -rf "$ETROBO_SPIKE_RT_TOOLS/qemu"
+    fi
     etrobopkg $sim_select
     . "$scripts/sim" env
 fi
@@ -101,7 +110,7 @@ fi
 
 #
 # distribute etroboc_common
-if [ "$ETROBO_ENV_MODE" != "NXT" ]; then
+if [ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]; then
     src="$ETROBO_ROOT/dist/etroboc_common"
     dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
     if [ ! -d "$dst" ]; then
@@ -154,7 +163,7 @@ fi
 
 #
 # distribute UnityETroboSim
-if [ "$ETROBO_OS" != "raspi" ] && [ "$ETROBO_ENV_MODE" != "NXT" ]; then
+if [ "$ETROBO_OS" != "raspi" ] && ([ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]); then
     cd "$ETROBO_ROOT/dist"
     . sim env
     echo "Bundled Simulator: $ETROBO_SIM_VER"

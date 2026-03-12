@@ -22,9 +22,19 @@ else
             export LD_LIBRARY_PATH="$ETROBO_ATHRILL_GCC:$ETROBO_ATHRILL_GCC/lib:$LD_LIBRARY_PATH"
         fi
     fi
-    
+
     export ETROBO_PATH_ORG="$PATH"
-    export PATH=".:$ETROBO_SCRIPTS:$ETROBO_ATHRILL_GCC/bin:$ETROBO_ROOT/gcc-arm-none-eabi-$ETROBO_HRP3_GCC_VER/bin:$PATH"
+    unset gcc_path
+    if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
+        gcc_path="$ETROBO_ATHRILL_GCC/bin:$ETROBO_TARGET_GCC/bin"
+    else
+        gcc_path="$ETROBO_TARGET_GCC/bin:$ETROBO_ATHRILL_GCC/bin"
+    fi
+    unset spikert_path
+    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+        spikert_path="$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin"
+    fi
+    export PATH=".:$ETROBO_SCRIPTS:$gcc_path:$spikert_path:$PATH"
     if [ "$ETROBO_OS" == "win" ]; then
         if [ -n "$ETROBO_MODE_CUI" ]; then
             export PATH="$PATH:/mnt/c/Windows:/mnt/c/Windows/System32:/mnt/c/Windows/System32/wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH"

@@ -136,6 +136,47 @@ if [ "$1" = "--help" ]; then
     exit 0
 fi
 
+# determine target devenv
+unset ETROBO_ENV_MODE
+if [ "$opt_devenv" = "NXT" ]; then
+    touch "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "EV3" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    touch "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "SPIKE-RT" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    touch "$ETROBO_ROOT/SPIKE-RT"
+    rm -rf "$ETROBO_ROOT/SPIKE"
+elif [ "$opt_devenv" = "SPIKE" ]; then
+    rm -rf "$ETROBO_ROOT/NXT"
+    rm -rf "$ETROBO_ROOT/EV3"
+    rm -rf "$ETROBO_ROOT/SPIKE-RT"
+    touch "$ETROBO_ROOT/SPIKE"
+fi
+if [ -f "$ETROBO_ROOT/NXT" ]; then
+    export ETROBO_ENV_MODE="NXT"
+    export ETROBO_ENV_TARGET="physical"
+elif [ -f "$ETROBO_ROOT/EV3" ]; then
+    export ETROBO_ENV_MODE="EV3"
+    export ETROBO_ENV_TARGET="simulator"
+elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+    export ETROBO_ENV_MODE="SPIKE-RT"
+    export ETROBO_ENV_TARGET="physical"
+elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+    export ETROBO_ENV_MODE="SPIKE"
+    export ETROBO_ENV_TARGET="simulator"
+else
+    export ETROBO_ENV_MODE="SPIKE"
+    export ETROBO_ENV_TARGET="simulator"
+fi
+echo "entering $ETROBO_ENV_MODE mode"
+
 # `checkout [<branch name>]` option
 unset branch
 if [ "$1" = "checkout" ]; then
@@ -356,6 +397,11 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y update
         sudo apt -y upgrade
         sudo apt -y install build-essential
+        sudo apt -y install python3
+        sudo apt -y install python3-pip
+        sudo apt -y install usbutils
+        sudo apt -y install minicom
+        sudo apt -y install doxygen 
         sudo apt -y install sshpass
         sudo apt -y install git
         sudo apt -y install ruby
@@ -365,6 +411,11 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install bison
         sudo apt -y install psmisc
         sudo apt -y install net-tools
+        if [ `sudo apt -y install --simulate libncurses5 > /dev/null 2>&1; echo $?` -eq 100 ]; then
+            sudo apt -y install libncurses6
+        else
+            sudo apt -y install libncurses5
+        fi
         if [ -n "`echo \"$guest\" | grep \"Ubuntu 20.04\"`" ]; then
             sudo apt -y install gcc-10 g++-10
             sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 10
@@ -408,52 +459,18 @@ if [ "$install" = "install" ] && [ -z "$branch" ]; then
     fi
 fi
 
-# determine target devenv
-unset ETROBO_ENV_MODE
-if [ "$opt_devenv" = "NXT" ]; then
-    touch "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
-elif [ "$opt_devenv" = "EV3" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    touch "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
-elif [ "$opt_devenv" = "SPIKE-RT" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    touch "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
-elif [ "$opt_devenv" = "SPIKE" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    touch "$ETROBO_ROOT/SPIKE"
-fi
-if [ -f "$ETROBO_ROOT/NXT" ]; then
-    export ETROBO_ENV_MODE="NXT"
-elif [ -f "$ETROBO_ROOT/EV3" ]; then
-    export ETROBO_ENV_MODE="EV3"
-elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
-    export ETROBO_ENV_MODE="SPIKE-RT"
-elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
-    export ETROBO_ENV_MODE="SPIKE"
-else
-    export ETROBO_ENV_MODE="SPIKE"
-fi
-echo "entering $ETROBO_ENV_MODE mode"
-
 # download package
 if [ -d "$ETROBO_ROOT" ]; then
     "$ETROBO_ROOT/scripts/etrobopkg"
 fi
 
 # install Athrill2 & UnityETroboSim
-if [ -n "$repair" ]; then
-    "$ETROBO_ROOT/scripts/setup.sh repair $repair"
-else
-    "$ETROBO_ROOT/scripts/setup.sh"
+if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
+    if [ -n "$repair" ]; then
+        "$ETROBO_ROOT/scripts/setup.sh repair $repair"
+    else
+        "$ETROBO_ROOT/scripts/setup.sh"
+    fi
 fi
 
 # prepare as nxtOSEK mode

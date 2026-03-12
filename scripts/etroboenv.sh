@@ -2,7 +2,7 @@
 # etrobo environment core
 #   etroboenv.sh 
 # Author: jtFuruhata
-# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -21,19 +21,24 @@ fi
 if [ -z "$ETROBO_ENV_MODE" ]; then
     if [ -f "$ETROBO_ROOT/NXT" ]; then
         export ETROBO_ENV_MODE="NXT"
+        export ETROBO_ENV_TARGET="physical"
     elif [ -f "$ETROBO_ROOT/EV3" ]; then
         export ETROBO_ENV_MODE="EV3"
+        export ETROBO_ENV_TARGET="simulator"
+    elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+        export ETROBO_ENV_MODE="SPIKE-RT"
+        export ETROBO_ENV_TARGET="physical"
     elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
         export ETROBO_ENV_MODE="SPIKE"
+        export ETROBO_ENV_TARGET="simulator"
     else
         export ETROBO_ENV_MODE="SPIKE"
+        export ETROBO_ENV_TARGET="simulator"
     fi
 fi
 
 # switch workspace
-if [ "$ETROBO_ENV_MODE" = "NXT" ]; then
-    targetWorkspace="$ETROBO_ROOT/nxtOSEK/workspace"
-elif [ "$ETROBO_ENV_MODE" = "EV3" ]; then
+if [ "$ETROBO_ENV_MODE" = "EV3" ]; then
     # select EV3RT kernel version
     ver=`ls -1 "$ETROBO_ROOT" | grep "^ev3rt-.*-release" | grep -v beta | tail -n 1 | sed -E "s/^ev3rt-(.*)-release$/\1/"`
     file="$ETROBO_ROOT/select_kernel_version"
@@ -47,13 +52,20 @@ elif [ "$ETROBO_ENV_MODE" = "EV3" ]; then
     if [ -n "`echo $ver | grep beta`" ]; then
         kernel="hrp2"
     fi
-    targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
 elif [ "$ETROBO_ENV_MODE" = "SPIKE" ]; then
     kernel="raspike-athrill-v850e2m"
-    targetWorkspace="$ETROBO_ROOT/$kernel/sdk/workspace"
+elif [ "$ETROBO_ENV_MODE" = "SPIKE-RT" ]; then
+    kernel="spike-rt"
 fi
+if [ "$ETROBO_ENV_MODE" = "NXT" ]; then
+    targetSDK="$ETROBO_ROOT/nxtOSEK"
+else
+    targetSDK="$ETROBO_ROOT/$kernel/sdk"
+fi
+targetWorkspace="$targetSDK/workspace"
+
 currentWorkspace="`ls -la "$ETROBO_ROOT" | grep 'workspace ->' | sed -E 's/.* workspace -> (.*)$/\1/'`"
-if [ "$targetWorkspace" != "$currentWorkspace" ]; then
+if [ "$targetWorkspace" != "$currentWorkspace" ] && [ -d "$targetWorkspace" ]; then
     rm -f "$ETROBO_ROOT/workspace"
     ln -s "$targetWorkspace" "$ETROBO_ROOT/workspace"
 fi
@@ -64,12 +76,15 @@ if [ "$1" = "unset" ]; then
     . etrobopath.sh unset
     unset ETROBO_ENV
     unset ETROBO_ENV_MODE
+    unset ETROBO_ENV_TARGET
     unset ETROBO_ENV_VER
     unset ETROBO_SCRIPTS
+    unset ETROBO_TARGET_GCC
+    unset ETROBO_TARGET_GCC_VER
     unset ETROBO_ATHRILL_GCC
     unset ETROBO_ATHRILL_TARGET
-    unset ETROBO_HRP3_SDK
-    unset ETROBO_HRP3_WORKSPACE
+    unset ETROBO_HRP3_SDK       # ToDo: rename to ETROBO_TARGET_SDK
+    unset ETROBO_HRP3_WORKSPACE # ToDo: rename to ETROBO_TARGET_WORKSPACE
     unset ETROBO_ATHRILL_EV3RT
     unset ETROBO_ATHRILL_RASPIKE
     unset ETROBO_ATHRILL_SDK
@@ -99,8 +114,8 @@ else
             export ETROBO_ATHRILL_GCC="$ETROBO_ROOT/athrill-gcc-package/usr/local/athrill-gcc"
             export ETROBO_EV3RT_VER=$ver
             export ETROBO_EV3RT_KERNEL="$kernel"
-            export ETROBO_HRP3_SDK="$ETROBO_ROOT/$kernel/sdk"
-            export ETROBO_HRP3_WORKSPACE="$ETROBO_HRP3_SDK/workspace"
+            export ETROBO_HRP3_SDK="$targetSDK"             # ToDo: rename to ETROBO_TARGET_SDK
+            export ETROBO_HRP3_WORKSPACE="$targetWorkspace" # ToDo: rename to ETROBO_TARGET_WORKSPACE
             export ETROBO_ATHRILL_EV3RT="$ETROBO_ROOT/ev3rt-athrill-v850e2m"
             export ETROBO_ATHRILL_RASPIKE="$ETROBO_ROOT/raspike-athrill-v850e2m"
             if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
@@ -165,6 +180,14 @@ else
                 fi
             fi
 
+            if [ "$ETROBO_ENV_MODE" == "NXT" ] || [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+                export ETROBO_TARGET_GCC_VER="6_1-2017q1"
+                export ETROBO_TARGET_GCC="$ETROBO_ROOT/gcc-arm-none-eabi-6-2017-q1-update"
+            else
+                export ETROBO_TARGET_GCC_VER="10.3-2021.10"
+                export ETROBO_TARGET_GCC="$ETROBO_ROOT/gcc-arm-none-eabi-10.3-2021.10"
+            fi
+
             export ETROBO_ATHRILL_TARGET="$ETROBO_ROOT/athrill-target-v850e2m/build_${ETROBO_KERNEL_POSTFIX}"
 
             . "$ETROBO_SCRIPTS/etrobopath.sh" unset
@@ -191,6 +214,8 @@ else
         fi
     elif [ -z "$quit" ]; then
         if [ "$PATH" == "$ETROBO_PATH_ORG" ]; then
+            . "$ETROBO_SCRIPTS/sim" env
+            . "$ETROBO_SCRIPTS/etrobopkg" env
             . "$ETROBO_SCRIPTS/etrobopath.sh"
         fi
         echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"

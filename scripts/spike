@@ -10,6 +10,7 @@
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 #
+# this script is intended to be sourced by etroboenv.sh, and also to be executed directly
 
 # detect host OS
 if [ -z "$ETROBO_OS" ]; then
@@ -37,11 +38,13 @@ fi
 # unset - unset environment variables
 #
 if [ "$command" = "unset" ]; then
-    unset ETROBO_SPIKE_VIDPID_LEGO
-    unset ETROBO_SPIKE_VIDPID_LEGO_DFU
-    unset ETROBO_SPIKE_VIDPID_STM
-    unset ETROBO_SPIKE_TTY
     unset ETROBO_SPIKE_DRIVER
+    unset ETROBO_SPIKE_DEVICE_MODE_ENUM
+    unset ETROBO_SPIKE_DEVICE_ID_ENUM
+    unset ETROBO_SPIKE_DEVICE_MODE
+    unset ETROBO_SPIKE_DEVICE_BUS
+    unset ETROBO_SPIKE_DEVICE_DEV
+    unset ETROBO_SPIKE_DEVICE_ID
     exit 0
 fi
 
@@ -75,14 +78,35 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
     fi
 fi
 
-#
-# device - discover connected SPIKE devices and set environment variables
-#
-if [ "$command" == "device" ] || [ "$command" == "env" ]; then
-    export ETROBO_SPIKE_VIDPID_DFU="0694:0008"
-    export ETROBO_SPIKE_VIDPID_SPIKEAPP="0694:0009"
-    export ETROBO_SPIKE_VIDPID_PYBRICKS="0483:5740"
+# discover a connected SPIKE device and set environment variables
+export ETROBO_SPIKE_DEVICE_MODE_ENUM=("DFU" "SPIKE App" "Pybricks")
+export ETROBO_SPIKE_DEVICE_ID_ENUM=("0694:0008" "0694:0009" "0483:5740")
+unset ETROBO_SPIKE_DEVICE_MODE
+unset ETROBO_SPIKE_DEVICE_BUS
+unset ETROBO_SPIKE_DEVICE_DEV
+unset ETROBO_SPIKE_DEVICE_ID
+device=$(IFS="|"; lsusb | grep -E "${ETROBO_SPIKE_DEVICE_ID_ENUM[*]}")
+if [ -n "$device" ]; then
+    export ETROBO_SPIKE_DEVICE_BUS=$(echo "$device" | awk '{print $2}')
+    export ETROBO_SPIKE_DEVICE_DEV=$(echo "$device" | awk '{print $4}' | sed 's/://')
+    export ETROBO_SPIKE_DEVICE_ID=$(echo "$device" | awk '{print $6}')
+    index=0
+    for dev in "${ETROBO_SPIKE_DEVICE_ID_ENUM[@]}"; do
+        if [[ "$dev" == "$ETROBO_SPIKE_DEVICE_ID" ]]; then
+            break
+        fi
+        index=$((index + 1))
+    done
+    export ETROBO_SPIKE_DEVICE_MODE=${ETROBO_SPIKE_DEVICE_MODE_ENUM[$index]}
 fi
 
-
-
+#
+# device - show connected SPIKE device mode
+if [ "$command" == "device" ]; then
+    if [ -n "$ETROBO_SPIKE_DEVICE_MODE" ]; then
+        echo "$ETROBO_SPIKE_DEVICE_MODE"
+        exit 0
+    else
+        exit 1
+    fi
+fi

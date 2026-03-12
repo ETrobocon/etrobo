@@ -129,7 +129,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             git clone -b "$ETROBO_SPIKE_RT_GIT_BRANCH" "https://github.com/$ETROBO_SPIKE_RT_GIT_AUTHOR/$ETROBO_SPIKE_RT_GIT_REPOSITORY.git" "$ETROBO_SPIKE_RT_ROOT"
         fi
 
-        if [ "$ETROBO_OS" == "win" ] && [ $(powershell.exe 'usbipd list' > /dev/null 2>&1; echo $?) -ne 0 ]; then
+        if [ "$ETROBO_OS" == "win" ] && [ -z "$ETROBO_SPIKE_DRIVER" ]; then
             #
             # usbipd-win
             # https://github.com/dorssel/usbipd-win

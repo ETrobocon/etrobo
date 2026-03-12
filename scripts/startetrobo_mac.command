@@ -299,6 +299,10 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install curl                         #(keg only)
     brew link --force curl
 
+    brew install libusb             # for usbutils
+    brew install usbutils
+    brew install minicom
+
     brew install esolitos/ipa/sshpass iproute2mac
     gem install shell -E
 
@@ -381,7 +385,7 @@ if [ -n "$makeBeerHall" ]; then
     echo 'export SHELL="$HOMEBREW_PREFIX/bin/bash"' >> $beer
     echo 'export PATH="$BEERHALL:$BEERHALL_PATH_TO_BIN:/usr/bin:/bin:/usr/sbin:/sbin"' >> $beer
     echo 'export BEERHALL_PATH="$PATH"' >> $beer
-    echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"' >> $beer
+    echo 'export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@3)"' >> $beer
     echo 'export TERM_PROGRAM="BeerHall"' >> $beer
     echo "export TERM_PROGRAM_VERSION=\"$BEERHALL_VER\"" >> $beer
     echo '' >> $beer

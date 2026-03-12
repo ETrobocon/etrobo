@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# host OS detection utility
+#   detect_host_os 
+# Author: jtFuruhata
+# Copyright (c) 2026 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+
+# Usage: detect_host_os
+# Output: win|mac|linux|chrome|raspi [WSL1|WSL2]
+
+os="linux"
+subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"
+if [ "$subsystem" == "WSL2+" ]; then
+    subsystem="WSL2"
+fi
+if [ `uname` == "Darwin" ]; then
+    os="mac"
+    unset subsystem
+elif [ "$subsystem" == "Microsoft" ] || [ "$subsystem" == "WSL2" ]; then
+    if [ "$subsystem" == "Microsoft" ]; then
+        subsystem="WSL1"
+    fi
+    os="win"
+elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
+    os="chrome"
+    unset subsystem
+elif [ `uname` == "Linux" ]; then
+    os="linux"
+    unset subsystem
+    if [ -n "`cat /proc/device-tree/model 2>&1 | tr -d '\000' | grep Raspberry`" ]; then
+        os="raspi"
+    fi
+fi
+if [ -n "$subsystem" ]; then
+    echo "$os $subsystem"
+else
+    echo "$os"
+fi

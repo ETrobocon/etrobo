@@ -76,7 +76,7 @@ else
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
         export ETROBO_SPIKE_RT_ROOT="$ETROBO_ROOT/spike-rt"
         export ETROBO_SPIKE_RT_TOOLS="$ETROBO_SPIKE_RT_ROOT/tools"
-        export ETROBO_SPIKE_RT_PYTHON_VENV="$ETROBO_SPIKE_RT_ROOT/venv"
+        export ETROBO_SPIKE_RT_PYTHON_VENV="$ETROBO_SPIKE_RT_TOOLS/python"
         export ETROBO_SPIKE_RT_GIT_AUTHOR="ytoi"
         export ETROBO_SPIKE_RT_GIT_REPOSITORY="spike-rt-RasPike-ART"
         export ETROBO_SPIKE_RT_GIT_BRANCH="main"
@@ -86,7 +86,6 @@ else
     # GNU Arm Embedded Toolchain
     # https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
     #
-    echo "prepare GNU Arm Embedded Toolchain URL with $ETROBO_ENV_TARGET" >> "$ETROBO_ROOT/log"
     if [ "$ETROBO_ENV_TARGET" == "physical" ]; then
         platform="$ETROBO_KERNEL_POSTFIX"
         if [ "$ETROBO_ENV_MODE" == "NXT" ] || [ "$ETROBO_ENV_MODE" == "EV3" ]; then
@@ -99,7 +98,6 @@ else
         fi
         export ETROBO_TARGET_GCC_URL_BASE="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/$ETROBO_TARGET_GCC_VER/gcc-arm-none-eabi-${target_basename}"
         export ETROBO_TARGET_GCC_URL="${ETROBO_TARGET_GCC_URL_BASE}-${platform}.tar.bz2"
-        echo "GNU Arm Embedded Toolchain URL: $ETROBO_TARGET_GCC_URL" >> "$ETROBO_ROOT/log"
     fi
 fi
 if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
@@ -108,7 +106,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     vers=()
     sizes=()
 
-    echo "prepare package list to download" >> "$ETROBO_ROOT/log"
     if [ "$ETROBO_ENV_TARGET" == "physical" ]; then
         pkgs+=("gnu-rm")
         urls+=("$ETROBO_TARGET_GCC_URL")
@@ -120,7 +117,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         else
             sizes+=("157089706")    # x86_64-linux
         fi
-        echo "queing download: GNU Arm Embedded Toolchain" >> "$ETROBO_ROOT/log"
     fi
 
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
@@ -153,6 +149,18 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             url=("https://github.com/dorssel/usbipd-win/releases/download/v${version}/usbipd-win_${version}_${arch}.msi")
             urls+=("$url")
             rm -f "$ETROBO_ROOT/dist/$(basename $url).manifest"
+        fi
+
+        #
+        # PyUSB
+        # https://github.com/pyusb/pyusb
+        #
+        if [ ! -d "$ETROBO_SPIKE_RT_PYTHON_VENV" ]; then
+            echo "setup Python virtual environment for PyUSB"
+            python3 -m venv "$ETROBO_SPIKE_RT_PYTHON_VENV"
+            if [ -z "$("$ETROBO_SPIKE_RT_PYTHON_VENV/bin/pip3" list --format=freeze | grep pyusb)" ]; then
+               "$ETROBO_SPIKE_RT_PYTHON_VENV/bin/pip3" install pyusb 
+            fi
         fi
 
         #
@@ -568,12 +576,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
         # install files
         if [ $request ]; then
-            echo "install request: $pkg" >> "$ETROBO_ROOT/log"
             case $pkg in
             "gnu-rm" ) 
                 echo
                 echo "Install GNU Arm Embedded Toolchain:"
-                echo "URL: $ETROBO_TARGET_GCC_URL" >> "$ETROBO_ROOT/log"
                 if [ -d "$ETROBO_TARGET_GCC" ]; then
                     rm -rf "$ETROBO_TARGET_GCC"
                 fi

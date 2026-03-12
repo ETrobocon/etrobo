@@ -10,9 +10,15 @@
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 #
-# This utility uses etrobo environment variables:
-# 
 
+# detect host OS
+if [ -z "$ETROBO_OS" ]; then
+    set -- $(./scripts/detect_host_os)
+    ETROBO_OS="$1"
+    if [ "$ETROBO_OS" == "win" ]; then
+        ETROBO_OS_SUBSYSTEM="$2"
+    fi
+fi
 
 # command recognition
 unset command
@@ -31,15 +37,18 @@ fi
 # unset - unset environment variables
 #
 if [ "$command" = "unset" ]; then
+    unset ETROBO_SPIKE_VIDPID_LEGO
+    unset ETROBO_SPIKE_VIDPID_LEGO_DFU
+    unset ETROBO_SPIKE_VIDPID_STM
     unset ETROBO_SPIKE_TTY
     unset ETROBO_SPIKE_DRIVER
-    return 0
+    exit 0
 fi
 
 #
 # driver - check USB serial driver availability and set environment variables
 #
-if [ "$command" == "driver" ]; then
+if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
     # check USB serial driver availability and set environment variables
     unset ETROBO_SPIKE_DRIVER
     if [ "$ETROBO_OS" == "win" ]; then
@@ -53,8 +62,27 @@ if [ "$command" == "driver" ]; then
     else
         export ETROBO_SPIKE_DRIVER="debian"
     fi
-    if [ -n "$ETROBO_SPIKE_DRIVER" ] && [ $(lsusb) -ne 127 ]; then
+    if [ -n "$ETROBO_SPIKE_DRIVER" ] && [ "$(lsusb)" != "127" ]; then
         export ETROBO_SPIKE_DRIVER="available"
     fi
+
+    if [ "$1" == "check" ]; then
+        if [ "$ETROBO_SPIKE_DRIVER" == "available" ]; then
+            exit 0
+        else
+            exit 1
+        fi
+    fi
 fi
+
+#
+# device - discover connected SPIKE devices and set environment variables
+#
+if [ "$command" == "device" ] || [ "$command" == "env" ]; then
+    export ETROBO_SPIKE_VIDPID_DFU="0694:0008"
+    export ETROBO_SPIKE_VIDPID_SPIKEAPP="0694:0009"
+    export ETROBO_SPIKE_VIDPID_PYBRICKS="0483:5740"
+fi
+
+
 

@@ -134,22 +134,16 @@ else
             export ETROBO_SDCARD="$ETROBO_ROOT/ev3rt-$ETROBO_EV3RT_VER-release/sdcard"
 
             export ETROBO_PLATFORM="`uname -m`"
-            subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"
-            if [ "$subsystem" == "WSL2+" ]; then
-                subsystem="WSL2"
-            fi
-            if [ `uname` == "Darwin" ]; then
-                export ETROBO_OS="mac"
+
+            os=`"$ETROBO_SCRIPTS/detect_host_os"`
+            export ETROBO_OS="`echo $os | awk '{print $1}'`"
+            if [ "$ETROBO_OS" == "mac" ]; then
                 export ETROBO_KERNEL="darwin"
                 export ETROBO_KERNEL_POSTFIX="mac"
                 export ETROBO_USERPROFILE="$HOME_ORG"
                 export ETROBO_EXE_POSTFIX=".app"
-            elif [ "$subsystem" == "Microsoft" ] || [ "$subsystem" == "WSL2" ]; then
-                if [ "$subsystem" == "Microsoft" ]; then
-                    subsystem="WSL1"
-                fi
-                export ETROBO_OS="win"
-                export ETROBO_OS_SUBSYSTEM="$subsystem"
+            elif [ "$ETROBO_OS" == "win" ]; then
+                export ETROBO_OS_SUBSYSTEM="`echo $os | awk '{print $2}'`"
                 export ETROBO_KERNEL="debian"
                 export ETROBO_KERNEL_POSTFIX="linux"
                 comspec="`which cmd.exe`"
@@ -164,21 +158,16 @@ else
                     export ETROBO_USERPROFILE="/mnt/c/Users/`whoami`"
                 fi
                 export ETROBO_EXE_POSTFIX=".exe"
-            elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
-                export ETROBO_OS="chrome"
+            elif [ "$ETROBO_OS" == "chrome" ]; then
                 export ETROBO_KERNEL="debian"
                 export ETROBO_KERNEL_POSTFIX="linux"
                 export ETROBO_USERPROFILE="$HOME"
                 export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
-            elif [ `uname` == "Linux" ]; then
-                export ETROBO_OS="linux"
+            elif [ "$ETROBO_OS" == "linux" ] || [ "$ETROBO_OS" == "raspi" ]; then
                 export ETROBO_KERNEL="debian"
                 export ETROBO_KERNEL_POSTFIX="linux"
                 export ETROBO_USERPROFILE="$HOME"
                 export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
-                if [ -n "`cat /proc/device-tree/model 2>&1 | tr -d '\000' | grep Raspberry`" ]; then
-                    export ETROBO_OS="raspi"
-                fi
             fi
 
             if [ "$ETROBO_ENV_MODE" == "NXT" ] || [ "$ETROBO_ENV_MODE" == "EV3" ]; then

@@ -30,8 +30,13 @@ fi
 if [ "$command" == "--help" ] || [ "$command" == "usage" ]; then
     echo "Usage: spike [options]"
     echo "Options:"
-    echo "  unset   Unset environment variables"
-    return 0
+    echo "  driver   Check USB serial driver availability and set environment variables"
+    echo "    check  return boolean value of USB serial driver availability (used with 'driver' option)"
+    echo "  device   Show connected SPIKE device mode"
+    echo
+    echo "  unset    Unset environment variables"
+    echo "  env      Check USB serial driver and connected SPIKE device, and set environment variables"
+    exit 0
 fi
 
 #
@@ -123,8 +128,5 @@ if [ "$command" == "device" ] || [ "$command" == "env" ]; then
         if [ "$command" == "device" ]; then
             echo "$ETROBO_SPIKE_DEVICE_MODE"
         fi
-        return 0
-    else
-        return 1
     fi
 fi

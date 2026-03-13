@@ -45,7 +45,7 @@ if [ "$command" = "unset" ]; then
     unset ETROBO_SPIKE_DEVICE_BUS
     unset ETROBO_SPIKE_DEVICE_DEV
     unset ETROBO_SPIKE_DEVICE_ID
-    exit 0
+    return 0
 fi
 
 #
@@ -71,9 +71,9 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
 
     if [ "$1" == "check" ]; then
         if [ "$ETROBO_SPIKE_DRIVER" == "available" ]; then
-            exit 0
+            return 0
         else
-            exit 1
+            return 1
         fi
     fi
 fi
@@ -123,8 +123,8 @@ if [ "$command" == "device" ] || [ "$command" == "env" ]; then
         if [ "$command" == "device" ]; then
             echo "$ETROBO_SPIKE_DEVICE_MODE"
         fi
-        exit 0
+        return 0
     else
-        exit 1
+        return 1
     fi
 fi

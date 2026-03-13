@@ -25,7 +25,7 @@ if [ -z "$ETROBO_ENV_MODE" ]; then
     elif [ -f "$ETROBO_ROOT/EV3" ]; then
         export ETROBO_ENV_MODE="EV3"
         export ETROBO_ENV_TARGET="simulator"
-    elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+    elif [ -f "$ETROBO_ROOT/SPIKE_RT" ]; then
         export ETROBO_ENV_MODE="SPIKE-RT"
         export ETROBO_ENV_TARGET="physical"
     elif [ -f "$ETROBO_ROOT/SPIKE" ]; then

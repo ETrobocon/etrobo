@@ -148,7 +148,7 @@ if [ "$opt_devenv" = "NXT" ]; then
 elif [ "$opt_devenv" = "EV3" ]; then
     touch "$tmpdir/EV3"
 elif [ "$opt_devenv" = "SPIKE-RT" ]; then
-    touch "$tmpdir/SPIKE-RT"
+    touch "$tmpdir/SPIKE_RT"
 elif [ "$opt_devenv" = "SPIKE" ]; then
     touch "$tmpdir/SPIKE"
 fi
@@ -160,15 +160,15 @@ if [ -d "$ETROBO_ROOT" ] && [ $(ls -1 "$tmpdir" | wc -l) -eq 0 ]; then
     if [ -f "$ETROBO_ROOT/EV3" ]; then
         touch "$tmpdir/EV3"
     fi
-    if [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
-        touch "$tmpdir/SPIKE-RT"
+    if [ -f "$ETROBO_ROOT/SPIKE_RT" ]; then
+        touch "$tmpdir/SPIKE_RT"
     fi
     if [ -f "$ETROBO_ROOT/SPIKE" ]; then
         touch "$tmpdir/SPIKE"
     fi
     rm -f "$ETROBO_ROOT/NXT"
     rm -f "$ETROBO_ROOT/EV3"
-    rm -f "$ETROBO_ROOT/SPIKE-RT"
+    rm -f "$ETROBO_ROOT/SPIKE_RT"
     rm -f "$ETROBO_ROOT/SPIKE"
 fi
 # set environment vars according to target env mode
@@ -179,7 +179,7 @@ if [ -f "$tmpdir/NXT" ]; then
 elif [ -f "$tmpdir/EV3" ]; then
     export ETROBO_ENV_MODE="EV3"
     export ETROBO_ENV_TARGET="simulator"
-elif [ -f "$tmpdir/SPIKE-RT" ]; then
+elif [ -f "$tmpdir/SPIKE_RT" ]; then
     export ETROBO_ENV_MODE="SPIKE-RT"
     export ETROBO_ENV_TARGET="physical"
 elif [ -f "$tmpdir/SPIKE" ]; then
@@ -480,8 +480,8 @@ fi
 if [ -f "$tmpdir/EV3" ]; then
     mv -f "$tmpdir/EV3" "$ETROBO_ROOT/EV3"
 fi
-if [ -f "$tmpdir/SPIKE-RT" ]; then
-    mv -f "$tmpdir/SPIKE-RT" "$ETROBO_ROOT/SPIKE-RT"
+if [ -f "$tmpdir/SPIKE_RT" ]; then
+    mv -f "$tmpdir/SPIKE_RT" "$ETROBO_ROOT/SPIKE_RT"
 fi
 if [ -f "$tmpdir/SPIKE" ]; then
     mv -f "$tmpdir/SPIKE" "$ETROBO_ROOT/SPIKE"

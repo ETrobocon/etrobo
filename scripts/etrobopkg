@@ -110,7 +110,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         pkgs+=("gnu-rm")
         urls+=("$ETROBO_TARGET_GCC_URL")
         vers+=("2020.03.03a")
-        if [ "$ETROBO_MAC" = "mac" ]; then
+        if [ "$ETROBO_OS" = "mac" ]; then
             sizes+=("158961466")    # mac
         elif [ "$ETROBO_PLATFORM" = "aarch64" ]; then
             sizes+=("168772350")    # aarch64-linux

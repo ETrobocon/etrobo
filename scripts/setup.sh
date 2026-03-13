@@ -76,6 +76,7 @@ if [ -n "$update" ]; then
         echo "attempt to update SPIKE-RT environment"
         cd "$ETROBO_SPIKE_RT_ROOT"
         git pull --ff-only
+        git submodule update --init ./external/
         cd ..
         rm -rf "$ETROBO_SPIKE_RT_TOOLS/cmake"
         rm -rf "$ETROBO_SPIKE_RT_TOOLS/doxygen"

@@ -127,6 +127,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             echo
             echo "clone SPIKE-RT core"
             git clone -b "$ETROBO_SPIKE_RT_GIT_BRANCH" "https://github.com/$ETROBO_SPIKE_RT_GIT_AUTHOR/$ETROBO_SPIKE_RT_GIT_REPOSITORY.git" "$ETROBO_SPIKE_RT_ROOT"
+            cd spike-rt
+            git submodule update --init ./external/
+            cd ..
         fi
 
         if [ "$ETROBO_OS" == "win" ] && [ -z "$ETROBO_SPIKE_DRIVER" ]; then

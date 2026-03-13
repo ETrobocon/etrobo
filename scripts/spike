@@ -85,7 +85,23 @@ unset ETROBO_SPIKE_DEVICE_MODE
 unset ETROBO_SPIKE_DEVICE_BUS
 unset ETROBO_SPIKE_DEVICE_DEV
 unset ETROBO_SPIKE_DEVICE_ID
-device=$(IFS="|"; lsusb | grep -E "${ETROBO_SPIKE_DEVICE_ID_ENUM[*]}")
+regex=$(printf "|%s" "${ETROBO_SPIKE_DEVICE_ID_ENUM[@]}")
+regex=${regex:1}
+if [ "$ETROBO_OS" == "win" ]; then
+    device=$(usbipd.exe list 2>/dev/null | grep -E "$regex")
+    if [ -n "$device" ]; then
+        result=$(usbipd.exe attach --wsl --busid $(echo "$device" | awk '{print $1}') 2>&1)
+        if [ $? -ne 0 ]; then
+            invoker=$(echo $result | grep "usbipd bind" | sed -n "s/.*'\(.*\)'.*/\1/p")
+            if [ -n "$invoker" ]; then
+                powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList 'usbipd bind --busid 1-1'"
+                usbipd.exe attach --wsl --busid $(echo "$device" | awk '{print $1}') > /dev/null 2>&1
+            fi
+        fi
+        sleep 1 # ToDo: magic number
+    fi
+fi
+device=$(lsusb 2>/dev/null | grep -E "$regex")
 if [ -n "$device" ]; then
     export ETROBO_SPIKE_DEVICE_BUS=$(echo "$device" | awk '{print $2}')
     export ETROBO_SPIKE_DEVICE_DEV=$(echo "$device" | awk '{print $4}' | sed 's/://')
@@ -102,9 +118,11 @@ fi
 
 #
 # device - show connected SPIKE device mode
-if [ "$command" == "device" ]; then
+if [ "$command" == "device" ] || [ "$command" == "env" ]; then
     if [ -n "$ETROBO_SPIKE_DEVICE_MODE" ]; then
-        echo "$ETROBO_SPIKE_DEVICE_MODE"
+        if [ "$command" == "device" ]; then
+            echo "$ETROBO_SPIKE_DEVICE_MODE"
+        fi
         exit 0
     else
         exit 1

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 echo '-----------------'
-echo ' startetrobo 3.1 - etrobo all-in-one package installer/invoker'
+echo ' startetrobo 4.0 - etrobo all-in-one package installer/invoker'
 echo '-----------------'
 # Author: jtFuruhata
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
@@ -137,38 +137,29 @@ if [ "$1" = "--help" ]; then
 fi
 
 # determine target devenv
+tmpdir=".startetrobo.tmp"
+rm -rf "$tmpdir"
+mkdir -p "$tmpdir"
 unset ETROBO_ENV_MODE
 if [ "$opt_devenv" = "NXT" ]; then
-    touch "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
+    touch "$tmpdir/NXT"
 elif [ "$opt_devenv" = "EV3" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    touch "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
+    touch "$tmpdir/EV3"
 elif [ "$opt_devenv" = "SPIKE-RT" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    touch "$ETROBO_ROOT/SPIKE-RT"
-    rm -rf "$ETROBO_ROOT/SPIKE"
+    touch "$tmpdir/SPIKE-RT"
 elif [ "$opt_devenv" = "SPIKE" ]; then
-    rm -rf "$ETROBO_ROOT/NXT"
-    rm -rf "$ETROBO_ROOT/EV3"
-    rm -rf "$ETROBO_ROOT/SPIKE-RT"
-    touch "$ETROBO_ROOT/SPIKE"
+    touch "$tmpdir/SPIKE"
 fi
-if [ -f "$ETROBO_ROOT/NXT" ]; then
+if [ -f "$tmpdir/NXT" ]; then
     export ETROBO_ENV_MODE="NXT"
     export ETROBO_ENV_TARGET="physical"
-elif [ -f "$ETROBO_ROOT/EV3" ]; then
+elif [ -f "$tmpdir/EV3" ]; then
     export ETROBO_ENV_MODE="EV3"
     export ETROBO_ENV_TARGET="simulator"
-elif [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+elif [ -f "$tmpdir/SPIKE-RT" ]; then
     export ETROBO_ENV_MODE="SPIKE-RT"
     export ETROBO_ENV_TARGET="physical"
-elif [ -f "$ETROBO_ROOT/SPIKE" ]; then
+elif [ -f "$tmpdir/SPIKE" ]; then
     export ETROBO_ENV_MODE="SPIKE"
     export ETROBO_ENV_TARGET="simulator"
 else
@@ -458,6 +449,21 @@ if [ "$install" = "install" ] && [ -z "$branch" ]; then
         exit 1
     fi
 fi
+
+# move env mode files
+if [ -f "$tmpdir/NXT" ]; then
+    mv -f "$tmpdir/NXT" "$ETROBO_ROOT/NXT"
+fi
+if [ -f "$tmpdir/EV3" ]; then
+    mv -f "$tmpdir/EV3" "$ETROBO_ROOT/EV3"
+fi
+if [ -f "$tmpdir/SPIKE-RT" ]; then
+    mv -f "$tmpdir/SPIKE-RT" "$ETROBO_ROOT/SPIKE-RT"
+fi
+if [ -f "$tmpdir/SPIKE" ]; then
+    mv -f "$tmpdir/SPIKE" "$ETROBO_ROOT/SPIKE"
+fi
+rm -rf "$tmpdir"
 
 # download package
 if [ -d "$ETROBO_ROOT" ]; then

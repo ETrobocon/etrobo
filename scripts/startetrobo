@@ -136,11 +136,13 @@ if [ "$1" = "--help" ]; then
     exit 0
 fi
 
-# determine target devenv
+#
+# env mode selector
+#
 tmpdir=".startetrobo.tmp"
 rm -rf "$tmpdir"
 mkdir -p "$tmpdir"
-unset ETROBO_ENV_MODE
+# determine specified env mode
 if [ "$opt_devenv" = "NXT" ]; then
     touch "$tmpdir/NXT"
 elif [ "$opt_devenv" = "EV3" ]; then
@@ -150,6 +152,27 @@ elif [ "$opt_devenv" = "SPIKE-RT" ]; then
 elif [ "$opt_devenv" = "SPIKE" ]; then
     touch "$tmpdir/SPIKE"
 fi
+# check existing env mode files in ETROBO_ROOT
+if [ -d "$ETROBO_ROOT" ] && [ $(ls -1 "$tmpdir" | wc -l) -eq 0 ]; then
+    if [ -f "$ETROBO_ROOT/NXT" ]; then
+        touch "$tmpdir/NXT"
+    fi
+    if [ -f "$ETROBO_ROOT/EV3" ]; then
+        touch "$tmpdir/EV3"
+    fi
+    if [ -f "$ETROBO_ROOT/SPIKE-RT" ]; then
+        touch "$tmpdir/SPIKE-RT"
+    fi
+    if [ -f "$ETROBO_ROOT/SPIKE" ]; then
+        touch "$tmpdir/SPIKE"
+    fi
+    rm -f "$ETROBO_ROOT/NXT"
+    rm -f "$ETROBO_ROOT/EV3"
+    rm -f "$ETROBO_ROOT/SPIKE-RT"
+    rm -f "$ETROBO_ROOT/SPIKE"
+fi
+# set environment vars according to target env mode
+unset ETROBO_ENV_MODE
 if [ -f "$tmpdir/NXT" ]; then
     export ETROBO_ENV_MODE="NXT"
     export ETROBO_ENV_TARGET="physical"

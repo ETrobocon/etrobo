@@ -139,7 +139,7 @@ fi
 #
 # env mode selector
 #
-tmpdir=".startetrobo.tmp"
+tmpdir="$(cd `dirname $0`; pwd)/.startetrobo.tmp"
 rm -rf "$tmpdir"
 mkdir -p "$tmpdir"
 # determine specified env mode
@@ -202,7 +202,7 @@ if [ "$1" = "checkout" ]; then
         branch="master"
     fi
     # install with specified branch
-    if [ "$ETROBO_ENV" != "available" ]; then
+    if [ ! -d "$ETROBO_ROOT" ]; then
         cd "`dirname $0`"
         echo
         echo 'Clone etrobo core package'
@@ -222,7 +222,7 @@ if [ "$1" = "checkout" ]; then
     cd "$ETROBO_ROOT"
     git checkout .
     git checkout master
-    git pull
+    git pull --ff-only
     git checkout $branch
 
     rm -f "$ETROBO_ROOT/../startetrobo"
@@ -413,6 +413,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install build-essential
         sudo apt -y install python3
         sudo apt -y install python3-pip
+        sudo apt -y install python3-venv
         sudo apt -y install usbutils
         sudo apt -y install minicom
         sudo apt -y install doxygen 

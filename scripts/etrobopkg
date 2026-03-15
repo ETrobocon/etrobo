@@ -132,13 +132,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             # In this environment, use the original deploy-dfu.sh from spike-rt/spike-rt repository.
             if [ ! -f "$ETROBO_CACHE/deploy-dfu.sh" ]; then
                 curl -L https://raw.githubusercontent.com/spike-rt/spike-rt/main/scripts/deploy-dfu.sh -o "$ETROBO_CACHE/deploy-dfu.sh"
-                sed -i 's/^TOOL_DIR=.*/TOOL_DIR=\"$ETROBO_SPIKE_RT_TOOLS\"/' "$ETROBO_CACHE/deploy-dfu.sh"
+                cat "$ETROBO_CACHE/deploy-dfu.sh" | sed -E 's/^TOOL_DIR=.*/TOOL_DIR=\"$ETROBO_SPIKE_RT_TOOLS\"/' > "$ETROBO_CACHE/deploy-dfu.sh.tmp"
+                rm -f "$ETROBO_CACHE/deploy-dfu.sh"
+                mv -f "$ETROBO_CACHE/deploy-dfu.sh.tmp" "$ETROBO_CACHE/deploy-dfu.sh"
             fi
             if [ ! -f "sdk/common/deploy-dfu.sh.bak" ]; then
                 mv "sdk/common/deploy-dfu.sh" "sdk/common/deploy-dfu.sh.bak"
             fi
             rm -f "sdk/common/deploy-dfu.sh"
             cp -f "$ETROBO_CACHE/deploy-dfu.sh" "sdk/common/deploy-dfu.sh"
+            chmode +x "sdk/common/deploy-dfu.sh"
             cd ..
         fi
 

@@ -141,7 +141,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
             rm -f "sdk/common/deploy-dfu.sh"
             cp -f "$ETROBO_CACHE/deploy-dfu.sh" "sdk/common/deploy-dfu.sh"
-            chmode +x "sdk/common/deploy-dfu.sh"
+            chmod +x "sdk/common/deploy-dfu.sh"
             cd ..
         fi
 

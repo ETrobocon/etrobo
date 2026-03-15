@@ -22,7 +22,15 @@ cd "$workspace"
 
 # no-fake invoke on `make upload`
 if [ "$1" = "upload" ]; then
-    make $@
+    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ] && [ "$(spike device)" != "DFU" ]; then
+        echo "[fakemake on SPIKE-RT] *** upload failed: SPIKE device not found in DFU mode."
+        exit 1
+    fi
+    if [ "$ETROBO_OS" == "win" ] && [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+        sudo -E make $@
+    else
+        make $@
+    fi
     exit $?
 fi
 
@@ -192,7 +200,7 @@ if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
         if [ $? -eq 0 ]; then
             echo "[fakemake on SPIKE-RT] build succeed: $proj"
             if [ "$simopt" == "up" ]; then
-                make upload
+                fakemake.sh upload
             fi
         else
             echo "[fakemake on SPIKE-RT] *** one or more error occured while build for $proj"

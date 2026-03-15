@@ -11,6 +11,8 @@
 unset workspace
 if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
     workspace="$ETROBO_ROOT/nxtOSEK/workspace"
+elif [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+    workspace="$ETROBO_ROOT/spike-rt/sdk/workspace"
 elif [ "$ETROBO_ENV_MODE" == "EV3" ]; then
     workspace="$ETROBO_HRP3_WORKSPACE"
 else
@@ -22,6 +24,14 @@ cd "$workspace"
 if [ "$1" = "upload" ]; then
     make $@
     exit $?
+fi
+
+# no-fake invoke on `make clean` and `make realclean` for SPIKE-RT mode
+if [ "$ETROBO_ENV_MODE" = "SPIKE-RT" ]; then
+    if [ "$1" = "clean" ] || [ "$1" = "realclean" ]; then
+        make $@
+        exit $?
+    fi
 fi
 
 # `make nxt` enters into nxtOSEK mode, left for compatibility
@@ -106,6 +116,9 @@ if [ "$1" = "sample" ]; then
     if [ -n "$nxt" ]; then
         cd "$ETROBO_ROOT"
         make app="helloworld" up
+    elif [ "$ETROBO_ENV_MODE" = "SPIKE-RT" ]; then
+        cd "$ETROBO_ROOT"
+        make app=sample_c5 up
     elif [ "$2" = "tr" ]; then
         cd "$ETROBO_ROOT"
         make $skiphrp3 $strip $import $courseSelect $manual_launch $unprefs $btcat app="etrobo_tr" sim up
@@ -169,8 +182,28 @@ if [ -z "$proj" ] && [ -f currentapp ]; then
     proj=`echo $currentapp | sed -E "s/^app=|img=(.*)$/\1/"`
 fi
 
+# invoke make for SPIKE-RT mode
+if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+    echo "[fakemake on SPIKE-RT] invoke: make img=$proj $simopt" 
+    target="$ETROBO_ROOT/spike-rt/sdk/workspace/$proj"
+    if [ -d "$target" ]; then
+        echo "app=$proj" > currentapp
+        make img="$proj"
+        if [ $? -eq 0 ]; then
+            echo "[fakemake on SPIKE-RT] build succeed: $proj"
+            if [ "$simopt" == "up" ]; then
+                make upload
+            fi
+        else
+            echo "[fakemake on SPIKE-RT] *** one or more error occured while build for $proj"
+        fi
+        exit 0
+    else
+        echo "[fakemake on SPIKE-RT] *** project not found: $target."
+        exit 1
+    fi
 # invoke make for nxtOSEK mode
-if [ -n "$nxt" ]; then
+elif [ -n "$nxt" ]; then
     echo "[fakemake on nxtOSEK] invoke: make nxt app=$proj $simopt" 
     target="$ETROBO_NXTOSEK_ROOT/workspace/$proj"
     if [ -d "$target" ]; then

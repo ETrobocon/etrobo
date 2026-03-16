@@ -26,7 +26,7 @@ if [ "$1" = "upload" ]; then
         echo "[fakemake on SPIKE-RT] *** upload failed: SPIKE device not found in DFU mode."
         exit 1
     fi
-    if [ "$ETROBO_OS" == "win" ] && [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
         sudo -E make $@
     else
         make $@

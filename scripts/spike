@@ -99,9 +99,10 @@ if [ "$ETROBO_OS" == "win" ]; then
         if [ $? -ne 0 ]; then
             invoker=$(echo $result | grep "usbipd bind" | sed -n "s/.*'\(.*\)'.*/\1/p")
             if [ -n "$invoker" ]; then
-                powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList 'usbipd bind --busid 1-1'"
+                powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList 'usbipd bind --busid $(echo "$device" | awk '{print $1}')'" > /dev/null 2>&1
                 sleep 3 # ToDo: magic number
                 usbipd.exe attach --wsl --busid $(echo "$device" | awk '{print $1}') > /dev/null 2>&1
+                sleep 3 # ToDo: magic number
             fi
         fi
         sleep 1 # ToDo: magic number

@@ -43,6 +43,8 @@ if [ "$1" == "unset" ]; then
     unset ETROBO_SPIKE_RT_GIT_BRANCH
     # for physical NXT
     unset ETROBO_NXTOSEK_ROOT
+    unset GNUARM_ROOT   # envvar for nxtOSEK
+    unset NEXTTOOL_ROOT # envvar for nxtOSEK
 else
     # prepare envvar (also with `set` option)
     userProfile="$ETROBO_USERPROFILE"
@@ -70,6 +72,8 @@ else
     # nxtOSEK envvar
     if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
         export ETROBO_NXTOSEK_ROOT="$userProfile/nxtOSEK"   # Windows path
+        export GNUARM_ROOT="$ETROBO_TARGET_GCC"             # envvar for nxtOSEK
+        export NEXTTOOL_ROOT="ETROBO_NXTOSEK_ROOT/bin"      # envvar for nxtOSEK
     fi
 
     # SPIKE-RT envvar
@@ -128,12 +132,20 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         pkgs+=("gnu-rm")
         urls+=("$ETROBO_TARGET_GCC_URL")
         vers+=("2020.03.03a")
-        if [ "$ETROBO_OS" = "mac" ]; then
-            sizes+=("158961466")    # mac
-        elif [ "$ETROBO_PLATFORM" = "aarch64" ]; then
-            sizes+=("168772350")    # aarch64-linux
-        else
-            sizes+=("157089706")    # x86_64-linux
+        if [ "$ETROBO_TARGET_GCC_VER" == "6_1-2017q1" ]; then
+            if [ "$ETROBO_OS" = "mac" ]; then
+                sizes+=("104170189")    # mac
+            else
+                sizes+=("100247592")    # x86_64-linux (only)
+            fi
+        elif [ "$ETROBO_TARGET_GCC_VER" == "10.3-2021.10" ]; then
+            if [ "$ETROBO_OS" = "mac" ]; then
+                sizes+=("158961466")    # mac
+            elif [ "$ETROBO_PLATFORM" = "aarch64" ]; then
+                sizes+=("168772350")    # aarch64-linux
+            else
+                sizes+=("157089706")    # x86_64-linux
+            fi
         fi
     fi
 

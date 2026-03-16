@@ -106,6 +106,24 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
     vers=()
     sizes=()
 
+    #
+    # start manifest
+    #
+    echo "-----------"
+    echo " etrobopkg - etrobo package manager"
+    echo "-----------"
+    echo "  manifest version $ETROBO_MANIFEST_VER"
+
+    if [ ! -d "$ETROBO_CACHE" ]; then
+        rm -f "$ETROBO_CACHE"
+        mkdir "$ETROBO_CACHE"
+        if [ "$?" != "0" ]; then
+            echo "*** FATAL ERROR ***"
+            echo "'$ETROBO_USERPROFILE' doesn't exists. please check your user directory location."
+            exit 1
+        fi
+    fi
+
     if [ "$ETROBO_ENV_TARGET" == "physical" ]; then
         pkgs+=("gnu-rm")
         urls+=("$ETROBO_TARGET_GCC_URL")
@@ -131,6 +149,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             git submodule update --init ./external/
             # In this environment, use the original deploy-dfu.sh from spike-rt/spike-rt repository.
             if [ ! -f "$ETROBO_CACHE/deploy-dfu.sh" ]; then
+
                 curl -L https://raw.githubusercontent.com/spike-rt/spike-rt/main/scripts/deploy-dfu.sh -o "$ETROBO_CACHE/deploy-dfu.sh"
                 cat "$ETROBO_CACHE/deploy-dfu.sh" | sed -E 's/^TOOL_DIR=.*/TOOL_DIR=\"$ETROBO_SPIKE_RT_TOOLS\"/' > "$ETROBO_CACHE/deploy-dfu.sh.tmp"
                 rm -f "$ETROBO_CACHE/deploy-dfu.sh"
@@ -414,24 +433,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 vers+=("2025.07.19a")
                 sizes+=("$size")
             fi
-        fi
-    fi
-
-    #
-    # start downloading
-    #
-    echo "-----------"
-    echo " etrobopkg - etrobo package manager"
-    echo "-----------"
-    echo "  manifest version $ETROBO_MANIFEST_VER"
-
-    if [ ! -d "$ETROBO_CACHE" ]; then
-        rm -f "$ETROBO_CACHE"
-        mkdir "$ETROBO_CACHE"
-        if [ "$?" != "0" ]; then
-            echo "*** FATAL ERROR ***"
-            echo "'$ETROBO_USERPROFILE' doesn't exists. please check your user directory location."
-            exit 1
         fi
     fi
 

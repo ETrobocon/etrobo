@@ -219,6 +219,12 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
                     echo "[ SPIKE USB manager: Attempting to $subcommand device with busid $busid... ]" > /dev/tty
                     usbipd.exe $subcommand $option --busid $busid > /dev/null 2>&1
                     if [ $? -eq 0 ]; then
+                        if [ "$subcommand" == "attach" ]; then
+                            while [ "$(spike usb getinfo | awk '{print $4}')" != "Attached" ]; do
+                                echo "[ SPIKE USB manager: Waiting for device to be attached... ]" > /dev/tty
+                                sleep 0.1
+                            done
+                        fi
                         echo "[ SPIKE USB manager: Device $subcommand succeeded. ]" > /dev/tty
                     else
                         echo "[ SPIKE USB manager: Device $subcommand failed. ]" > /dev/tty

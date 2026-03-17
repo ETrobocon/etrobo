@@ -1,16 +1,29 @@
 #!/bin/bash
-export BEERHALL_VER="5.30d.250628"
+export BEERHALL_VER="5.30e.260317"
 echo
 echo "------------"
 echo " jtBeerHall - an implementation of Homebrew sandbox"
 echo "------------"
 echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
-# Copyright (c) 2020-2025 jtLab, Hokkaido Information University
+# Copyright (c) 2020-2026 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 #
 
+# detect the checkout branch for startetrobo
+args=("$@")
+unset etrobo_branch
+for ((i=0; i < ${#args[@]}; i++)); do
+    if [[ "${args[i]}" == "checkout" ]]; then
+        if [[ $((i + 1)) -lt ${#args[@]} ]]; then
+            etrobo_branch="${args[i+1]}"
+            break
+        fi
+    fi
+done
+
+# update BeerHall
 if [ "$1" = "update" ]; then
     shift
     if [ -z "$BEERHALL" ]; then
@@ -31,6 +44,7 @@ if [ "$1" = "update" ]; then
     rm -f "$BEERHALL/BeerHall"
 fi
 
+# clean BeerHall
 if [ "$1" = "clean" ]; then
     shift
     if [ -z "$BEERHALL" ]; then
@@ -415,9 +429,12 @@ if [ -n "$makeBeerHall" ]; then
 
     # for startetrobo
     cd "$BEERHALL"
+    if [ "$etrobo_branch" != "master" ]; then
+        rm -f "$BEERHALL/startetrobo"
+    fi
     if [ ! -f "$BEERHALL/startetrobo" ]; then
         echo "download startetrobo"
-        "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/master/scripts/startetrobo"
+        "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/$etrobo_branch/scripts/startetrobo"
         chmod +x startetrobo
     fi
 else

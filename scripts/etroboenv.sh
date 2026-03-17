@@ -207,6 +207,7 @@ else
         if [ "$PATH" == "$ETROBO_PATH_ORG" ]; then
             . "$ETROBO_SCRIPTS/sim" env
             . "$ETROBO_SCRIPTS/etrobopkg" env
+            . "$ETROBO_SCRIPTS/spike" env
             . "$ETROBO_SCRIPTS/etrobopath.sh"
         fi
         echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"

@@ -45,11 +45,14 @@ fi
 if [ "$command" = "unset" ]; then
     unset ETROBO_SPIKE_DRIVER
     unset ETROBO_SPIKE_DEVICE_MODE_ENUM
+    unset ETROBO_SPIKE_DEVICE_MODE_REGEX
     unset ETROBO_SPIKE_DEVICE_ID_ENUM
+    unset ETROBO_SPIKE_DEVICE_ID_REGEX
     unset ETROBO_SPIKE_DEVICE_MODE
     unset ETROBO_SPIKE_DEVICE_BUS
     unset ETROBO_SPIKE_DEVICE_DEV
     unset ETROBO_SPIKE_DEVICE_ID
+    unset ETROBO_SPIKE_DEVICE_STATE
     return 0
 fi
 
@@ -76,59 +79,194 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
 
     if [ "$1" == "check" ]; then
         if [ "$ETROBO_SPIKE_DRIVER" == "available" ]; then
-            return 0
+            true
         else
-            return 1
+            false
         fi
     fi
 fi
 
-# discover a connected SPIKE device and set environment variables
+# set envvars related to connected SPIKE device enum and regex
 export ETROBO_SPIKE_DEVICE_MODE_ENUM=("DFU" "SPIKE App" "Pybricks")
+regex=$(printf "|%s" "${ETROBO_SPIKE_DEVICE_MODE_ENUM[@]}")
+export ETROBO_SPIKE_DEVICE_MODE_REGEX=${regex:1}
 export ETROBO_SPIKE_DEVICE_ID_ENUM=("0694:0008" "0694:0009" "0483:5740")
-unset ETROBO_SPIKE_DEVICE_MODE
-unset ETROBO_SPIKE_DEVICE_BUS
-unset ETROBO_SPIKE_DEVICE_DEV
-unset ETROBO_SPIKE_DEVICE_ID
 regex=$(printf "|%s" "${ETROBO_SPIKE_DEVICE_ID_ENUM[@]}")
-regex=${regex:1}
-if [ "$ETROBO_OS" == "win" ]; then
-    device=$(usbipd.exe list 2>/dev/null | grep -E "$regex")
-    if [ -n "$device" ]; then
-        result=$(usbipd.exe attach --wsl --busid $(echo "$device" | awk '{print $1}') 2>&1)
-        if [ $? -ne 0 ]; then
-            invoker=$(echo $result | grep "usbipd bind" | sed -n "s/.*'\(.*\)'.*/\1/p")
-            if [ -n "$invoker" ]; then
-                powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList 'usbipd bind --busid $(echo "$device" | awk '{print $1}')'" > /dev/null 2>&1
-                sleep 3 # ToDo: magic number
-                usbipd.exe attach --wsl --busid $(echo "$device" | awk '{print $1}') > /dev/null 2>&1
-                sleep 3 # ToDo: magic number
-            fi
-        fi
-        sleep 1 # ToDo: magic number
-    fi
-fi
-device=$(lsusb 2>/dev/null | grep -E "$regex")
-if [ -n "$device" ]; then
-    export ETROBO_SPIKE_DEVICE_BUS=$(echo "$device" | awk '{print $2}')
-    export ETROBO_SPIKE_DEVICE_DEV=$(echo "$device" | awk '{print $4}' | sed 's/://')
-    export ETROBO_SPIKE_DEVICE_ID=$(echo "$device" | awk '{print $6}')
-    index=0
-    for dev in "${ETROBO_SPIKE_DEVICE_ID_ENUM[@]}"; do
-        if [[ "$dev" == "$ETROBO_SPIKE_DEVICE_ID" ]]; then
-            break
-        fi
-        index=$((index + 1))
-    done
-    export ETROBO_SPIKE_DEVICE_MODE=${ETROBO_SPIKE_DEVICE_MODE_ENUM[$index]}
-fi
+export ETROBO_SPIKE_DEVICE_ID_REGEX=${regex:1}
 
 #
-# device - show connected SPIKE device mode
-if [ "$command" == "device" ] || [ "$command" == "env" ]; then
-    if [ -n "$ETROBO_SPIKE_DEVICE_MODE" ]; then
-        if [ "$command" == "device" ]; then
-            echo "$ETROBO_SPIKE_DEVICE_MODE"
+# usb - manage USB device connection
+# usbipd - manage USB device connection with usbipd (Windows)
+#
+if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
+    subcommand="$1"
+    shift
+    #
+    # list - list connected SPIKE devices
+    if [ "$subcommand" == "list" ]; then
+        if [ "$command" == "usbipd" ] && [ "$ETROBO_OS" == "win" ]; then
+            usbipd.exe list 2>/dev/null | grep -E "$ETROBO_SPIKE_DEVICE_ID_REGEX"
+        else
+            lsusb 2>/dev/null | grep -E "$ETROBO_SPIKE_DEVICE_ID_REGEX"
+        fi
+    #
+    # getinfo - get information of connected SPIKE device as array
+    elif [ "$subcommand" == "getinfo" ]; then
+        device="$(spike $command list | head -n 1)"
+        if [ -n "$device" ]; then
+            if [ "$ETROBO_OS" == "win" ] && [ "$command" == "usbipd" ]; then
+                busid=$(echo "$device" | awk '{print $1}')
+                bus="${busid%-*}"
+                dev="${busid#*-}"
+                id="$(echo "$device" | awk '{print $2}')"
+                state="$(echo "$device" | awk '{print $NF}' | tr -d '\r')"
+                if [ "$state" == "shared" ]; then
+                    state="NotShared"
+                fi
+            else
+                bus="$(echo "$device" | awk '{print $2}')"
+                dev="$(echo "$device" | awk '{print $4}' | sed 's/://')"
+                id="$(echo "$device" | awk '{print $6}')"
+                state="Attached"
+            fi
+            echo "$bus $dev $id $state"
+        else
+            false
+        fi
+    elif [ "$subcommand" == "bind" ] || [ "$subcommand" == "unbind" ]; then
+        if [ "$ETROBO_OS" == "win" ]; then
+            device=($(spike usbipd getinfo))
+            if [ $? -eq 0 ]; then
+                bus="${device[0]}"
+                dev="${device[1]}"
+                id="${device[2]}"
+                state="${device[3]}"
+                busid="${bus}-${dev}"
+                #
+                # check device state and decide whether to invoke usbipd bind/unbind command
+                unset invoker
+                unset newstate
+                if [ "$subcommand" == "bind" ]; then
+                    newstate="Shared"
+                    if [ "$state" != "NotShared" ]; then
+                        echo "[ SPIKE USB manager: Device is already binded. ]" > /dev/tty
+                        invoker="no"
+                    fi
+                elif [ "$subcommand" == "unbind" ]; then
+                    newstate="NotShared"
+                    if [ "$state" == "NotShared" ]; then
+                        echo "[ SPIKE USB manager: Device is not binded. ]" > /dev/tty
+                        invoker="no"
+                    fi
+                fi
+                #
+                # invoke usbipd bind/unbind command with elevated privileges and wait for it to complete
+                if [ "$invoker" != "no" ]; then
+                    invoker="usbipd $subcommand --busid $busid > $(wslpath -w $ETROBO_CACHE/usbipd.log)"
+                    echo "[ SPIKE USB manager: Attempting to $subcommand device with busid $busid... ]" > /dev/tty
+                    echo "[ SPIKE USB manager: *** A UAC dialog box may appear. Please \"allow\" it to proceed. *** ]" > /dev/tty
+                    sleep 3
+                    pid=$(powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList '$invoker' -PassThru | Select-Object -ExpandProperty Id")
+                    while tasklist.exe | grep -q " $pid "; do
+                        sleep 0.1
+                    done
+                    if [ $(spike usbipd getinfo | awk '{print $NF}' | tr -d '\r') == "$newstate" ]; then
+                        echo "[ SPIKE USB manager: Device $subcommand succeeded. ]" > /dev/tty
+                    else
+                        echo "[ SPIKE USB manager: Device $subcommand failed. ]" > /dev/tty
+                        false
+                    fi
+                fi
+            else
+                false
+            fi
+        fi
+    elif [ "$subcommand" == "attach" ] || [ "$subcommand" == "detach" ]; then
+        if [ "$ETROBO_OS" == "win" ]; then
+            device=($(spike usbipd getinfo))
+            if [ $? -eq 0 ]; then
+                bus="${device[0]}"
+                dev="${device[1]}"
+                id="${device[2]}"
+                state="${device[3]}"
+                busid="${bus}-${dev}"
+                #
+                # check device state and decide whether to invoke usbipd attach/detach command
+                unset option
+                unset invoke
+                if [ "$subcommand" == "attach" ]; then
+                    option="--wsl"
+                    if [ "$state" == "Attached" ]; then
+                        echo "[ SPIKE USB manager: Device is already attached. ]" > /dev/tty
+                        invoke="no"
+                    elif [ "$state" == "NotShared" ]; then
+                        spike usbipd bind
+                        if [ $? -ne 0 ]; then
+                            echo "[ SPIKE USB manager: Device bind failed. Cannot attach device. ]" > /dev/tty
+                            invoke="no"
+                        fi
+                    fi
+                elif [ "$subcommand" == "detach" ]; then
+                    if [ "$state" != "Attached" ]; then
+                        echo "[ SPIKE USB manager: Device is not attached. ]" > /dev/tty
+                        invoke="no"
+                    fi
+                fi
+
+                #
+                # invoke usbipd attach/detach command
+                if [ "$invoke" != "no" ]; then
+                    echo "[ SPIKE USB manager: Attempting to $subcommand device with busid $busid... ]" > /dev/tty
+                    usbipd.exe $subcommand $option --busid $busid > /dev/null 2>&1
+                    if [ $? -eq 0 ]; then
+                        echo "[ SPIKE USB manager: Device $subcommand succeeded. ]" > /dev/tty
+                    else
+                        echo "[ SPIKE USB manager: Device $subcommand failed. ]" > /dev/tty
+                        false
+                    fi
+                fi
+            else
+                false
+            fi
+        fi
+    else
+        echo "Unknown subcommand: $subcommand"
+        false
+    fi
+else
+    #
+    # auto mount SPIKE device on Windows
+    # and set envvars related to connected SPIKE device
+    unset ETROBO_SPIKE_DEVICE_MODE
+    if [ "$ETROBO_OS" == "win" ]; then
+        state=$(spike usbipd getinfo | awk '{print $NF}' | tr -d '\r')
+        if [ "$state" != "Attached" ]; then
+            spike usbipd attach
+        fi
+    fi
+    device=$(spike usb getinfo)
+    if [ -n "$device" ]; then
+        export ETROBO_SPIKE_DEVICE_BUS=$(echo "$device" | awk '{print $1}')
+        export ETROBO_SPIKE_DEVICE_DEV=$(echo "$device" | awk '{print $2}')
+        export ETROBO_SPIKE_DEVICE_ID=$(echo "$device" | awk '{print $3}')
+        export ETROBO_SPIKE_DEVICE_STATE=$(echo "$device" | awk '{print $4}')
+        index=0
+        for dev in "${ETROBO_SPIKE_DEVICE_ID_ENUM[@]}"; do
+            if [[ "$dev" == "$ETROBO_SPIKE_DEVICE_ID" ]]; then
+                break
+            fi
+            index=$((index + 1))
+        done
+        export ETROBO_SPIKE_DEVICE_MODE=${ETROBO_SPIKE_DEVICE_MODE_ENUM[$index]}
+    fi
+
+    #
+    # device - show connected SPIKE device mode
+    if [ "$command" == "device" ] || [ "$command" == "env" ]; then
+        if [ -n "$ETROBO_SPIKE_DEVICE_MODE" ]; then
+            if [ "$command" == "device" ]; then
+                echo "$ETROBO_SPIKE_DEVICE_MODE"
+            fi
         fi
     fi
 fi

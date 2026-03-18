@@ -240,6 +240,8 @@ fi
 export HOMEBREW_PREFIX="$BEERHALL/usr/local"
 export HOMEBREW_CELLAR="$HOMEBREW_PREFIX/Cellar"
 export HOMEBREW_CACHE="$HOMEBREW_PREFIX/cache"
+no_env_hints=$HOMEBREW_NO_ENV_HINTS
+export HOMEBREW_NO_ENV_HINTS=1
 if [ -z "`echo $PATH | grep $HOMEBREW_PREFIX/bin`" ]; then
     export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 fi
@@ -253,6 +255,10 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install pkgconf            # for ncurses
     brew install ncurses            # for bash (keg only)
     brew link --force ncurses
+    brew install readline           # for bash (keg only)
+    brew link --force readline
+    brew install libunistring       # for gettext
+    brew install gettext            # for bash
     brew install bash
     brew install bash-completion@2
 
@@ -260,19 +266,18 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install coreutils  
     brew install findutils
 
-    brew install libunistring       # for gettext
-    brew install gettext            # for wget
     brew install libidn2            # for wget
     brew install ca-certificates    # for wget
     brew install openssl@3          # for wget
+    brew postinstall openssl@3
     brew install wget
 
     brew install pcre2              # for git
+    brew install libiconv           # for git (keg only)
+    brew link --force libiconv
     brew install git
 
     brew install libyaml            # for ruby@3.2
-    brew install readline           # for ruby@3.2 (keg only)
-    brew link --force readline
     brew install m4                 # for ruby@3.2 (keg only)
     brew link --force m4
     brew install autoconf           # for ruby@3.2
@@ -284,17 +289,19 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install sqlite             # for ruby@3.2 (keg only)
     brew link --force sqlite
     brew install xz                 # for ruby@3.2
-    brew install python@3.13        # for ruby@3.2
     brew install z3                 # for ruby@3.2
     brew install lz4                # for ruby@3.2
     brew install zstd               # for ruby@3.2
-    brew install llvm               # for ruby@3.2
+    brew install cmake              # for llvm
+    brew install ninja              # for llvm
+    brew install swig               # for llvm
+    brew install python@3.14        # for llvm
+    brew install llvm@21            # for rust
     brew install rust               # for ruby@3.2
-    brew install ruby@3.2                         #(keg only)
-    brew link --force ruby@3.2
+    brew install ruby@3.2
+    brew postinstall ruby@3.2
 
-    brew install berkeley-db@5      # for flex (keg only)
-    brew link --force berkeley-db@5
+    brew install berkeley-db@5      # for flex
     brew install gdbm               # for flex
     brew install perl               # for flex
     brew install help2man           # for flex
@@ -309,6 +316,8 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
 
     brew install brotli             # for curl
     brew install libnghttp2         # for curl
+    brew install libnghttp3         # for curl
+    brew install libngtcp2          # for curl
     brew install rtmpdump           # for curl
     brew install curl                         #(keg only)
     brew link --force curl
@@ -322,7 +331,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
 
     # install additional kegs for athrill-gcc-package-mac_arm64
     if [ "`uname -m`" = "arm64" ]; then
-        packages="gmp mpfr libmpc isl cloog"
+        packages="mpfr libmpc isl cloog"
         for package in $packages; do
             brew install $package
             if [ ! -e "/opt/homebrew/opt/$package/lib" ]; then
@@ -332,6 +341,8 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
             fi
         done
     fi
+
+    HOMEBREW_NO_ENV_HINTS=$no_env_hints
 
     gnupath="/Users/jt/BeerHall/usr/local/opt/make/libexec/gnubin"
     gnupath="$gnupath:/Users/jt/BeerHall/usr/local/opt/coreutils/libexec/gnubin"
@@ -434,7 +445,7 @@ if [ -n "$makeBeerHall" ]; then
     fi
     if [ ! -f "$BEERHALL/startetrobo" ]; then
         echo "download startetrobo"
-        "$HOMEBREW_PREFIX/bin/wget" "https://raw.githubusercontent.com/ETrobocon/etrobo/$etrobo_branch/scripts/startetrobo"
+        "$HOMEBREW_PREFIX/bin/wget" --no-check-certificate "https://raw.githubusercontent.com/ETrobocon/etrobo/$etrobo_branch/scripts/startetrobo"
         chmod +x startetrobo
     fi
 else

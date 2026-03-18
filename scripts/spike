@@ -12,6 +12,9 @@
 #
 # this script is intended to be sourced by etroboenv.sh, and also to be executed directly
 
+# get path of this script
+spike="${BASH_SOURCE[0]}"
+
 # detect host OS
 if [ -z "$ETROBO_OS" ]; then
     set -- $(./scripts/detect_host_os)
@@ -112,7 +115,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
     #
     # getinfo - get information of connected SPIKE device as array
     elif [ "$subcommand" == "getinfo" ]; then
-        device="$(spike $command list | head -n 1)"
+        device="$($spike $command list | head -n 1)"
         if [ -n "$device" ]; then
             if [ "$ETROBO_OS" == "win" ] && [ "$command" == "usbipd" ]; then
                 busid=$(echo "$device" | awk '{print $1}')
@@ -135,7 +138,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
         fi
     elif [ "$subcommand" == "bind" ] || [ "$subcommand" == "unbind" ]; then
         if [ "$ETROBO_OS" == "win" ]; then
-            device=($(spike usbipd getinfo))
+            device=($($spike usbipd getinfo))
             if [ $? -eq 0 ]; then
                 bus="${device[0]}"
                 dev="${device[1]}"
@@ -183,7 +186,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
         fi
     elif [ "$subcommand" == "attach" ] || [ "$subcommand" == "detach" ]; then
         if [ "$ETROBO_OS" == "win" ]; then
-            device=($(spike usbipd getinfo))
+            device=($($spike usbipd getinfo))
             if [ $? -eq 0 ]; then
                 bus="${device[0]}"
                 dev="${device[1]}"
@@ -220,7 +223,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
                     usbipd.exe $subcommand $option --busid $busid > /dev/null 2>&1
                     if [ $? -eq 0 ]; then
                         if [ "$subcommand" == "attach" ]; then
-                            while [ "$(spike usb getinfo | awk '{print $4}')" != "Attached" ]; do
+                            while [ "$($spike usb getinfo | awk '{print $4}')" != "Attached" ]; do
                                 echo "[ SPIKE USB manager: Waiting for device to be attached... ]" > /dev/tty
                                 sleep 0.1
                             done
@@ -245,12 +248,12 @@ else
     # and set envvars related to connected SPIKE device
     unset ETROBO_SPIKE_DEVICE_MODE
     if [ "$ETROBO_OS" == "win" ]; then
-        state=$(spike usbipd getinfo | awk '{print $NF}' | tr -d '\r')
+        state=$($spike usbipd getinfo | awk '{print $NF}' | tr -d '\r')
         if [ "$state" != "Attached" ]; then
-            spike usbipd attach
+            $spike usbipd attach
         fi
     fi
-    device=$(spike usb getinfo)
+    device=$($spike usb getinfo)
     if [ -n "$device" ]; then
         export ETROBO_SPIKE_DEVICE_BUS=$(echo "$device" | awk '{print $1}')
         export ETROBO_SPIKE_DEVICE_DEV=$(echo "$device" | awk '{print $2}')

@@ -270,6 +270,48 @@ else
     fi
 
     #
+    # upload - upload firmware from connected SPIKE device
+    # download - download firmware to connected SPIKE device
+    if [ "$command" == "upload" ] || [ "$command" == "download" ]; then
+        # target file path completion
+        file="$ETROBO_ROOT/workspace/$1"
+        if [ "${file##*.}" != "bin" ]; then
+            file="$file.bin"
+        fi
+        # determine pybricksdev command
+        unset mode
+        if [ "$command" == "upload" ]; then
+            mode="backup"
+            if [ -f "$file" ]; then
+                echo "[ SPIKE USB manager: Target file $file already exists. It will be overwritten. ]" > /dev/tty
+            fi
+        elif [ "$command" == "download" ]; then
+            mode="restore"
+            if [ ! -f "$file" ]; then
+                echo "[ SPIKE USB manager: Target file $file does not exist. ]" > /dev/tty
+                unset mode
+                false
+            fi
+        fi
+        
+        # invoke pybricksdev command for SPIKE device in DFU mode
+        if [ "$ETROBO_OS" == "win" ]; then
+            if [ "$ETROBO_SPIKE_DEVICE_MODE" != "DFU" ]; then
+                spike usbipd attach
+            fi
+        fi
+        if [ "$ETROBO_SPIKE_DEVICE_MODE" == "DFU" ]; then
+            if [ -n "$mode" ]; then
+                echo "[ SPIKE USB manager: Attempting to $command through DFU... ]" > /dev/tty
+            fi
+            pybricksdev dfu $mode "$file"
+        else
+            echo "[ SPIKE USB manager: Connected device is not in DFU mode. ]" > /dev/tty
+            false
+        fi
+    fi
+
+    #
     # device - show connected SPIKE device mode
     if [ "$command" == "device" ] || [ "$command" == "env" ]; then
         if [ -n "$ETROBO_SPIKE_DEVICE_MODE" ]; then

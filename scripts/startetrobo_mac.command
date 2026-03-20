@@ -330,6 +330,7 @@ if [ "$makeBeerHall" = "install" ] || [ "$makeBeerHall" = "update" ]; then
     brew install usbutils
     brew install minicom
     brew install pipx
+    brew install dfu-util
 
     brew install esolitos/ipa/sshpass iproute2mac
     gem install shell -E

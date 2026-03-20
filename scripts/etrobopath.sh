@@ -32,7 +32,7 @@ else
     fi
     unset spikert_path
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
-        spikert_path="$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin"
+        spikert_path="$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin:~/.local/bin"
     fi
     export PATH=".:$ETROBO_SCRIPTS:$gcc_path:$spikert_path:$PATH"
     if [ "$ETROBO_OS" == "win" ]; then

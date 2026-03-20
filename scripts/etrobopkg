@@ -172,7 +172,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
             rm -f "sdk/common/deploy-dfu.sh"
             cp -f "$ETROBO_CACHE/deploy-dfu.sh" "sdk/common/deploy-dfu.sh"
-            chmod +x "sdk/common/deploy-dfu.sh"
             cd ..
         fi
 
@@ -182,14 +181,14 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         if [ ! -d "$ETROBO_SPIKE_RT_PYTHON_VENV" ]; then
             echo "setup Python virtual environment for SPIKE-RT"
             python3 -m venv "$ETROBO_SPIKE_RT_PYTHON_VENV"
+            chmod +x "$ETROBO_SPIKE_RT_PYTHON_VENV/bin/activate"
         elif [ -n "$VIRTUAL_ENV" ]; then
             if [ "$VIRTUAL_ENV" != "$ETROBO_SPIKE_RT_PYTHON_VENV" ]; then
                 echo "deactivate current Python virtual environment"
                 deactivate
             fi
-            echo "activate Python virtual environment for SPIKE-RT"
-            . "$ETROBO_SPIKE_RT_PYTHON_VENV/bin/activate"
         fi
+        . "$ETROBO_SPIKE_RT_PYTHON_VENV/bin/activate"
 
         if [ "$ETROBO_OS" == "win" ] && [ -z "$ETROBO_SPIKE_DRIVER" ]; then
             #
@@ -219,7 +218,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         #
         if [ -z "$(pip3 list --format=freeze | grep pyusb)" ]; then
             echo "install PyUSB into Python virtual environment for SPIKE-RT"
-            pip3 install pyusb 
+            pip3 install pyusb
         fi
 
         #

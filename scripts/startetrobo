@@ -515,6 +515,19 @@ else
     rm -f "$ETROBO_ROOT/scripts/cygpath"
 fi
 
+# set udev rules for SPIKE Hub in DFU mode
+if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+    udevrules="/etc/udev/rules.d/99-spike-rt.rules"
+    if [ "$kernel" == "debian" ] && [ ! -f "$udevrules" ]; then
+        echo "set udev rules for SPIKE Hub in DFU mode"
+        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0483\", MODE=\"0666\"" | sudo tee "$udevrules" > /dev/null
+        echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0694\", MODE=\"0666\"" | sudo tee -a "$udevrules" > /dev/null
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger
+    fi
+fi
+
+
 # invoke etrobo environment
 cd "$ETROBO_ROOT"
 if [ -z "$ETROBO_ENV" ]; then

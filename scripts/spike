@@ -90,7 +90,7 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
 fi
 
 # set envvars related to connected SPIKE device enum and regex
-export ETROBO_SPIKE_DEVICE_MODE_ENUM=("DFU" "SPIKE App" "Pybricks")
+export ETROBO_SPIKE_DEVICE_MODE_ENUM=("DFU" "HubOS" "Pybricks")
 regex=$(printf "|%s" "${ETROBO_SPIKE_DEVICE_MODE_ENUM[@]}")
 export ETROBO_SPIKE_DEVICE_MODE_REGEX=${regex:1}
 export ETROBO_SPIKE_DEVICE_ID_ENUM=("0694:0008" "0694:0009" "0483:5740")

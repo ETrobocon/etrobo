@@ -12,7 +12,7 @@ echo " as 'startetrobo_mac.command' Ver $BEERHALL_VER"
 #
 
 # detect the checkout branch for startetrobo
-unset etrobo_branch
+etrobo_branch="master"
 if [ -n "$BEERHALL" ] && [ -d "$BEERHALL/etrobo" ]; then
     cd "$BEERHALL/etrobo"
     etrobo_branch="$(git branch --show-current)"

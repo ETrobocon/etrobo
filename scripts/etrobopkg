@@ -81,7 +81,7 @@ else
         export ETROBO_SPIKE_RT_ROOT="$ETROBO_ROOT/spike-rt"
         export ETROBO_SPIKE_RT_TOOLS="$ETROBO_SPIKE_RT_ROOT/tools"
         export ETROBO_SPIKE_RT_PYTHON_VENV="$ETROBO_SPIKE_RT_TOOLS/python"
-        export ETROBO_SPIKE_RT_GIT_AUTHOR="ytoi"
+        export ETROBO_SPIKE_RT_GIT_AUTHOR="etrobocon"
         export ETROBO_SPIKE_RT_GIT_REPOSITORY="spike-rt-RasPike-ART"
         export ETROBO_SPIKE_RT_GIT_BRANCH="main"
     fi

@@ -44,8 +44,8 @@ if [ "$command" == "--help" ] || [ "$command" == "usage" ]; then
     echo "    unbind  Unbind connected SPIKE device (Windows only)"
     echo "    attach  Attach connected SPIKE device (Windows only)"
     echo "    detach  Detach connected SPIKE device (Windows only)"
-    echo "  upload    Upload firmware from connected SPIKE device (DFU mode only)"
-    echo "  download  Download firmware to connected SPIKE device (DFU mode only)"
+    echo "  download  download firmware from connected SPIKE device (DFU mode only)"
+    echo "  upload    upload firmware to connected SPIKE device (DFU mode only)"
     echo
     echo "  unset    Unset environment variables"
     echo "  env      Check USB serial driver and connected SPIKE device, and set environment variables"
@@ -280,9 +280,9 @@ else
     fi
 
     #
-    # upload - upload firmware from connected SPIKE device
-    # download - download firmware to connected SPIKE device
-    if [ "$command" == "upload" ] || [ "$command" == "download" ]; then
+    # download - download firmware from connected SPIKE device
+    # upload - upload firmware to connected SPIKE device
+    if [ "$command" == "download" ] || [ "$command" == "upload" ]; then
         # target file path completion
         file="$ETROBO_ROOT/workspace/$1"
         if [ "${file##*.}" != "bin" ]; then
@@ -290,12 +290,12 @@ else
         fi
         # determine pybricksdev command
         unset mode
-        if [ "$command" == "upload" ]; then
+        if [ "$command" == "download" ]; then
             mode="backup"
             if [ -f "$file" ]; then
                 echo "[ SPIKE USB manager: Target file $file already exists. It will be overwritten. ]" > /dev/tty
             fi
-        elif [ "$command" == "download" ]; then
+        elif [ "$command" == "upload" ]; then
             mode="restore"
             if [ ! -f "$file" ]; then
                 echo "[ SPIKE USB manager: Target file $file does not exist. ]" > /dev/tty

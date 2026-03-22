@@ -416,6 +416,7 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install python3-venv
         sudo apt -y install pipx
         sudo apt -y install usbutils
+        sudo apt -y install dfu-util
         sudo apt -y install minicom
         sudo apt -y install doxygen 
         sudo apt -y install sshpass
@@ -518,7 +519,7 @@ fi
 # set udev rules for SPIKE Hub in DFU mode
 if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
     udevrules="/etc/udev/rules.d/99-spike-rt.rules"
-    if [ "$kernel" == "debian" ] && [ ! -f "$udevrules" ]; then
+    if [ "$kernel" == "debian" ] && [ "$ETROBO_OS" != "chrome" ] && [ ! -f "$udevrules" ]; then
         echo "set udev rules for SPIKE Hub in DFU mode"
         echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0483\", MODE=\"0666\"" | sudo tee "$udevrules" > /dev/null
         echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0694\", MODE=\"0666\"" | sudo tee -a "$udevrules" > /dev/null

@@ -226,7 +226,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         # pybricksdev
         # https://github.com/pybricks/pybricksdev
         #
-        if [ -z "$(which pybricksdev)" ]; then
+        if [ -d "$HOME/.local/bin"  ] && [ -n "$(ls -1 "$HOME/.local/bin" | grep pybricksdev)" ]; then
             echo "install pybricksdev"
             pipx install pybricksdev
         fi

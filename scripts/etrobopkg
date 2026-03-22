@@ -666,10 +666,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             "ev3rt" )
                 echo
                 echo "Install TOPPERS/EV3RT:"
-                if [ -d "$ETROBO_HRP3_WORKSPACE" ]; then
+                if [ -d "$ETROBO_TARGET_WORKSPACE" ]; then
                     rm -rf "$ETROBO_ROOT/workspace_autobackup"
-                    cp -rf "$ETROBO_HRP3_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
-                    rm -rf "$ETROBO_HRP3_WORKSPACE"
+                    cp -rf "$ETROBO_TARGET_WORKSPACE" "$ETROBO_ROOT/workspace_autobackup"
+                    rm -rf "$ETROBO_TARGET_WORKSPACE"
                     echo "********"
                     echo " NOTICE - your workspace is automatically backuped as 'workspace_autobackup'"
                     echo "          this autobackup folder will be deleted in the next time autobackup."

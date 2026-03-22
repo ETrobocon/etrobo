@@ -20,12 +20,12 @@ fi
 
 # search & select a path to device_config.txt
 # select priority on EV3RT: 
-# 1. $ETROBO_HRP3_WORKSPACE/etroboc_common
+# 1. $ETROBO_TARGET_WORKSPACE/etroboc_common
 # 2. $ETROBO_ATHRILL_WORKSPACE/etroboc_common
 # 3. $ETROBO_ATHRILL_SDK/common
 if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
-    if [ -f "$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config.txt" ]; then
-        ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
+    if [ -f "$ETROBO_TARGET_WORKSPACE/etroboc_common/device_config.txt" ]; then
+        ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_TARGET_WORKSPACE/etroboc_common/device_config"
     elif [ -f "$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config.txt" ]; then
         ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_WORKSPACE/etroboc_common/device_config"
     fi
@@ -49,8 +49,8 @@ fi
 
 projName="`echo \"$1\" | grep ^app= | sed -E 's/^app=(.*)$/\1/'`"
 if [ -z "$projName" ]; then
-    if [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-        projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+    if [ -f "$ETROBO_TARGET_WORKSPACE/currentapp" ]; then
+        projName=`cat "$ETROBO_TARGET_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
     else
         projName="__race"
     fi

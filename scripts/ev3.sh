@@ -24,7 +24,7 @@ if [ "$1" = "cp" ]; then
             if [ -z "$name" ]; then
                 name="app"
             fi
-            make upload ip=$BTPAN_IP from=$ETROBO_HRP3_WORKSPACE/app to=$name
+            make upload ip=$BTPAN_IP from=$ETROBO_TARGET_WORKSPACE/app to=$name
             exit $?
         fi
     fi
@@ -43,7 +43,7 @@ if [ $? -eq 0 ]; then
             name=$2
         fi
         rm -f "$ETROBO_EV3RT_USB/ev3rt/apps/"$name
-        cp "$ETROBO_HRP3_WORKSPACE/app" "$ETROBO_EV3RT_USB/ev3rt/apps/$name"
+        cp "$ETROBO_TARGET_WORKSPACE/app" "$ETROBO_EV3RT_USB/ev3rt/apps/$name"
         echo "'$name' is copied into EV3."
         ;;
     "rm" )
@@ -65,7 +65,7 @@ if [ $? -eq 0 ]; then
         fi
         rm -rf "$ETROBO_EV3RT_USB/uImage" 2> /dev/null
         if [ "$2" = "img" ]; then
-            cp "$ETROBO_HRP3_WORKSPACE/uImage" "$ETROBO_EV3RT_USB/"
+            cp "$ETROBO_TARGET_WORKSPACE/uImage" "$ETROBO_EV3RT_USB/"
         else
             cp "$ETROBO_SDCARD/uImage" "$ETROBO_EV3RT_USB/"
             if [ ! -d "$ETROBO_EV3RT_USB/ev3rt" ]; then

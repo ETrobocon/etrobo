@@ -25,7 +25,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "'l_/r_<projName>.asp' files depending on specified course."
     echo
     echo "On 'zip' or 'upload' mode, this archiver creates a upload.zip file from"
-    echo "'\$ETROBO_HRP3_WORKSPACE/simdist/<projName>' into the race folder."
+    echo "'\$ETROBO_TARGET_WORKSPACE/simdist/<projName>' into the race folder."
     echo "If COURSE option is specified, this archiver rewrites L/RHackEV value"
     echo "on 'settings.json' to specified course."
     echo
@@ -65,7 +65,7 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "  </path/to/raceFolder> can specifies a *ABSOLUTE* path"
     echo "                        to the race folder."
     echo "  (default on Windows: '%USERPROFILE%\etrobosim\_race\')"
-    echo "  (default on others:  '\$ETROBO_HRP3_WORKSPACE/simdist/_race/')"
+    echo "  (default on others:  '\$ETROBO_TARGET_WORKSPACE/simdist/_race/')"
     echo
     echo "  On 'zip' or 'update' mode, <projName> can specifies a project name."
     echo "  (default: current app)"
@@ -178,8 +178,8 @@ fi
 #
 # determine a project name
 #
-if [ -f "$ETROBO_HRP3_WORKSPACE/currentapp" ]; then
-    projName=`cat "$ETROBO_HRP3_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
+if [ -f "$ETROBO_TARGET_WORKSPACE/currentapp" ]; then
+    projName=`cat "$ETROBO_TARGET_WORKSPACE/currentapp" | head -n 1 | sed -E "s/^app=|img=(.*)$/\1/"`
 else
     projName="__race"
 fi

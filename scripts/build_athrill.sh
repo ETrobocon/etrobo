@@ -371,7 +371,7 @@ if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
     #     Ruby 3.x hotfix   #
     #########################
     # -------------------------------------------------------------------------------------
-    target="$ETROBO_HRP3_SDK/../cfg/pass1.rb"
+    target="$ETROBO_TARGET_SDK/../cfg/pass1.rb"
     if [ -n "`cat \"$target\" | grep '{ skip_blanks:'`" ]; then
         cp -f "$target" "$target.backup"
         rm -f "$target"
@@ -407,7 +407,7 @@ if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
         | sed -E "s/^INCLUDES\ \+=\ -I(.*\/mruby-$ETROBO_MRUBY_VER\/include\/)(.*)$/INCLUDES += -I\$(ETROBO_MRUBY_ROOT)\/include\/\2/" \
         > Makefile.inc.mod
         mv -f Makefile.inc.mod Makefile.inc
-        cp -rf "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby" "$ETROBO_HRP3_WORKSPACE/"
+        cp -rf "$ETROBO_ATHRILL_WORKSPACE/base_practice_1_mruby" "$ETROBO_TARGET_WORKSPACE/"
     fi
 fi
 

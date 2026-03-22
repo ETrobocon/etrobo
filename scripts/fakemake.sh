@@ -14,7 +14,7 @@ if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
 elif [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
     workspace="$ETROBO_ROOT/spike-rt/sdk/workspace"
 elif [ "$ETROBO_ENV_MODE" == "EV3" ]; then
-    workspace="$ETROBO_HRP3_WORKSPACE"
+    workspace="$ETROBO_TARGET_WORKSPACE"
 else
     workspace="$ETROBO_ATHRILL_WORKSPACE"
 fi
@@ -304,7 +304,7 @@ if [ -z "$skiphrp3" ]; then
         simopt=`tail -n 1 currentapp`
     else
         echo fakemake on `echo "$ETROBO_EV3RT_KERNEL" | sed -E "s/(.*)/\U\1/"`: make failed ... `cat currentapp`
-        cd "$ETROBO_HRP3_WORKSPACE"
+        cd "$ETROBO_TARGET_WORKSPACE"
         rm -f "${incFile}.org"
         rm -f "${incFile}.base"
         exit 1
@@ -325,7 +325,7 @@ if [ -n "$build_asp3" ]; then
     if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
         rm -rf "$ETROBO_ATHRILL_WORKSPACE/$proj"
         mv -f "${incFile}.base" "${incFile}"
-        cp -rH "$ETROBO_HRP3_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
+        cp -rH "$ETROBO_TARGET_WORKSPACE/$proj" "$ETROBO_ATHRILL_WORKSPACE/"  # Issue #30: thx to @Amakuchisan
         mv -f "${incFile}.org" "$incFile"
     fi
 
@@ -353,7 +353,7 @@ if [ -n "$build_asp3" ]; then
         #
         # $ETROBO_ATHRILL_WORKSPACE
         #   |- athrill2
-        # $ETROBO_HRP3_WORKSPACE
+        # $ETROBO_TARGET_WORKSPACE
         #   |- [simdist]
         #       |- [projName]
         #           |- log.txt

@@ -88,7 +88,7 @@ else
         fi
     fi
     if [ "$ETROBO_ENV_MODE" = "EV3" ]; then
-        export ETROBO_SIM_WORKSPACE="$ETROBO_HRP3_WORKSPACE"
+        export ETROBO_SIM_WORKSPACE="$ETROBO_TARGET_WORKSPACE"
     else
         export ETROBO_SIM_WORKSPACE="$ETROBO_ATHRILL_WORKSPACE"
     fi

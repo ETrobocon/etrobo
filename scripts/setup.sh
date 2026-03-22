@@ -113,11 +113,11 @@ fi
 # distribute etroboc_common
 if [ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]; then
     src="$ETROBO_ROOT/dist/etroboc_common"
-    dst="$ETROBO_HRP3_WORKSPACE/etroboc_common"
+    dst="$ETROBO_TARGET_WORKSPACE/etroboc_common"
     if [ ! -d "$dst" ]; then
         echo
         echo "Install etroboc_common to workspace"
-        cp -rf "$src" "$ETROBO_HRP3_WORKSPACE/"
+        cp -rf "$src" "$ETROBO_TARGET_WORKSPACE/"
     elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
         echo
         echo "Update etroboc_ext.h"
@@ -204,20 +204,20 @@ if [ "$ETROBO_OS" != "raspi" ] && ([ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO
 fi
 
 if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
-    if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_c4" ]; then
+    if [ ! -d "$ETROBO_TARGET_WORKSPACE/sample_c4" ]; then
         installProcess="${installProcess}sample_c4 "
         echo
         echo "Install workspace/sample_c4:"
         git checkout .
-        cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_HRP3_WORKSPACE/"
+        cp -rf "$ETROBO_ROOT/dist/sample_c4" "$ETROBO_TARGET_WORKSPACE/"
     fi
 
-    if [ ! -d "$ETROBO_HRP3_WORKSPACE/sample_mruby" ]; then
+    if [ ! -d "$ETROBO_TARGET_WORKSPACE/sample_mruby" ]; then
         installProcess="${installProcess}sample_mruby "
         echo
         echo "Install workspace/sample_mruby:"
         git checkout .
-        cp -rf "$ETROBO_ROOT/dist/sample_mruby" "$ETROBO_HRP3_WORKSPACE/"
+        cp -rf "$ETROBO_ROOT/dist/sample_mruby" "$ETROBO_TARGET_WORKSPACE/"
     fi
 fi
 

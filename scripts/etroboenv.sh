@@ -84,8 +84,8 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_TARGET_GCC_VER
     unset ETROBO_ATHRILL_GCC
     unset ETROBO_ATHRILL_TARGET
-    unset ETROBO_HRP3_SDK       # ToDo: rename to ETROBO_TARGET_SDK
-    unset ETROBO_HRP3_WORKSPACE # ToDo: rename to ETROBO_TARGET_WORKSPACE
+    unset ETROBO_TARGET_SDK
+    unset ETROBO_TARGET_WORKSPACE
     unset ETROBO_ATHRILL_EV3RT
     unset ETROBO_ATHRILL_RASPIKE
     unset ETROBO_ATHRILL_SDK
@@ -115,13 +115,13 @@ else
             export ETROBO_ATHRILL_GCC="$ETROBO_ROOT/athrill-gcc-package/usr/local/athrill-gcc"
             export ETROBO_EV3RT_VER=$ver
             export ETROBO_EV3RT_KERNEL="$kernel"
-            export ETROBO_HRP3_SDK="$targetSDK"             # ToDo: rename to ETROBO_TARGET_SDK
-            export ETROBO_HRP3_WORKSPACE="$targetWorkspace" # ToDo: rename to ETROBO_TARGET_WORKSPACE
+            export ETROBO_TARGET_SDK="$targetSDK"             # ToDo: rename to ETROBO_TARGET_SDK
+            export ETROBO_TARGET_WORKSPACE="$targetWorkspace" # ToDo: rename to ETROBO_TARGET_WORKSPACE
             export ETROBO_ATHRILL_EV3RT="$ETROBO_ROOT/ev3rt-athrill-v850e2m"
             export ETROBO_ATHRILL_RASPIKE="$ETROBO_ROOT/raspike-athrill-v850e2m"
             if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
                 export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_EV3RT/sdk"
-                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_HRP3_WORKSPACE/etroboc_common/device_config"
+                export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_TARGET_WORKSPACE/etroboc_common/device_config"
             else
                 export ETROBO_ATHRILL_SDK="$ETROBO_ATHRILL_RASPIKE/sdk"
                 export ETROBO_ATHRILL_DEVICE_CONFIG="$ETROBO_ATHRILL_SDK/workspace/etroboc_common/device_config"

@@ -15,7 +15,10 @@
 # get path of this script and define workspace directory path
 spike="$0"
 scripts="$(dirname "$spike")"
-workspace="$scripts/../workspace"
+workspace="$(cd "$scripts/../workspace" 2>/dev/null && pwd -P)"
+if [ -z "$workspace" ]; then
+    workspace="$scripts"
+fi
 # detect host OS
 if [ -z "$ETROBO_OS" ]; then
     read ETROBO_OS ETROBO_OS_SUBSYSTEM < <($scripts/detect_host_os)
@@ -295,7 +298,7 @@ else
     # upload - upload firmware to connected SPIKE device
     if [ "$command" == "download" ] || [ "$command" == "upload" ]; then
         # target file path completion
-        file="$ETROBO_TARGET_WORKSPACE/$1"
+        file="$workspace/$1"
         if [ "${file##*.}" != "bin" ]; then
             file="$file.bin"
         fi

@@ -13,15 +13,11 @@
 # this script is intended to be sourced by etroboenv.sh, and also to be executed directly
 
 # get path of this script
-spike="${BASH_SOURCE[0]}"
+spike="$0"
 
 # detect host OS
 if [ -z "$ETROBO_OS" ]; then
-    set -- $(./scripts/detect_host_os)
-    ETROBO_OS="$1"
-    if [ "$ETROBO_OS" == "win" ]; then
-        ETROBO_OS_SUBSYSTEM="$2"
-    fi
+    read ETROBO_OS ETROBO_OS_SUBSYSTEM < <(./scripts/detect_host_os)
 fi
 
 # command recognition
@@ -213,7 +209,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
                         echo "[ SPIKE USB manager: Device is already attached. ]" > /dev/tty
                         invoke="no"
                     elif [ "$state" == "NotShared" ]; then
-                        spike usbipd bind
+                        $spike usbipd bind
                         if [ $? -ne 0 ]; then
                             echo "[ SPIKE USB manager: Device bind failed. Cannot attach device. ]" > /dev/tty
                             invoke="no"
@@ -307,7 +303,7 @@ else
         # invoke pybricksdev command for SPIKE device in DFU mode
         if [ "$ETROBO_OS" == "win" ]; then
             if [ "$ETROBO_SPIKE_DEVICE_MODE" != "DFU" ]; then
-                spike usbipd attach
+                $spike usbipd attach
             fi
         fi
         if [ "$ETROBO_SPIKE_DEVICE_MODE" == "DFU" ]; then

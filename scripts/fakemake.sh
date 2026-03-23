@@ -42,6 +42,22 @@ if [ "$ETROBO_ENV_MODE" = "SPIKE-RT" ]; then
     fi
 fi
 
+# `make raspike` invokes `make app=raspike up` for SPIKE-RT mode
+if [ "$1" = "raspike" ]; then
+    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+        echo "[fakemake on SPIKE-RT] invoke: make app=raspike and store as RasPike-ART.bin"
+        cd "$ETROBO_ROOT"
+        make app=raspike
+        if [ $? -eq 0 ]; then
+            rm -f "$workspace/RasPike-ART.bin"
+            cp -f "$workspace/asp.bin" "$workspace/RasPike-ART.bin"
+            echo "[fakemake on SPIKE-RT] invoke: spike upload RasPike-ART"
+            spike upload RasPike-ART
+        fi
+        exit $?
+    fi
+fi
+
 # `make nxt` enters into nxtOSEK mode, left for compatibility
 unset nxt
 if [ "$1" = "nxt" ]; then

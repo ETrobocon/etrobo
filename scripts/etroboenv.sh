@@ -213,6 +213,7 @@ else
         fi
         if [ ! -f "$ETROBO_ROOT/dist/prompted.flag" ]; then
             echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
+        else
             rm "$ETROBO_ROOT/dist/prompted.flag"
         fi
     fi

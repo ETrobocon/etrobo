@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 echo '-----------------'
-echo ' startetrobo 4.0 - etrobo all-in-one package installer/invoker'
+echo ' startetrobo 4.1 - etrobo all-in-one package installer/invoker'
 echo '-----------------'
 # Author: jtFuruhata
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
@@ -36,61 +36,6 @@ else
     BeerHall=""
 fi
 
-# platform detection
-unset host
-unset kernel
-unset guest
-unset raspi
-if [ `uname` == "Darwin" ]; then
-    host="mac"
-    kernel="darwin"
-    guest="`brew --version | head -n 1`"
-    if [ -n "$BeerHall" ]; then
-        guest="$guest on jtBeerHall"
-    else
-        echo 
-        echo "WARNING:"
-        echo "  I guess 'BeerHall' is necessary for this environment,"
-        echo "  you can't get support from us."
-        echo 
-    fi
-elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
-    host="win"
-    guest=" on WSL1"
-elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "WSL2" ]; then
-    host="win"
-    guest=" on WSL2"
-elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
-    host="chrome"
-elif [ `uname` == "Linux" ]; then
-    host="linux"
-else
-    echo unknown Host OS or not WSL/WSL2 on Windows 10/11.
-    exit 1
-fi
-if [ `uname` == "Linux" ]; then
-    id="`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/"`"
-    if [ "`echo \"$id\" | grep debian`" != "debian" ]; then
-        echo this environment is available for Debian GNU/Linux variants.
-        exit 1
-    else
-        kernel="debian"
-        guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
-        raspi="`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`"
-    fi
-fi
-platform="`uname -m`"
-if [ "$platform" != "x86_64" ]; then
-    if [ -n "$raspi" ]; then
-        host="raspi"
-        guest="$guest on $raspi"
-    elif [ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]; then
-        echo this environment is available for x86_64, Apple Silicon and Raspberry Pi.
-        exit 1
-    fi
-fi
-echo "detect platform: $host.$platform($guest)"
-
 # export ETROBO_ROOT if necessary
 if [ -z "$ETROBO_ROOT" ]; then
     export ETROBO_ROOT="$(cd `dirname $0`; pwd)/etrobo"
@@ -104,36 +49,6 @@ unset opt_devenv
 if [ "$1" == "NXT" ] || [ "$1" == "EV3" ] || [ "$1" == "SPIKE" ] || [ "$1" == "SPIKE-RT" ]; then
     opt_devenv="$1"
     shift
-fi
-
-# usage
-if [ "$1" = "--help" ]; then
-    echo 'Usage: startetrobo [NXT|EV3|SPIKE-RT|SPIKE] [<option>]'
-    echo '  NXT|EV3|SPIKE-RT|SPIKE ... select your target devenv'
-    echo '  If no target is specified,'
-    echo '    If a file named 'NXT' exists, NXT(nxtOSEK) is selected.'
-    echo '    If a file named 'EV3' exists, EV3(EV3RT) is selected.'
-    echo '    If a file named 'SPIKE-RT' exists, SPIKE-RT is selected.'
-    echo '    If none of the files exist, SPIKE(etrobosim/RasPike-ART) is selected.'
-    echo
-    echo '  startetrobo         ... install and/or open etrobo terminal on VSCode'
-    echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
-    echo
-    echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
-    echo '  . startetrobo set   ... export etrobo environment vars into this instance'
-    echo
-    echo '  startetrobo checkout [<branch_name>]'
-    echo '                      ... (for developer) checkout <branch_name>'
-    echo '                          default: master branch'
-    echo
-    echo '  startetrobo clean   ... remove etrobo environment from here'
-    echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
-    echo
-    echo '  startetrobo update  ... update etrobo environment core package (for win/linux)'
-    echo '                          for Mac users: run bellow command instead of this option.'
-    echo '                          `./startetrobo_mac.command update Beerhall`'
-    echo
-    exit 0
 fi
 
 #
@@ -190,6 +105,91 @@ else
     export ETROBO_ENV_TARGET="simulator"
 fi
 echo "entering $ETROBO_ENV_MODE mode"
+
+# platform detection
+unset host
+unset kernel
+unset guest
+unset raspi
+if [ `uname` == "Darwin" ]; then
+    host="mac"
+    kernel="darwin"
+    guest="`brew --version | head -n 1`"
+    if [ -n "$BeerHall" ]; then
+        guest="$guest on jtBeerHall"
+    else
+        echo 
+        echo "WARNING:"
+        echo "  I guess 'BeerHall' is necessary for this environment,"
+        echo "  you can't get support from us."
+        echo 
+    fi
+elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "Microsoft" ]; then
+    host="win"
+    guest=" on WSL1"
+elif [ `uname -r | sed -E "s/^.*-(.*)$/\1/"` == "WSL2" ]; then
+    host="win"
+    guest=" on WSL2"
+elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
+    host="chrome"
+elif [ `uname` == "Linux" ]; then
+    host="linux"
+else
+    echo unknown Host OS or not WSL/WSL2 on Windows 10/11.
+    exit 1
+fi
+if [ `uname` == "Linux" ]; then
+    id="`cat /etc/os-release 2>&1 | grep ^ID | sed -E "s/^ID.*=(.*)$/\1/"`"
+    if [ "`echo \"$id\" | grep debian`" != "debian" ]; then
+        echo this environment is available for Debian GNU/Linux variants.
+        exit 1
+    else
+        kernel="debian"
+        guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
+        raspi="`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`"
+    fi
+fi
+platform="`uname -m`"
+if [ "$platform" != "x86_64" ]; then
+    if [ -n "$raspi" ]; then
+        host="raspi"
+        guest="$guest on $raspi"
+    elif [ "$ETROBO_ENV_MODE" != "SPIKE-RT" ] && ([ "$platform" != "arm64" ] || [ "$kernel" != "darwin" ]); then
+        echo this environment is available for x86_64, Apple Silicon and Raspberry Pi.
+        exit 1
+    fi
+fi
+echo "detect platform: $host.$platform($guest)"
+
+# usage
+if [ "$1" = "--help" ]; then
+    echo 'Usage: startetrobo [NXT|EV3|SPIKE-RT|SPIKE] [<option>]'
+    echo '  NXT|EV3|SPIKE-RT|SPIKE ... select your target devenv'
+    echo '  If no target is specified,'
+    echo '    If a file named 'NXT' exists, NXT(nxtOSEK) is selected.'
+    echo '    If a file named 'EV3' exists, EV3(EV3RT) is selected.'
+    echo '    If a file named 'SPIKE-RT' exists, SPIKE-RT is selected.'
+    echo '    If none of the files exist, SPIKE(etrobosim/RasPike-ART) is selected.'
+    echo
+    echo '  startetrobo         ... install and/or open etrobo terminal on VSCode'
+    echo '  startetrobo shell   ... install and/or open etrobo terminal on this terminal'
+    echo
+    echo '  . startetrobo unset ... unset etrobo environment vars from this instance'
+    echo '  . startetrobo set   ... export etrobo environment vars into this instance'
+    echo
+    echo '  startetrobo checkout [<branch_name>]'
+    echo '                      ... (for developer) checkout <branch_name>'
+    echo '                          default: master branch'
+    echo
+    echo '  startetrobo clean   ... remove etrobo environment from here'
+    echo '  startetrobo deep clean. remove all install files (include by old installer) from here'
+    echo
+    echo '  startetrobo update  ... update etrobo environment core package (for win/linux)'
+    echo '                          for Mac users: run bellow command instead of this option.'
+    echo '                          `./startetrobo_mac.command update Beerhall`'
+    echo
+    exit 0
+fi
 
 # `checkout [<branch name>]` option
 unset branch
@@ -449,8 +449,10 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         #echo "Remove binutils-arm-none-eabi and gcc-arm-none-eabi:"
         #sudo apt remove binutils-arm-none-eabi gcc-arm-none-eabi -y
         #echo
-        #echo "Install u-boot-tools and lib32stdc++6:"
-        sudo apt install u-boot-tools lib32stdc++6 -y
+        if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
+            echo "Install u-boot-tools and lib32stdc++6:"
+            sudo apt install u-boot-tools lib32stdc++6 -y
+        fi
     elif [ "$install" = "update" ]; then
         echo
         echo "--- NOTICE ---"
@@ -494,6 +496,9 @@ rm -rf "$tmpdir"
 # download package
 if [ -d "$ETROBO_ROOT" ]; then
     "$ETROBO_ROOT/scripts/etrobopkg"
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
 fi
 
 # install Athrill2 & UnityETroboSim

@@ -32,7 +32,8 @@ else
     fi
     unset spikert_path
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
-        spikert_path="$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin:~/.local/bin"
+        usbipd_path="$(wslpath "$(powershell.exe -Command '[System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")' | tr -d '\r' | tr ';' '\n' | grep -i "usbipd")" | sed 's/\/*$/:/' | sed 's/^.$//')"
+        spikert_path="${usbipd_path}$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin:~/.local/bin"
     fi
     export PATH=".:$ETROBO_SCRIPTS:$gcc_path:$spikert_path:$PATH"
     if [ "$ETROBO_OS" == "win" ]; then

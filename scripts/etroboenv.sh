@@ -195,6 +195,7 @@ else
                 echo
                 echo 'to disable this environment, run `touch $ETROBO_ROOT/disable` and restart terminal'
                 echo
+                touch "$ETROBO_ROOT/dist/prompted.flag"
             fi
         else
             echo
@@ -210,7 +211,10 @@ else
             . "$ETROBO_SCRIPTS/spike" env
             . "$ETROBO_SCRIPTS/etrobopath.sh"
         fi
-        echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
+        if [ ! -f "$ETROBO_ROOT/dist/prompted.flag" ]; then
+            echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
+            rm "$ETROBO_ROOT/dist/prompted.flag"
+        fi
     fi
 fi
 

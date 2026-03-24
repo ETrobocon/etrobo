@@ -4,7 +4,7 @@
 #
 # spike
 #
-# for etrobo environment Ver 1.00a.260312
+# for etrobo environment Ver 1.00b.260324
 # Copyright (c) 2026 jtLab, Hokkaido Information University
 # by TANAHASHI, Jiro(aka jtFuruhata) <jt@do-johodai.ac.jp>
 # Released under the MIT license
@@ -13,8 +13,8 @@
 # this script is intended to be sourced by etroboenv.sh, and also to be executed directly
 
 # get path of this script and define workspace directory path
-spike="$0"
-scripts="$(dirname "$spike")"
+scripts="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+spike="$scripts/$(basename "${BASH_SOURCE[0]}")"
 workspace="$(cd "$scripts/../workspace" 2>/dev/null && pwd -P)"
 if [ -z "$workspace" ]; then
     workspace="$scripts"
@@ -73,14 +73,16 @@ fi
 # download and store the Pybricks Firmware
 # https://github.com/pybricks/pybricks-micropython/
 #
-pybricks_ver="3.6.1"
-if [ ! -f "$workspace/Pybricks.bin" ]; then
-    echo "[ SPIKE USB manager: Downloading Pybricks Firmware... ]" > /dev/tty
-    curl -L -o "$workspace/pybricks.zip" "https://github.com/pybricks/pybricks-micropython/releases/download/v$pybricks_ver/pybricks-primehub-v$pybricks_ver.zip" > /dev/tty 2>&1
-    unzip -q "$workspace/pybricks.zip" -d "$workspace/pybricks_tmp" > /dev/tty 2>&1
-    cp "$workspace/pybricks_tmp/firmware-base.bin" "$workspace/Pybricks.bin"
-    rm -rf "$workspace/pybricks_tmp"
-    rm -f "$workspace/pybricks.zip"
+if [ "$command" != "unset" ] && [ "$command" != "env" ]; then
+    pybricks_ver="3.6.1"
+    if [ ! -f "$workspace/Pybricks.bin" ]; then
+        echo "[ SPIKE USB manager: Downloading Pybricks Firmware... ]" > /dev/tty
+        curl -L -o "$workspace/pybricks.zip" "https://github.com/pybricks/pybricks-micropython/releases/download/v$pybricks_ver/pybricks-primehub-v$pybricks_ver.zip" > /dev/tty 2>&1
+        unzip -q "$workspace/pybricks.zip" -d "$workspace/pybricks_tmp" > /dev/tty 2>&1
+        cp "$workspace/pybricks_tmp/firmware-base.bin" "$workspace/Pybricks.bin"
+        rm -rf "$workspace/pybricks_tmp"
+        rm -f "$workspace/pybricks.zip"
+    fi
 fi
 
 #
@@ -91,7 +93,7 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
     unset ETROBO_SPIKE_DRIVER
     if [ "$ETROBO_OS" == "win" ]; then
         if [ $(powershell.exe 'usbipd list' > /dev/null 2>&1; echo $?) -eq 0 ]; then
-            export ETROBO_SPIKE_DRIVER="usbip-win"
+            export ETROBO_SPIKE_DRIVER="usbipd-win"
         fi
     elif [ "$ETROBO_OS" == "mac" ]; then
         if [ -n "$(brew list --versions libusb)" ]; then
@@ -266,7 +268,7 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
         echo "Unknown subcommand: $subcommand"
         false
     fi
-else
+elif [ "$command" != "unset" ] && [ "$command" != "env" ]; then
     #
     # auto mount SPIKE device on Windows
     # and set envvars related to connected SPIKE device

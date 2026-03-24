@@ -200,7 +200,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             version="5.3.0"
             vers+=("2026.03.03a")
             unset arch
-            if [ "$arch" = "aarch64" ]; then
+            if [ "$ETROBO_PLATFORM" = "aarch64" ]; then
                 arch="arm64"
                 size="4448256"
             else
@@ -640,12 +640,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 echo
                 echo "Install usbipd-win:"
                 powershell.exe -NoProfile -Command "Start-Process msiexec.exe -ArgumentList '/i \"$(wslpath -w "$file")\" /qn' -Verb RunAs"
-                echo
-                echo "*** To start using usbipd, you must restart this environment. ***"
-                echo "*** Please re-run \"Start ETrobo.cmd\" after closing this terminal and VSCode. ***"
-                echo
-                read -p "Press ENTER key to continue..." dummy
-                exit 0
                 ;;
             "cmake" )
                 echo

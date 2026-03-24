@@ -48,7 +48,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 
 ### Windows
 
-- x86-64アーキテクチャのCPU
+- x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
 - Windows 11
     - version 25H2、またはOSビルド26100.2605（December 2024 Update）以降のversion 24H2。
         - 2024年12月アップデートより前に手動インストールした24H2ではWSLが破壊され修復不可能であるとの報告もありますのでご注意ください。 
@@ -59,6 +59,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
     - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
+- 制限事項：MacのParallels Desktop上で動作するWindows 11では、WSLへのUSBパススルーが利用できないため、実機への転送ができません。ParallelsではDebianをご利用ください。
 
 ### Mac
 - Apple Silicon、またはx86-64アーキテクチャのCPU
@@ -72,7 +73,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 - Visual Studio Codeのインストール
 
 ### Linux
-- x86-64アーキテクチャのCPU
+- x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
 - Debian GNU/Linux 13 (trixie) または Ubuntu 24.04
     - 環境のインストールにはsudoers権限の付与が必要です。
     - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
@@ -80,7 +81,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 - Visual Studio Codeのインストール
 
 ### ChromeOS
-- x86-64アーキテクチャのCPU
+- x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
     - Chrome OSでの動作確認は以下の環境で行っています：
         - ASUS Chromebook C223NA
         - Chrome OS 126.0.6478.222 (Official Build)

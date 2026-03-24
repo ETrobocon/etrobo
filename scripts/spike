@@ -102,7 +102,7 @@ if [ "$command" == "driver" ] || [ "$command" == "env" ]; then
     else
         export ETROBO_SPIKE_DRIVER="debian"
     fi
-    if [ -n "$ETROBO_SPIKE_DRIVER" ] && [ "$(lsusb)" != "127" ]; then
+    if [ -n "$ETROBO_SPIKE_DRIVER" ] && [ $(lsusb >/dev/null 2>&1; echo $?) -eq 0 ]; then
         export ETROBO_SPIKE_DRIVER="available"
     fi
 

@@ -145,8 +145,8 @@ if [ `uname` == "Linux" ]; then
         exit 1
     else
         kernel="debian"
-        guest="`cat /etc/os-release 2>&1 | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'`$guest"
-        raspi="`cat /proc/device-tree/model 2>&1 | grep -a Raspberry`"
+        guest="$(cat /etc/os-release 2>/dev/null | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'$guest)"
+        raspi="$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' | grep -a Raspberry)"
     fi
 fi
 platform="`uname -m`"
@@ -159,7 +159,11 @@ if [ "$platform" != "x86_64" ]; then
         exit 1
     fi
 fi
-echo "detect platform: $host.$platform($guest)"
+unset raspi_type
+if [ -n "$raspi" ]; then
+    raspi_type=" on $raspi"
+fi
+echo "detect platform: $host.$platform($guest)$raspi_type"
 
 # usage
 if [ "$1" = "--help" ]; then

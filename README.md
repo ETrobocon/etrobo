@@ -72,7 +72,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 - Xcode(Command Line Tools)のインストール
 - Visual Studio Codeのインストール
 
-### Linux
+### Linux (Debian系)
 - x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
 - Debian GNU/Linux 13 (trixie) または Ubuntu 24.04
     - 環境のインストールにはsudoers権限の付与が必要です。
@@ -100,6 +100,15 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 ChromeOS 102以降のDebian 11向けLinuxコンテナでは有効にできますが、それでも実用的なパフォーマンスは期待できません。
 EV3実機向けの開発環境としては充分です。
 - 制限事項：SPIKE-RTモードでのSPIKE Primeハブとの接続は、DFUモードおよびHubOSモードでのみUSBパススルーが可能なため、Pybiricksモードでの接続はできません。アプリのアップロードやダウンロードは問題ありません。
+
+### Raspberry Pi OS
+※ SPIKE-RTモードにのみ対応します
+- Raspberry Pi OS (64bit)がインストールできるRaspberry Pi
+    - 動作確認は、以下の環境で行っています：
+        - Raspberry Pi Zero 2 W Rev 1.0
+        - Raspberry Pi OS (64bit) - Debian GNU/Linux 13 (trixie)
+- Raspberry Pi OS (64bit) - Debian GNU/Linux 13 (trixie)
+- Visual Studio Codeのインストール
 
 ## 動作確認＆主なコマンドの説明
 

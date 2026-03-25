@@ -90,7 +90,7 @@ if [ "$update" = "repair" ] && [ "$option" = "mruby" ]; then
     "$ETROBO_SCRIPTS/build_athrill.sh" official
 fi
 
-if [ "$ETROBO_ENV_TARGET" = "simulator" ]; then"]
+if [ "$ETROBO_ENV_TARGET" = "simulator" ]; then
     if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ] ; then
         installProcess="athrill"
         option="athrill"

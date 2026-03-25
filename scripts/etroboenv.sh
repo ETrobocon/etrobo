@@ -6,6 +6,7 @@
 # See LICENSE
 #
 
+caller="$(basename ${BASH_SOURCE[1]})"
 currentDir="`pwd`"
 
 # against VSCode bug on WSL2
@@ -195,7 +196,7 @@ else
                 echo
                 echo 'to disable this environment, run `touch $ETROBO_ROOT/disable` and restart terminal'
                 echo
-                touch "$ETROBO_ROOT/dist/prompted.flag"
+                touch "$ETROBO_ROOT/dist/prompted.bootsh"
             fi
         else
             echo
@@ -211,10 +212,13 @@ else
             . "$ETROBO_SCRIPTS/spike" env
             . "$ETROBO_SCRIPTS/etrobopath.sh"
         fi
-        if [ ! -f "$ETROBO_ROOT/dist/prompted.flag" ]; then
+        if [ ! -f "$ETROBO_ROOT/dist/prompted.bootsh" ]; then
             echo "etrobo environment for $ETROBO_ENV_MODE: Ready. (Ver.$ETROBO_ENV_VER)"
+            if [ "$caller" == "etrobo.sh" ]; then
+                touch "$ETROBO_ROOT/dist/prompted.bootsh"
+            fi
         else
-            rm "$ETROBO_ROOT/dist/prompted.flag"
+            rm -f "$ETROBO_ROOT/dist/prompted.bootsh"
         fi
     fi
 fi

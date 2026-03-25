@@ -79,7 +79,6 @@ if [ -n "$update" ]; then
         git submodule update --init ./external/
         cd ..
         rm -rf "$ETROBO_SPIKE_RT_TOOLS/cmake"
-        rm -rf "$ETROBO_SPIKE_RT_TOOLS/doxygen"
         rm -rf "$ETROBO_SPIKE_RT_TOOLS/qemu"
     fi
     etrobopkg $sim_select
@@ -91,114 +90,116 @@ if [ "$update" = "repair" ] && [ "$option" = "mruby" ]; then
     "$ETROBO_SCRIPTS/build_athrill.sh" official
 fi
 
-if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ]; then
-    installProcess="athrill"
-    option="athrill"
-else
-    "$ETROBO_SCRIPTS/build_athrill.sh" show
-    if [ "$?" = "1" ] && [ "$update" = "update" ] && [ "$athrill" != "skip" ]; then
+if [ "$ETROBO_ENV_TARGET" = "simulator" ]; then"]
+    if [ ! -f "$ETROBO_ATHRILL_WORKSPACE/athrill2" ] ; then
+        installProcess="athrill"
         option="athrill"
-    fi
-fi
-
-if [ "$option" = "athrill" ] && [ "$ETROBO_OS" != "raspi" ] && [ "$ETROBO_ENV_MODE" != "NXT" ]; then
-    echo
-    echo "Build Athrill2 with the ETrobo official certified commit"
-    "$ETROBO_SCRIPTS/build_athrill.sh" official
-    rm -f "$ETROBO_ATHRILL_SDK/common/library/libcpp-ev3/libcpp-ev3-standalone.a"
-    installProcess="${installProcess}athrill "
-fi
-
-#
-# distribute etroboc_common
-if [ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]; then
-    src="$ETROBO_ROOT/dist/etroboc_common"
-    dst="$ETROBO_TARGET_WORKSPACE/etroboc_common"
-    if [ ! -d "$dst" ]; then
-        echo
-        echo "Install etroboc_common to workspace"
-        cp -rf "$src" "$ETROBO_TARGET_WORKSPACE/"
-    elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
-        echo
-        echo "Update etroboc_ext.h"
-        rm -f "$dst/etroboc_ext.h"
-        cp -f "$src/etroboc_ext.h" "$dst/"
-    fi
-    dst="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
-    if [ ! -d "$dst" ]; then
-        echo
-        echo "Install etroboc_common to workspace"
-        cp -rf "$src" "$ETROBO_ATHRILL_WORKSPACE/"
-    elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
-        echo
-        echo "Update etroboc_ext.h"
-        rm -f "$dst/etroboc_ext.h"
-        cp -f "$src/etroboc_ext.h" "$dst/"
-    fi
-fi
-
-#
-# add include path to etroboc_common into Makefile.img
-if [ "$ETROBO_ENV_MODE" == "SPIKE" ] \
-&& [ -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" ] \
-&& [ -z "`cat \"$ETROBO_ATHRILL_SDK/common/Makefile.img\" | grep 'etroboc_common'`" ]; then
-    mv -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" "$ETROBO_ATHRILL_SDK/common/Makefile.img.org"
-    cat "$ETROBO_ATHRILL_SDK/common/Makefile.img.org" \
-    | sed -E 's/^\t-I\$\(LIBRASPIKE-ART_DIR\)\/include$/\t-I\$(LIBRASPIKE-ART_DIR)\/include \\\n\t-I\$(ETROBO_ATHRILL_WORKSPACE)\/etroboc_common/' \
-    > "$ETROBO_ATHRILL_SDK/common/Makefile.img"
-fi
-
-# prepare device_config_r.txt
-if [ -f "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" ]; then
-    if [ ! -f "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt" ]; then
-        echo
-        echo "Prepare ${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
-        cat "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" \
-        | sed -E "s/^DEVICE_CONFIG_UART_BASENAME(.*)$/DEVICE_CONFIG_UART_BASENAME\1_r/" \
-        | sed -E "s/^DEVICE_CONFIG_BT_BASENAME(.*)$/DEVICE_CONFIG_BT_BASENAME\1_r/" \
-        | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
-        | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
-        > "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
-    fi
-fi
-
-#
-# distribute UnityETroboSim
-if [ "$ETROBO_OS" != "raspi" ] && ([ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]); then
-    cd "$ETROBO_ROOT/dist"
-    . sim env
-    echo "Bundled Simulator: $ETROBO_SIM_VER"
-    if [ "$ETROBO_OS" = "chrome" ]; then
-        os="linux"
     else
-        os="$ETROBO_OS"
-    fi
-    targetName="etrobosim${ETROBO_SIM_VER}_${os}"
-    if [ "$ETROBO_KERNEL" = "darwin" ]; then
-        targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
-        targetDist="/Applications/etrobosim"
-    else
-        targetSrc="${targetName}"
-        targetDist="$ETROBO_USERPROFILE/etrobosim"
+        "$ETROBO_SCRIPTS/build_athrill.sh" show
+        if [ "$?" = "1" ] && [ "$update" = "update" ] && [ "$athrill" != "skip" ]; then
+            option="athrill"
+        fi
     fi
 
-    if [ ! -d "$targetDist/$targetSrc" ]; then
-        installProcess="${installProcess}sim "
+    if [ "$option" = "athrill" ] && [ "$ETROBO_OS" != "raspi" ]; then
         echo
-        echo "Install ETrobocon Simulator"
-        if [ ! -d "$targetDist" ]; then
-            mkdir "$targetDist"
+        echo "Build Athrill2 with the ETrobo official certified commit"
+        "$ETROBO_SCRIPTS/build_athrill.sh" official
+        rm -f "$ETROBO_ATHRILL_SDK/common/library/libcpp-ev3/libcpp-ev3-standalone.a"
+        installProcess="${installProcess}athrill "
+    fi
+
+    #
+    # distribute etroboc_common
+    if [ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]; then
+        src="$ETROBO_ROOT/dist/etroboc_common"
+        dst="$ETROBO_TARGET_WORKSPACE/etroboc_common"
+        if [ ! -d "$dst" ]; then
+            echo
+            echo "Install etroboc_common to workspace"
+            cp -rf "$src" "$ETROBO_TARGET_WORKSPACE/"
+        elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
+            echo
+            echo "Update etroboc_ext.h"
+            rm -f "$dst/etroboc_ext.h"
+            cp -f "$src/etroboc_ext.h" "$dst/"
+        fi
+        dst="$ETROBO_ATHRILL_WORKSPACE/etroboc_common"
+        if [ ! -d "$dst" ]; then
+            echo
+            echo "Install etroboc_common to workspace"
+            cp -rf "$src" "$ETROBO_ATHRILL_WORKSPACE/"
+        elif [ "$src/etroboc_ext.h" -nt "$dst/etroboc_ext.h" ]; then
+            echo
+            echo "Update etroboc_ext.h"
+            rm -f "$dst/etroboc_ext.h"
+            cp -f "$src/etroboc_ext.h" "$dst/"
+        fi
+    fi
+
+    #
+    # add include path to etroboc_common into Makefile.img
+    if [ "$ETROBO_ENV_MODE" == "SPIKE" ] \
+    && [ -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" ] \
+    && [ -z "`cat \"$ETROBO_ATHRILL_SDK/common/Makefile.img\" | grep 'etroboc_common'`" ]; then
+        mv -f "$ETROBO_ATHRILL_SDK/common/Makefile.img" "$ETROBO_ATHRILL_SDK/common/Makefile.img.org"
+        cat "$ETROBO_ATHRILL_SDK/common/Makefile.img.org" \
+        | sed -E 's/^\t-I\$\(LIBRASPIKE-ART_DIR\)\/include$/\t-I\$(LIBRASPIKE-ART_DIR)\/include \\\n\t-I\$(ETROBO_ATHRILL_WORKSPACE)\/etroboc_common/' \
+        > "$ETROBO_ATHRILL_SDK/common/Makefile.img"
+    fi
+
+    # prepare device_config_r.txt
+    if [ -f "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" ]; then
+        if [ ! -f "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt" ]; then
+            echo
+            echo "Prepare ${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
+            cat "${ETROBO_ATHRILL_DEVICE_CONFIG}.txt" \
+            | sed -E "s/^DEVICE_CONFIG_UART_BASENAME(.*)$/DEVICE_CONFIG_UART_BASENAME\1_r/" \
+            | sed -E "s/^DEVICE_CONFIG_BT_BASENAME(.*)$/DEVICE_CONFIG_BT_BASENAME\1_r/" \
+            | sed -E "s/^DEBUG_FUNC_VDEV_TX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_TX_PORTNO\ \ \ 54003/" \
+            | sed -E "s/^DEBUG_FUNC_VDEV_RX_PORTNO\ *([0-9]*)$/DEBUG_FUNC_VDEV_RX_PORTNO\ \ \ 54004/" \
+            > "${ETROBO_ATHRILL_DEVICE_CONFIG}_r.txt"
+        fi
+    fi
+
+    #
+    # distribute UnityETroboSim
+    if [ "$ETROBO_OS" != "raspi" ] && ([ "$ETROBO_ENV_MODE" == "EV3" ] || [ "$ETROBO_ENV_MODE" == "SPIKE" ]); then
+        cd "$ETROBO_ROOT/dist"
+        . sim env
+        echo "Bundled Simulator: $ETROBO_SIM_VER"
+        if [ "$ETROBO_OS" = "chrome" ]; then
+            os="linux"
+        else
+            os="$ETROBO_OS"
+        fi
+        targetName="etrobosim${ETROBO_SIM_VER}_${os}"
+        if [ "$ETROBO_KERNEL" = "darwin" ]; then
+            targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
+            targetDist="/Applications/etrobosim"
+        else
+            targetSrc="${targetName}"
+            targetDist="$ETROBO_USERPROFILE/etrobosim"
         fi
 
-        tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
-        if [ "$?" = "0" ]; then
-            mv -f "$targetSrc" "$targetDist/"
-            if [ "$ETROBO_OS" == "linux" ]; then
-                chmod +x "$targetDist/$targetSrc/etrobosim.x86_64"
+        if [ ! -d "$targetDist/$targetSrc" ]; then
+            installProcess="${installProcess}sim "
+            echo
+            echo "Install ETrobocon Simulator"
+            if [ ! -d "$targetDist" ]; then
+                mkdir "$targetDist"
             fi
-        else
-            echo "unpacking error: ${targetName}.tar.gz"
-            exit 1
+
+            tar xvf "${targetName}.tar.gz" > /dev/null 2>&1
+            if [ "$?" = "0" ]; then
+                mv -f "$targetSrc" "$targetDist/"
+                if [ "$ETROBO_OS" == "linux" ]; then
+                    chmod +x "$targetDist/$targetSrc/etrobosim.x86_64"
+                fi
+            else
+                echo "unpacking error: ${targetName}.tar.gz"
+                exit 1
+            fi
         fi
     fi
 fi

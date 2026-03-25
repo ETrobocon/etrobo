@@ -7,7 +7,7 @@
 #
 
 # Usage: detect_host_os
-# Output: win|mac|linux|chrome|raspi [WSL1|WSL2]
+# Output: win|mac|linux|chrome|raspi [WSL1|WSL2|<Raspberry Pi model>]
 
 os="linux"
 subsystem="`uname -r | sed -E 's/^.*-(.*)$/\1/'`"
@@ -28,8 +28,10 @@ elif [ "`ls /mnt/chromeos > /dev/null 2>&1; echo $?`" = "0" ]; then
 elif [ `uname` == "Linux" ]; then
     os="linux"
     unset subsystem
-    if [ -n "`cat /proc/device-tree/model 2>&1 | tr -d '\000' | grep Raspberry`" ]; then
+    raspi="$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' | grep -a Raspberry)"
+    if [ -n "$raspi" ]; then
         os="raspi"
+        subsystem="$raspi"
     fi
 fi
 if [ -n "$subsystem" ]; then

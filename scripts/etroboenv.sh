@@ -169,6 +169,10 @@ else
                 export ETROBO_KERNEL_POSTFIX="linux"
                 export ETROBO_USERPROFILE="$HOME"
                 export ETROBO_EXE_POSTFIX=".$ETROBO_PLATFORM"
+                # RasPi Zero series is too weak to build with multi-threading, so limit to single thread
+                if [ -n "$(detect_host_os | grep Zero)" ]; then
+                    export JOB_NUM=1
+                fi
             fi
 
             if [ "$ETROBO_ENV_MODE" == "NXT" ] || [ "$ETROBO_ENV_MODE" == "EV3" ]; then

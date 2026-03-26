@@ -528,12 +528,12 @@ fi
 # set udev rules for SPIKE Hub in DFU mode
 if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
     udevrules="/etc/udev/rules.d/99-spike-rt.rules"
-    if [ "$kernel" == "debian" ] && [ "$host" != "chrome" ] && [ ! -f "$udevrules" ]; then
+    if [ "$kernel" == "debian" ] && [ ! -f "$udevrules" ]; then
         echo "set udev rules for SPIKE Hub in DFU mode"
         echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0483\", MODE=\"0666\"" | sudo tee "$udevrules" > /dev/null
         echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0694\", MODE=\"0666\"" | sudo tee -a "$udevrules" > /dev/null
-        sudo udevadm control --reload-rules
-        sudo udevadm trigger
+        sudo udevadm control --reload-rules > /dev/null 2>&1
+        sudo udevadm trigger > /dev/null 2>&1
     fi
 fi
 

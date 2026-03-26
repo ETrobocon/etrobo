@@ -83,15 +83,18 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 ### ChromeOS
 - x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
     - Chrome OSでの動作確認は以下の環境で行っています：
-        - ASUS Chromebook C223NA
+        - ASUS Chromebook C223NA (babymega/coral)
         - Chrome OS 126.0.6478.222 (Official Build)
-        - Debian GNU/Linux 13 (trixie)
+        - Debian GNU/Linux 13 (trixie) x86-64
+    - SPIKE-RTモードの動作確認は以下の環境で行なっています：
+        - ASUS Chromebook Detachable CZ1 (katsu/kukui)
+        - Chrome OS 146.0.7680.169 (Official Build)
+        - Debian GNU/Linux 13 (trixie) aarch64
 - ChromeOS 102以降
-    - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも動作するものと考えていますがサポート対象外です。
-    - 79でも、Debian 10にアップグレードすると動作する可能性はありますが、未検証です。
-    - 78以前では、localhostのポート制限により動作しない可能性が高いものと認識していますが、未確認です。
+    - 80以降のChromeOS/ChromiumOS/ChromeOS Flexでも、Debianをtrixieにアップグレードすることで動作するものと考えていますがサポート対象外です。
 - 「Linux開発環境」のインストール
     - 教育委員会等によって無効化されている場合は素直に諦めてください。
+    - trixieへのアップグレードが必要です。
     - etroboパッケージのインストール手順等はLinux版をご覧ください。
 - Visual Studio Codeのインストール
     - `Linuxにインストール`がエラーになる場合は、ダウンロードファイルをLinuxに移動し、`sudo apt install ダウンロードファイル名`でインストールしてください。
@@ -99,7 +102,7 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 `Crostini GPU Support`有効の状態ではETロボコンシミュレータが起動しません。
 ChromeOS 102以降のDebian 11向けLinuxコンテナでは有効にできますが、それでも実用的なパフォーマンスは期待できません。
 EV3実機向けの開発環境としては充分です。
-- 制限事項：SPIKE-RTモードでのSPIKE Primeハブとの接続は、DFUモードおよびHubOSモードでのみUSBパススルーが可能なため、Pybiricksモードでの接続はできません。アプリのアップロードやダウンロードは問題ありません。
+- 制限事項：SPIKE-RTモードでのSPIKE Primeハブとの接続は、DFUモードおよびHubOSモードでのみUSBパススルーが可能なため、Pybiricksモードでの接続はできません。アプリのアップロードやダウンロードは可能ですが、デバイス接続設定のリセットが必要だったりUSBハブとの相性があったりなど接続にかなりクセがあり、その点はサポート対象外です。
 
 ### Raspberry Pi OS
 ※ SPIKE-RTモードにのみ対応します

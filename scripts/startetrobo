@@ -145,7 +145,7 @@ if [ `uname` == "Linux" ]; then
         exit 1
     else
         kernel="debian"
-        guest="$(cat /etc/os-release 2>/dev/null | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/'$guest)"
+        guest="$(cat /etc/os-release 2>/dev/null | grep ^PRETTY_NAME | sed -E 's/^PRETTY_NAME=\"(.*)\"/\1/')$guest"
         raspi="$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' | grep -a Raspberry)"
     fi
 fi

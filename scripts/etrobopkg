@@ -173,6 +173,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             rm -f "sdk/common/deploy-dfu.sh"
             cp -f "$ETROBO_CACHE/deploy-dfu.sh" "sdk/common/deploy-dfu.sh"
             chmod +x "sdk/common/deploy-dfu.sh"
+            git update-index --assume-unchanged "sdk/common/deploy_dfu.sh"
             cd ..
         fi
 

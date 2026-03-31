@@ -20,11 +20,8 @@ target_platforms=(
 )
 
 # Check build directory exists
-if [ "$ETROBO_OS" == "win" ]; then
-    build_dir="$ETROBO_USERPROFILE"
-fi
-build_dir="${build_dir}/UnityETroboSim/build"
-release_dir="${build_dir}/../release"
+build_dir="${ETROBO_USERPROFILE}/UnityETroboSim/Build"
+release_dir="${build_dir}/../Release"
 mkdir -p "$build_dir"
 mkdir -p "$release_dir"
 

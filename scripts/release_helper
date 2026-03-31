@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# UnityETroboSim release helper
+#   release_helper
+# Author: jtFuruhata
+# Copyright (c) 2026 ETロボコン実行委員会, Released under the MIT license
+# See LICENSE
+#
+if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
+    echo "usage: release_helper [year] version"
+    exit 0
+fi
+
+target_platforms=(
+    "win_x86_64"
+    "win_aarch64"
+    "linux_x86_64"
+#    "linux_aarch64"
+    "mac_universal"
+)
+
+# Check build directory exists
+if [ "$ETROBO_OS" == "win" ]; then
+    build_dir="$ETROBO_USERPROFILE"
+fi
+build_dir="${build_dir}/UnityETroboSim/build"
+release_dir="${build_dir}/../release"
+mkdir -p "$build_dir"
+mkdir -p "$release_dir"
+
+# determine competition year
+if [[ "$1" =~ ^[0-9]{4}$ ]]; then
+    year="$1"
+    shift 1
+else
+    year="$(date +%Y)"
+fi
+
+# determine version
+if [ -n "$1" ]; then
+    version="$1"
+else
+    echo "Error: version not specified"
+    echo "usage: release_helper [year] version"
+    exit 1
+fi
+
+# detect target directories
+target_basename="etrobosim${year}_${version}"
+ls -1 "$build_dir" | grep "${target_basename}"
+if [ $? -ne 0 ]; then
+    echo "Error: target directory not found: ${target_basename}"
+    exit 1
+fi
+
+# modify and archive target directories
+for target_platform in "${target_platforms[@]}"; do
+    target="${target_basename}_${target_platform}"
+    tarball="${target}.tar.gz"
+    if [ "$ETROBO_OS" == "mac" ]; then
+        target="${target}.app"
+    fi
+    target_dir="${build_dir}/${target}"
+    if [ -d "$target_dir" ]; then
+        echo "Found target directory: $target_dir"
+        rm -f "$release_dir/$tarball"
+
+        # remove Burst Compiler cache directory from target directory and 
+        if [ "$ETROBO_OS" != "mac"  ]; then
+            burst_dir="$(ls -1 "${target_dir}" | grep "DoNotShip")"
+            if [ -n "$burst_dir" ]; then
+                rm -rf "${target_dir}/${burst_dir}"
+            fi
+        fi
+
+        # Windows: rename to etrobosim and archive
+        if [ -n "$(echo "$target_platform" | grep "win")" ]; then
+            src="${target_dir}/ETロボコンシミュレータ_Data"
+            dst="${target_dir}/etrobosim_Data"
+            mv -f "$src" "$dst"
+            src="${target_dir}/ETロボコンシミュレータ.exe"
+            dst="${target_dir}/etrobosim.exe"
+            mv -f "$src" "$dst"
+        fi
+
+        tar zcvf "$release_dir/$tarball" -C "$build_dir" "$target"
+    fi
+done
+

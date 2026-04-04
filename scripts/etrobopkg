@@ -5,7 +5,7 @@
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-manifest_ver="2026.03.03a"
+manifest_ver="2026.04.04a"
 
 # check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
@@ -64,7 +64,7 @@ else
 
     # ETroboSim versions
     if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
-        export ETROBO_PUBLIC_VER="2025_7.0.1-public"
+        export ETROBO_PUBLIC_VER="2026_8.0.0-public"
         export ETROBO_BETA_VER="2023_6.0.2b"
         export ETROBO_COMPETITION_VER="2025_7.2.0"
     fi
@@ -367,7 +367,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 vers+=("2021.03.19a")
                 sizes+=("35857495")
             else
-                urls+=("http://etrobocon.github.io/etroboEV3//athrill-gcc-package-mac_x86_64.tar.gz")
+                urls+=("http://etrobocon.github.io/etroboEV3/athrill-gcc-package-mac_x86_64.tar.gz")
                 vers+=("2021.03.08a")
                 sizes+=("32950726")
             fi
@@ -401,23 +401,33 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         #
         # UnityETroboSim public version
         #
-        unset target
-        if [ "$ETROBO_OS" = "chrome" ]; then
+        target="$ETROBO_OS"
+        arch="$ETROBO_PLATFORM"
+        if [ "$target" = "chrome" ] || [ "$target" = "raspi" ]; then
             target="linux"
-        else
-            target="$ETROBO_OS"
         fi
+
         if [ "$target" = "win" ]; then
-            size=36355097
+            if [ "$arch" = "x86_64" ]; then
+                size=58638542   # win_x86_64
+            else
+                size=54204786   # win_aarch64
+            fi
         elif [ "$target" = "mac" ]; then
-            size=43089544
+            arch="universal"
+            size=48658492       # mac_universal
         elif [ "$target" = "linux" ]; then
-            size=31796928
-        fi    
+            if [ "$arch" = "x86_64" ]; then
+                size=38345448   # linux_x86_64
+            #else
+            #    size=38345448   # linux_aarch64
+            fi
+        fi
+
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
-            urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}.tar.gz")
-            vers+=("2025.05.03a")
+            urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}_${arch}.tar.gz")
+            vers+=("2026.04.04a")
             sizes+=("$size")
         fi
 
@@ -448,22 +458,33 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         #
         # UnityETroboSim via Kintone
         #
-            unset target
-            if [ "$ETROBO_OS" = "chrome" ]; then
+            target="$ETROBO_OS"
+            arch="$ETROBO_PLATFORM"
+            if [ "$target" = "chrome" ] || [ "$target" = "raspi" ]; then
                 target="linux"
-            else
-                target="$ETROBO_OS"
             fi
+
             if [ "$target" = "win" ]; then
-                size=42401845
+                if [ "$arch" = "x86_64" ]; then
+                    size=42401845   # win_x86_64
+                #else
+                #    size=42401845   # win_aarch64
+                fi
             elif [ "$target" = "mac" ]; then
+                arch="universal"
                 size=49305063
             elif [ "$target" = "linux" ]; then
-                size=38393714
+                if [ "$arch" = "x86_64" ]; then
+                    size=38393714   # linux_x86_64
+                #else
+                #    size=38393714   # linux_aarch64
+                fi
             fi
+
             if [ "$ETROBO_OS" != "raspi" ]; then
                 pkgs+=("etrobosim")
                 urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+                #urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}_${arch}.tar.gz")
                 vers+=("2025.07.19a")
                 sizes+=("$size")
             fi

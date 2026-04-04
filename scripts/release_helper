@@ -44,7 +44,6 @@ fi
 
 # detect target directories
 target_basename="etrobosim${year}_${version}"
-ls -1 "$build_dir" | grep "${target_basename}"
 if [ $? -ne 0 ]; then
     echo "Error: target directory not found: ${target_basename}"
     exit 1
@@ -54,7 +53,7 @@ fi
 for target_platform in "${target_platforms[@]}"; do
     target="${target_basename}_${target_platform}"
     tarball="${target}.tar.gz"
-    if [ "$ETROBO_OS" == "mac" ]; then
+    if [ -n "$(echo "$target_platform" | grep "mac")" ]; then
         target="${target}.app"
     fi
     target_dir="${build_dir}/${target}"

@@ -168,12 +168,19 @@ if [ "$ETROBO_ENV_TARGET" = "simulator" ]; then
         cd "$ETROBO_ROOT/dist"
         . sim env
         echo "Bundled Simulator: $ETROBO_SIM_VER"
-        if [ "$ETROBO_OS" = "chrome" ]; then
+        os="$ETROBO_OS"
+        arch="$ETROBO_PLATFORM"
+        if [ "$os" = "chrome" ] || [ "$os" = "raspi" ]; then
             os="linux"
-        else
-            os="$ETROBO_OS"
+        elif [ "$os" = "mac" ]; then
+            arch="universal"
         fi
-        targetName="etrobosim${ETROBO_SIM_VER}_${os}"
+        unset targetName
+        if [ $(echo $ETROBO_SIM_VER | sed -E 's/^([0-9]{4})_.*/\1/') -lt 2026 ]; then
+            targetName="etrobosim${ETROBO_SIM_VER}_${os}"
+        else
+            targetName="etrobosim${ETROBO_SIM_VER}_${os}_${arch}"
+        fi
         if [ "$ETROBO_KERNEL" = "darwin" ]; then
             targetSrc="${targetName}${ETROBO_EXE_POSTFIX}"
             targetDist="/Applications/etrobosim"

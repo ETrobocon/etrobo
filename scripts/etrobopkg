@@ -5,7 +5,7 @@
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-manifest_ver="2026.04.04a"
+manifest_ver="2026.04.04b"
 
 # check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
@@ -64,7 +64,7 @@ else
 
     # ETroboSim versions
     if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
-        export ETROBO_PUBLIC_VER="2026_8.0.0-public"
+        export ETROBO_PUBLIC_VER="2026_8.0.1-public"
         export ETROBO_BETA_VER="2023_6.0.2b"
         export ETROBO_COMPETITION_VER="2025_7.2.0"
     fi
@@ -409,25 +409,25 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
         if [ "$target" = "win" ]; then
             if [ "$arch" = "x86_64" ]; then
-                size=58638542   # win_x86_64
+                size=40531748   # win_x86_64
             else
-                size=54204786   # win_aarch64
+                size=36145316   # win_aarch64
             fi
         elif [ "$target" = "mac" ]; then
             arch="universal"
-            size=48658492       # mac_universal
+            size=48525363       # mac_universal
         elif [ "$target" = "linux" ]; then
             if [ "$arch" = "x86_64" ]; then
-                size=38345448   # linux_x86_64
+                size=38212661   # linux_x86_64
             #else
-            #    size=38345448   # linux_aarch64
+            #    size=38212661   # linux_aarch64
             fi
         fi
 
         if [ "$ETROBO_OS" != "raspi" ]; then
             pkgs+=("etrobosim")
             urls+=("https://github.com/ETrobocon/etroboEV3/raw/gh-pages/etrobosim${ETROBO_PUBLIC_VER}_${target}_${arch}.tar.gz")
-            vers+=("2026.04.04a")
+            vers+=("2026.04.04b")
             sizes+=("$size")
         fi
 

@@ -843,7 +843,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
                 if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ] || [ -z "$i386" ]; then
                     if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                        brew install --cask --no-quarantine gcenx/wine/wine-crossover
+                        brew install --cask gcenx/wine/game-porting-toolkit
                     elif [ "$ETROBO_OS" != "win" ]; then
                         if [ -z "$i386" ]; then
                             sudo dpkg --add-architecture i386

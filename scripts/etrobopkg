@@ -832,16 +832,20 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 rm -f NeXTTool.exe
                 ;;
             "atk1" )
-                # install wine(-crossover) if not installed
+                # install a Wine runtime inside BeerHall if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
                 echo "Install Wine(32) to launch sg.exe if necessary"
                 unset i386
+                unset beerhall_wine
                 if [ "$ETROBO_KERNEL" == "darwin" ]; then
                     i386="mac"
+                    if [ -x "$HOMEBREW_PREFIX/bin/wine" ] || [ -x "$HOMEBREW_PREFIX/bin/wine64" ]; then
+                        beerhall_wine="available"
+                    fi
                 else
                     i386="`sudo dpkg --print-foreign-architectures | grep i386`"
                 fi
-                if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ] || [ -z "$i386" ]; then
+                if { [ "$ETROBO_KERNEL" == "darwin" ] && [ -z "$beerhall_wine" ]; } || { [ "$ETROBO_KERNEL" != "darwin" ] && [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ]; } || [ -z "$i386" ]; then
                     if [ "$ETROBO_KERNEL" == "darwin" ]; then
                         brew install --cask gcenx/wine/game-porting-toolkit
                     elif [ "$ETROBO_OS" != "win" ]; then
@@ -882,7 +886,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
                 if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                    if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
+                    if [ ! -x "$HOMEBREW_PREFIX/bin/lsusb" ] || [ ! -f "$HOMEBREW_PREFIX/lib/libusb-0.1.4.dylib" ] || [ ! -f "$HOMEBREW_PREFIX/include/usb.h" ]; then
                         brew install libusb libusb-compat usbutils
                     fi
                 elif [ "$ETROBO_KERNEL" == "debian" ]; then

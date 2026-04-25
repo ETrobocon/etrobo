@@ -811,14 +811,22 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                  | sed -E 's/¥/\\/g' \
                  | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
                  | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E '/^ifeq \(\$\(UNAME\), Darwin\)$/,/^else$/ s/(^\t# WINECONSOLE := .*wineconsole$)/\tWINECONSOLE := wine64 > \/dev\/null 2>\&1/' \
+                 | sed -E 's/(^\t\$\(WINECONSOLE\) \$\(TOPPERS_OSEK_ROOT_SG\)\/sg\/sg )(.*)$/\1.exe\2/' \
                  | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 | sed -E '/^[[:space:]]*-os=ECC2 .* -template=/a\
+	@test -f .\/kernel_cfg.c -a -f .\/kernel_id.h || { echo "ERROR: sg.exe did not generate kernel_cfg.c/kernel_id.h." \>\&2; exit 1; }' \
                  > nxtOSEK/ecrobot/ecrobot.mak
                 iconv -f SHIFT_JIS -t UTF-8 nxtOSEK/ecrobot/ecrobot++.mak.org \
                  | sed -E 's/μ/u/g' \
                  | sed -E 's/¥/\\/g' \
                  | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
                  | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E '/^ifeq \(\$\(UNAME\), Darwin\)$/,/^else$/ s/(^\t# WINECONSOLE := .*wineconsole$)/\tWINECONSOLE := wine64 > \/dev\/null 2>\&1/' \
+                 | sed -E 's/(^\t\$\(WINECONSOLE\) \$\(TOPPERS_OSEK_ROOT_SG\)\/sg\/sg )(.*)$/\1.exe\2/' \
                  | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 | sed -E '/^[[:space:]]*-os=ECC2 .* -template=/a\
+	@test -f .\/kernel_cfg.c -a -f .\/kernel_id.h || { echo "ERROR: sg.exe did not generate kernel_cfg.c/kernel_id.h." \>\&2; exit 1; }' \
                  > nxtOSEK/ecrobot/ecrobot++.mak
                 ;;
             "nexttool" )

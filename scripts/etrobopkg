@@ -894,7 +894,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
                 if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                    if [ ! -x "$HOMEBREW_PREFIX/bin/lsusb" ] || [ ! -f "$HOMEBREW_PREFIX/lib/libusb-0.1.4.dylib" ] || [ ! -f "$HOMEBREW_PREFIX/include/usb.h" ]; then
+                    if [ ! -x "$HOMEBREW_PREFIX/bin/lsusb" ] || [ ! -f "$HOMEBREW_PREFIX/include/usb.h" ] || ! ls "$HOMEBREW_PREFIX"/lib/libusb*.dylib > /dev/null 2>&1; then
                         brew install libusb libusb-compat usbutils
                     fi
                 elif [ "$ETROBO_KERNEL" == "debian" ]; then

@@ -173,72 +173,88 @@ if [ -z "$BEERHALL" ]; then
     fi
 
     pwd="$(cd "$(dirname "$0")"; pwd)"
-
-    if [ -e "$pwd/$hallName" ]; then
-        echo "'$pwd/$hallName' already exists. please delete it or use other name or"
-        read -p "Overwrite? (y/N): " yn
-        case "$yn" in
-            [yY]*) rm -rf "$pwd/$hallName";;
-            *)     exit 1;;
-        esac
+    defaultBeerHall="$HOME/$hallName"
+    if [ "$pwd" != "$HOME" ]; then
+        localBeerHall="$pwd/$hallName"
+    else
+        localBeerHall=""
     fi
 
-    profile="$HOME/.bash_profile"
-    touch "$profile"
-    echo
-    echo "add \$BEERHALL env var to $profile" 
-    export BEERHALL="$pwd/$hallName"
-    if [ -z "`cat $profile 2>&1 | grep BEERHALL`" ]; then
-        echo "envvar named 'BEERHALL' is added into $profile"
-        echo "# ----- this section was added by jtBeerHall -----" >> $profile
-        echo "export BEERHALL=\"$BEERHALL\"" >> $profile
-        echo "# ------------------------------- jtBeerHall end -" >> $profile
-    fi
-    profile="$HOME/.zprofile"
-    touch "$profile"
-    echo
-    echo "add \$BEERHALL env var to $profile" 
-    export BEERHALL="$pwd/$hallName"
-    if [ -z "`cat $profile 2>&1 | grep BEERHALL`" ]; then
-        echo "envvar named 'BEERHALL' is added into $profile"
-        echo "# ----- this section was added by jtBeerHall -----" >> $profile
-        echo "export BEERHALL=\"$BEERHALL\"" >> $profile
-        echo "# ------------------------------- jtBeerHall end -" >> $profile
+    if [ -f "$defaultBeerHall/BeerHall" ] && [ -d "$defaultBeerHall/usr/local" ]; then
+        echo "reuse existing BeerHall: $defaultBeerHall"
+        export BEERHALL="$defaultBeerHall"
+    elif [ -n "$localBeerHall" ] && [ -f "$localBeerHall/BeerHall" ] && [ -d "$localBeerHall/usr/local" ]; then
+        echo "reuse existing BeerHall: $localBeerHall"
+        export BEERHALL="$localBeerHall"
     fi
 
-    bashrc="/etc/bashrc_BeerHall"
-    echo "add $bashrc"
-    echo 'if [ -z "$BEERHALL_INVOKER" ]; then' | sudo tee $bashrc
-    echo '    . "$BEERHALL/BeerHall"' | sudo tee -a $bashrc
-    echo 'else' | sudo tee -a $bashrc
-    echo '    . "$BEERHALL/BeerHall" setpath' | sudo tee -a $bashrc
-    echo 'fi' | sudo tee -a $bashrc
+    if [ -z "$BEERHALL" ]; then
+        if [ -e "$pwd/$hallName" ]; then
+            echo "'$pwd/$hallName' already exists. please delete it or use other name or"
+            read -p "Overwrite? (y/N): " yn
+            case "$yn" in
+                [yY]*) rm -rf "$pwd/$hallName";;
+                *)     exit 1;;
+            esac
+        fi
 
-    bashrc="/etc/bashrc_vscode"
-    sudo touch $bashrc
-    echo "add $bashrc"
-    if [ -z "`cat $bashrc 2>&1 | grep BEERHALL`" ]; then
-        echo "'BEERHALL_INVOKER' event is added into $bashrc"
-        echo '# ----- this section was added by jtBeerHall -----' | sudo tee -a $bashrc
-        echo 'if [ "$BEERHALL_INVOKER" = "ready" ]; then' | sudo tee -a $bashrc
+        profile="$HOME/.bash_profile"
+        touch "$profile"
+        echo
+        echo "add \$BEERHALL env var to $profile" 
+        export BEERHALL="$pwd/$hallName"
+        if [ -z "`cat $profile 2>&1 | grep BEERHALL`" ]; then
+            echo "envvar named 'BEERHALL' is added into $profile"
+            echo "# ----- this section was added by jtBeerHall -----" >> $profile
+            echo "export BEERHALL=\"$BEERHALL\"" >> $profile
+            echo "# ------------------------------- jtBeerHall end -" >> $profile
+        fi
+        profile="$HOME/.zprofile"
+        touch "$profile"
+        echo
+        echo "add \$BEERHALL env var to $profile" 
+        export BEERHALL="$pwd/$hallName"
+        if [ -z "`cat $profile 2>&1 | grep BEERHALL`" ]; then
+            echo "envvar named 'BEERHALL' is added into $profile"
+            echo "# ----- this section was added by jtBeerHall -----" >> $profile
+            echo "export BEERHALL=\"$BEERHALL\"" >> $profile
+            echo "# ------------------------------- jtBeerHall end -" >> $profile
+        fi
+
+        bashrc="/etc/bashrc_BeerHall"
+        echo "add $bashrc"
+        echo 'if [ -z "$BEERHALL_INVOKER" ]; then' | sudo tee $bashrc
+        echo '    . "$BEERHALL/BeerHall"' | sudo tee -a $bashrc
+        echo 'else' | sudo tee -a $bashrc
         echo '    . "$BEERHALL/BeerHall" setpath' | sudo tee -a $bashrc
         echo 'fi' | sudo tee -a $bashrc
-        echo "# ------------------------------- jtBeerHall end -" | sudo tee -a $bashrc
+
+        bashrc="/etc/bashrc_vscode"
+        sudo touch $bashrc
+        echo "add $bashrc"
+        if [ -z "`cat $bashrc 2>&1 | grep BEERHALL`" ]; then
+            echo "'BEERHALL_INVOKER' event is added into $bashrc"
+            echo '# ----- this section was added by jtBeerHall -----' | sudo tee -a $bashrc
+            echo 'if [ "$BEERHALL_INVOKER" = "ready" ]; then' | sudo tee -a $bashrc
+            echo '    . "$BEERHALL/BeerHall" setpath' | sudo tee -a $bashrc
+            echo 'fi' | sudo tee -a $bashrc
+            echo "# ------------------------------- jtBeerHall end -" | sudo tee -a $bashrc
+        fi
+
+        echo "make symbolic link"
+        mkdir -p "$BEERHALL/usr/local"
+        cd "$BEERHALL"
+        ln -s "$HOME/.gitconfig" .gitconfig
+        ln -s "$HOME/.ssh" .ssh
+        ln -s "$HOME/.vscode" .vscode
+        ln -s "$HOME/Applications" Applications
+        ln -s "$HOME/Library" Library
+
+        echo "install HomeBrew, please wait about an hour"
+        cd "$BEERHALL/usr"
+        curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C local
+        makeBeerHall="install"
     fi
-
-    echo "make symbolic link"
-    mkdir -p "$BEERHALL/usr/local"
-    cd "$BEERHALL"
-    ln -s "$HOME/.gitconfig" .gitconfig
-    ln -s "$HOME/.ssh" .ssh
-    ln -s "$HOME/.vscode" .vscode
-    ln -s "$HOME/Applications" Applications
-    ln -s "$HOME/Library" Library
-
-    echo "install HomeBrew, please wait about an hour"
-    cd "$BEERHALL/usr"
-    curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C local
-    makeBeerHall="install"
 fi
 
 export HOMEBREW_PREFIX="$BEERHALL/usr/local"
@@ -468,5 +484,4 @@ param1="$1"
 shift
 paramAt="$@"
 "$BEERHALL/BeerHall" "./startetrobo $param1 $paramAt"
-
 

@@ -518,8 +518,13 @@ fi
 if [ "$ETROBO_ENV_MODE" == "NXT" ]; then
     if [ "$host" == "win" ]; then
         cp -f "$ETROBO_ROOT/scripts/fakewineconsole" "$ETROBO_ROOT/scripts/wineconsole"
+        cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
+    elif [ "$host" == "mac" ]; then
+        # macOS Wine needs Windows-style paths for sg.exe input files.
+        cp -f "$ETROBO_ROOT/scripts/maccygpath" "$ETROBO_ROOT/scripts/cygpath"
+    else
+        cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
     fi
-    cp -f "$ETROBO_ROOT/scripts/fakecygpath" "$ETROBO_ROOT/scripts/cygpath"
 else
     rm -f "$ETROBO_ROOT/scripts/wineconsole"
     rm -f "$ETROBO_ROOT/scripts/cygpath"

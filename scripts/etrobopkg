@@ -811,14 +811,22 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                  | sed -E 's/¥/\\/g' \
                  | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
                  | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E '/^ifeq \(\$\(UNAME\), Darwin\)$/,/^else$/ s/(^\t# WINECONSOLE := .*wineconsole$)/\tWINECONSOLE := wine64 > \/dev\/null 2>\&1/' \
+                 | sed -E 's#(\$\(TOPPERS_OSEK_ROOT_SG\)/sg/sg)( )#\1.exe\2#' \
                  | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 | sed -E '/^[[:space:]]*-os=ECC2 .* -template=/a\
+	@test -f .\/kernel_cfg.c -a -f .\/kernel_id.h || { echo "ERROR: sg.exe did not generate kernel_cfg.c/kernel_id.h." \>\&2; exit 1; }' \
                  > nxtOSEK/ecrobot/ecrobot.mak
                 iconv -f SHIFT_JIS -t UTF-8 nxtOSEK/ecrobot/ecrobot++.mak.org \
                  | sed -E 's/μ/u/g' \
                  | sed -E 's/¥/\\/g' \
                  | sed -E 's/(^WINECONSOLE := wineconsole$)/\1 > \/dev\/null 2>\&1/' \
                  | sed -E 's/^\t(WINECONSOLE := \/Applications\/Wine.app\/Contents\/MacOS\/startwine wineconsole$)/\t# \1/' \
+                 | sed -E '/^ifeq \(\$\(UNAME\), Darwin\)$/,/^else$/ s/(^\t# WINECONSOLE := .*wineconsole$)/\tWINECONSOLE := wine64 > \/dev\/null 2>\&1/' \
+                 | sed -E 's#(\$\(TOPPERS_OSEK_ROOT_SG\)/sg/sg)( )#\1.exe\2#' \
                  | sed -E 's/(^\tLAUNCHER := $)/\1$(WINECONSOLE)/' \
+                 | sed -E '/^[[:space:]]*-os=ECC2 .* -template=/a\
+	@test -f .\/kernel_cfg.c -a -f .\/kernel_id.h || { echo "ERROR: sg.exe did not generate kernel_cfg.c/kernel_id.h." \>\&2; exit 1; }' \
                  > nxtOSEK/ecrobot/ecrobot++.mak
                 ;;
             "nexttool" )
@@ -832,18 +840,22 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 rm -f NeXTTool.exe
                 ;;
             "atk1" )
-                # install wine(-crossover) if not installed
+                # install a Wine runtime inside BeerHall if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
                 echo "Install Wine(32) to launch sg.exe if necessary"
                 unset i386
+                unset beerhall_wine
                 if [ "$ETROBO_KERNEL" == "darwin" ]; then
                     i386="mac"
+                    if [ -x "$HOMEBREW_PREFIX/bin/wine" ] || [ -x "$HOMEBREW_PREFIX/bin/wine64" ]; then
+                        beerhall_wine="available"
+                    fi
                 else
                     i386="`sudo dpkg --print-foreign-architectures | grep i386`"
                 fi
-                if [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ] || [ -z "$i386" ]; then
+                if { [ "$ETROBO_KERNEL" == "darwin" ] && [ -z "$beerhall_wine" ]; } || { [ "$ETROBO_KERNEL" != "darwin" ] && [ "`wine --version > /dev/null 2>&1; echo $?`" == "127" ]; } || [ -z "$i386" ]; then
                     if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                        brew install --cask --no-quarantine gcenx/wine/wine-crossover
+                        brew install --cask gcenx/wine/game-porting-toolkit
                     elif [ "$ETROBO_OS" != "win" ]; then
                         if [ -z "$i386" ]; then
                             sudo dpkg --add-architecture i386
@@ -882,7 +894,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 # install usbutils and libusb-dev if not installed
                 # ToDo: ofcourse we should relocate this code to startetrobo
                 if [ "$ETROBO_KERNEL" == "darwin" ]; then
-                    if [ "`lsusb -V > /dev/null 2>&1; echo $?`" == "127" ]; then
+                    if [ ! -x "$HOMEBREW_PREFIX/bin/lsusb" ] || [ ! -f "$HOMEBREW_PREFIX/lib/libusb-0.1.4.dylib" ] || [ ! -f "$HOMEBREW_PREFIX/include/usb.h" ]; then
                         brew install libusb libusb-compat usbutils
                     fi
                 elif [ "$ETROBO_KERNEL" == "debian" ]; then

@@ -195,6 +195,26 @@ if [ "$1" = "--help" ]; then
     exit 0
 fi
 
+# change Ubuntu apt source to IPA ICSCoE/Cyberlab Public Mirror Service
+if [ -n "$(echo $guest | grep Ubuntu)" ]; then
+    _target="/etc/apt/sources.list"
+    _target_org="$_target.org"
+    if [ -z "$(cat $_target 2>&1 | grep archive.ubuntu.com)" ]; then
+        _target_org="/etc/apt/ubuntu.sources.org"
+        _target="$_target.d/ubuntu.sources"
+    fi
+    if [ -n "$(cat $_target 2>&1 | grep archive.ubuntu.com)" ]; then
+        echo "change Ubuntu apt source to IPA ICSCoE/Cyberlab Public Mirror Service"
+        echo 'Please enter your login password as sudoers if [sudo] ask you'
+        if [ ! -f $_target_org ]; then
+            sudo mv -f $_target $_target_org
+        fi
+        cat $_target_org \
+        | sed -E 's/(archive.ubuntu.com|security.ubuntu.com)/ftp.udx.icscoe.jp\/Linux/g' \
+        | sudo tee $_target > /dev/null
+    fi
+fi
+
 # `checkout [<branch name>]` option
 unset branch
 if [ "$1" = "checkout" ]; then

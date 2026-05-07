@@ -27,7 +27,7 @@ if [ "$1" = "upload" ]; then
         exit 1
     fi
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
-        sudo -E make $@
+        sudo ETROBO_SPIKE_RT_TOOLS="$ETROBO_SPIKE_RT_TOOLS" make $@
     else
         make $@
     fi

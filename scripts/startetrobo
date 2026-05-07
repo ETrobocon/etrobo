@@ -446,7 +446,14 @@ if [ "$install" = "install" ] || [ "$install" = "update" ]; then
         sudo apt -y install sshpass
         sudo apt -y install git
         sudo apt -y install ruby
+        
+        # safe gem install
+        GEM_HOME="$(sudo gem env home)"
+        GEM_PATH="$(sudo gem env path)"
+        sudo mkdir -p "$GEM_HOME"/{cache,gems,specifications,extensions}
+        sudo chmod -R 755 "$GEM_HOME"
         sudo GEM_HOME="$GEM_HOME" GEM_PATH="$GEM_PATH" gem install shell
+
         sudo apt -y install curl
         sudo apt -y install jq
         sudo apt -y install bison

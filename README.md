@@ -54,9 +54,8 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
         - 2024年12月アップデートより前に手動インストールした24H2ではWSLが破壊され修復不可能であるとの報告もありますのでご注意ください。 
     - Windows 10 Enterprise LTSC 2021での動作確認も行なっていますが、サポート対象外です。
     - インストールにWindowsの管理者権限が必要です。
-- `wsl --install`によりインストールされたUbuntuまたはUbuntu-24.04(WSL2)
+- `wsl --install`によりインストールされたUbuntu、Ubuntu-26.04 または Ubuntu-24.04(WSL2)
     - Ubuntu-22.04・20.04・18.04・16.04、Debian(9/10/11/12/13)でも動作するようですが、サポート対象外です。なお、Debianにインストールする場合はまず`sudo apt install wget`してください。
-    - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - WSL1での動作も引き続き問題ないと思われますが、サポート対象外です。
 - Visual Studio Code(「WSL」拡張機能）のインストール
 - 制限事項：MacのParallels Desktop上で動作するWindows 11では、WSLへのUSBパススルーが利用できないため、実機への転送ができません。ParallelsではDebianをご利用ください。
@@ -74,9 +73,8 @@ Copyright(C) 2020-2026 ETロボコン実行委員会, All rights reserved.
 
 ### Linux (Debian系)
 - x86-64アーキテクチャのCPU。SPIKE-RTモードはARM64アーキテクチャのCPUも利用可能
-- Debian GNU/Linux 13 (trixie) または Ubuntu 24.04
+- Debian GNU/Linux 13 (trixie) 、Ubuntu 26.04 または Ubuntu 24.04
     - 環境のインストールにはsudoers権限の付与が必要です。
-    - Ubuntu-26.04に対しては、リリースされ次第対応を実施します。
     - Debian 12/Ubuntu 22.04以前でも引き続き動作するものと考えていますが、サポート対象外です。
 - Visual Studio Codeのインストール
 

@@ -5,7 +5,7 @@
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-manifest_ver="2026.04.04b"
+manifest_ver="2026.04.10a"
 
 # check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
@@ -66,7 +66,7 @@ else
     if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
         export ETROBO_PUBLIC_VER="2026_8.0.1-public"
         export ETROBO_BETA_VER="2023_6.0.2b"
-        export ETROBO_COMPETITION_VER="2025_7.2.0"
+        export ETROBO_COMPETITION_VER="2026_8.0.2"
     fi
 
     # nxtOSEK envvar
@@ -466,26 +466,27 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             if [ "$target" = "win" ]; then
                 if [ "$arch" = "x86_64" ]; then
-                    size=42401845   # win_x86_64
+                    size=49479398   # win_x86_64
                 #else
-                #    size=42401845   # win_aarch64
+                #    size=45070794   # win_aarch64
                 fi
             elif [ "$target" = "mac" ]; then
                 arch="universal"
-                size=49305063
+                size=57557174       # mac_universal
             elif [ "$target" = "linux" ]; then
                 if [ "$arch" = "x86_64" ]; then
-                    size=38393714   # linux_x86_64
+                    size=47579206   # linux_x86_64
                 #else
                 #    size=38393714   # linux_aarch64
                 fi
             fi
 
             if [ "$ETROBO_OS" != "raspi" ]; then
+                kintone_folder_id="51"  # folder ID for etrobosim in kintone, eg. https://etrobocon.cybozu.com/k/51/ (this URL is not public)
                 pkgs+=("etrobosim")
-                urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
-                #urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}_${arch}.tar.gz")
-                vers+=("2025.07.19a")
+                #urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
+                urls+=("kintone://etrobocon.cybozu.com/${kintone_folder_id}/etrobosim${ETROBO_COMPETITION_VER}_${target}_${arch}.tar.gz")
+                vers+=("2026.04.10a")
                 sizes+=("$size")
             fi
         fi

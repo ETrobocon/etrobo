@@ -3,7 +3,7 @@
 # fakemake, integrated build and launch system among HRP3/EV3 and ASP3/Athrill
 #   fakemake.sh 
 # Author: jtFuruhata, mhikichi1769, yurie
-# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -22,6 +22,7 @@ cd "$workspace"
 
 # no-fake invoke on `make upload`
 if [ "$1" = "upload" ]; then
+    echo "[fakemake on $ETROBO_ENV_MODE] invoke: make upload"
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ] && [ "$(spike device)" != "DFU" ]; then
         echo "[fakemake on SPIKE-RT] *** upload failed: SPIKE device not found in DFU mode."
         exit 1
@@ -34,17 +35,18 @@ if [ "$1" = "upload" ]; then
     exit $?
 fi
 
-# no-fake invoke on `make clean` and `make realclean` for SPIKE-RT mode
+# SPIKE-RT mode sugar commands
 if [ "$ETROBO_ENV_MODE" = "SPIKE-RT" ]; then
+    # no-fake invoke on `make clean` and `make realclean` for SPIKE-RT mode
     if [ "$1" = "clean" ] || [ "$1" = "realclean" ]; then
         make $@
         exit $?
-    fi
-fi
-
-# `make raspike` invokes `make app=raspike up` for SPIKE-RT mode
-if [ "$1" = "raspike" ]; then
-    if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
+    # fake-fake invoke on `make start` for SPIKE-RT mode
+    elif [ "$1" = "start" ]; then
+        fakemake.sh upload
+        exit $?
+    # `make raspike` invokes `make app=raspike up` for SPIKE-RT mode
+    elif [ "$1" = "raspike" ]; then
         echo "[fakemake on SPIKE-RT] invoke: make app=raspike and store as RasPike-ART.bin"
         cd "$ETROBO_ROOT"
         make app=raspike

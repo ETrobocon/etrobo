@@ -5,7 +5,7 @@
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
-manifest_ver="2026.04.10a"
+manifest_ver="2026.05.29a"
 
 # check etrobo-core envvar
 if [ -z "$ETROBO_ROOT" ]; then
@@ -66,7 +66,7 @@ else
     if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
         export ETROBO_PUBLIC_VER="2026_8.0.1-public"
         export ETROBO_BETA_VER="2023_6.0.2b"
-        export ETROBO_COMPETITION_VER="2026_8.0.2"
+        export ETROBO_COMPETITION_VER="2026_8.0.3"
     fi
 
     # nxtOSEK envvar
@@ -466,16 +466,16 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             if [ "$target" = "win" ]; then
                 if [ "$arch" = "x86_64" ]; then
-                    size=49479398   # win_x86_64
+                    size=49575039   # win_x86_64
                 #else
                 #    size=45070794   # win_aarch64
                 fi
             elif [ "$target" = "mac" ]; then
                 arch="universal"
-                size=57557174       # mac_universal
+                size=57655923       # mac_universal
             elif [ "$target" = "linux" ]; then
                 if [ "$arch" = "x86_64" ]; then
-                    size=47579206   # linux_x86_64
+                    size=47672358   # linux_x86_64
                 #else
                 #    size=38393714   # linux_aarch64
                 fi
@@ -486,7 +486,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 pkgs+=("etrobosim")
                 #urls+=("kintone://etrobocon.cybozu.com/49/etrobosim${ETROBO_COMPETITION_VER}_${target}.tar.gz")
                 urls+=("kintone://etrobocon.cybozu.com/${kintone_folder_id}/etrobosim${ETROBO_COMPETITION_VER}_${target}_${arch}.tar.gz")
-                vers+=("2026.04.10a")
+                vers+=("2026.05.29a")
                 sizes+=("$size")
             fi
         fi

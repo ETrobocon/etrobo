@@ -768,6 +768,9 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
         unset start_gate
         unset gate1
         unset gate2
+        unset gate3
+        unset gate4
+        unset gate5
         unset goal
         unset startgoal
         start_time=`date "+%s"`
@@ -797,31 +800,59 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     echo "[ launcher: $sim_select: passed Start Gate ]"
                     start_gate="passed"
                 fi
-                if [ -n "$start_gate" ] && [ -z "$gate1" ]; then
-                    if [ "`echo $json | jq -r .${sim_select}Measurement.GATE1`" == "1" ]; then
-                        echo "[ launcher: $sim_select: passed Mid Gate ]"
-                        gate1="MidGate"
-                    fi
-                fi
-                if [ -n "$gate1" ] && [ -z "$goal" ]; then
-                    if [ "$gate1" != "MidGate" ]; then
-                        if [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
-                            measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
-                            goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
-                            echo "[ launcher: $sim_select: GOAL! Goal Time: $goal ]"
+
+                year=`echo "$json" | jq -r .info.year 2>/dev/null`
+                if [ "$year" == "2026" ]; then
+                    for gate_num in 1 2 3 4 5; do
+                        gate_var="gate${gate_num}"
+                        if [ -n "$start_gate" ] && [ -z "${!gate_var}" ]; then
+                            gate_value=`echo "$json" | jq -r .${sim_select}Measurement.GATE${gate_num} 2>/dev/null`
+                            if [ "$gate_value" == "1" ]; then
+                                echo "[ launcher: $sim_select: passed Gate ${gate_num} ]"
+                                eval "$gate_var=passed"
+                            fi
                         fi
-                    else
-                        if [ "`echo $json | jq -r .${sim_select}Measurement.GATE2`" == "1" ]; then
+                    done
+                    if [ -z "$goal" ]; then
+                        lap_value=`echo "$json" | jq -r .${sim_select}Measurement.LAP 2>/dev/null`
+                        if [ "$lap_value" == "1" ] || [[ "$lap_value" =~ ^[1-9][0-9]*$ ]]; then
                             measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
                             goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
                             echo "[ launcher: $sim_select: passed LAP Gate  Lap Time: $goal ]"
                         fi
                     fi
-                fi
-                if [ "$gate1" == "MidGate" ] && [ -n "$goal" ] && [ -z "$startgoal" ] \
-                && [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
-                    echo "[ launcher: $sim_select: GOAL! ]"
-                    startgoal="finished"
+                    if [ -n "$goal" ] && [ -z "$startgoal" ] \
+                    && [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
+                        echo "[ launcher: $sim_select: GOAL! ]"
+                        startgoal="finished"
+                    fi
+                else
+                    if [ -n "$start_gate" ] && [ -z "$gate1" ]; then
+                        if [ "`echo $json | jq -r .${sim_select}Measurement.GATE1`" == "1" ]; then
+                            echo "[ launcher: $sim_select: passed Mid Gate ]"
+                            gate1="MidGate"
+                        fi
+                    fi
+                    if [ -n "$gate1" ] && [ -z "$goal" ]; then
+                        if [ "$gate1" != "MidGate" ]; then
+                            if [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
+                                measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
+                                goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
+                                echo "[ launcher: $sim_select: GOAL! Goal Time: $goal ]"
+                            fi
+                        else
+                            if [ "`echo $json | jq -r .${sim_select}Measurement.GATE2`" == "1" ]; then
+                                measurement_time=`echo $json | jq -r .${sim_select}Measurement.MEASUREMENT_TIME`
+                                goal=`printf %04d $measurement_time | sed -E 's/^([0-9]*)([0-9]{3})$/\1\.\2/'`
+                                echo "[ launcher: $sim_select: passed LAP Gate  Lap Time: $goal ]"
+                            fi
+                        fi
+                    fi
+                    if [ "$gate1" == "MidGate" ] && [ -n "$goal" ] && [ -z "$startgoal" ] \
+                    && [ "`echo $json | jq -r .${sim_select}Measurement.GOAL`" == "1" ]; then
+                        echo "[ launcher: $sim_select: GOAL! ]"
+                        startgoal="finished"
+                    fi
                 fi
             else
                 unset loop

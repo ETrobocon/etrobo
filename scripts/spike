@@ -194,8 +194,8 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
                     invoker="usbipd $subcommand --busid $busid > $(wslpath -w $ETROBO_CACHE/usbipd.log)"
                     echo "[ SPIKE USB manager: Attempting to $subcommand device with busid $busid... ]" > /dev/tty
                     echo "[ SPIKE USB manager: *** A UAC dialog box may appear. Please \"allow\" it to proceed. *** ]" > /dev/tty
-                    sleep 3
                     pid=$(powershell.exe -NoProfile -Command "Start-Process powershell -Verb RunAs -ArgumentList '$invoker' -PassThru | Select-Object -ExpandProperty Id")
+                    sleep 3
                     while tasklist.exe | grep -q " $pid "; do
                         sleep 0.1
                     done
@@ -245,9 +245,25 @@ if [ "$command" == "usb" ] || [ "$command" == "usbipd" ]; then
                 #
                 # invoke usbipd attach/detach command
                 if [ "$invoke" != "no" ]; then
-                    echo "[ SPIKE USB manager: Attempting to $subcommand device with busid $busid... ]" > /dev/tty
-                    usbipd.exe $subcommand $option --busid $busid > /dev/null 2>&1
-                    if [ $? -eq 0 ]; then
+                    # create a named pipe for usbipd command output
+                    fifo="/tmp/usbipd_fifo"
+                    unset is_blocked
+                    if [ ! -p "$fifo" ]; then
+                        mkfifo "$fifo"
+                        usbipd.exe $subcommand $option --busid $busid > "$fifo" 2>&1 &
+                        pid=$!
+                        # wait for the usbipd command to complete and clean up the named pipe
+                        trap "kill $pid 2>/dev/null; rm -f $fifo" EXIT
+                        while IFS= read -r line; do
+                            echo "[ SPIKE USB manager: ${line%$'\r'} ]" > /dev/tty
+                            # check for firewall blocking message
+                            if echo "$line" | grep -q "A firewall appears to be blocking"; then
+                                is_blocked=damn
+                                break
+                            fi
+                        done < "$fifo"
+                    fi
+                    if [ -z "$is_blocked" ]; then
                         if [ "$subcommand" == "attach" ]; then
                             while [ "$($spike usb getinfo | awk '{print $4}')" != "Attached" ]; do
                                 echo "[ SPIKE USB manager: Waiting for device to be attached... ]" > /dev/tty

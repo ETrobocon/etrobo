@@ -802,7 +802,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
 
                 year=`echo "$json" | jq -r .info.year 2>/dev/null`
-                if [ "$year" == "2026" ]; then
+                echo "[ sim: year=$year, $json ]"
+                if [ "$year" == "2026" || "$year" == "0" ]; then
                     for gate_num in 1 2 3 4 5; do
                         gate_var="gate${gate_num}"
                         if [ -n "$start_gate" ] && [ -z "${!gate_var}" ]; then

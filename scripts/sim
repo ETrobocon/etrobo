@@ -802,13 +802,13 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 fi
 
                 year=`echo "$json" | jq -r .info.year 2>/dev/null`
-                if [ "$year" == "2026" || "$year" == "0" ]; then
+                if [ "$year" == "2026" ] || [ "$year" == "0" ]; then
                     for gate_num in 1 2 3 4 5; do
                         gate_var="gate${gate_num}"
                         if [ -n "$start_gate" ] && [ -z "${!gate_var}" ]; then
                             gate_value=`echo "$json" | jq -r .${sim_select}Measurement.GATE${gate_num} 2>/dev/null`
                             if [ "$gate_value" == "1" ]; then
-                                echo "[ launcher: $sim_select: passed Gate ${gate_num} ]"
+                                echo "[ launcher: $sim_select: passed Check Point ${gate_num} ]"
                                 eval "$gate_var=passed"
                             fi
                         fi

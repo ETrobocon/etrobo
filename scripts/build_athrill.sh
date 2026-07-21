@@ -23,7 +23,7 @@ if [ "$ETROBO_ENV_MODE" == "EV3" ]; then
     SAMPLE_OFFICIAL_COMMIT="eaa870b4e68413649d50e1b6d09d832b7de3af78"
     SAMPLE_AUTHOR="toppers"
 else
-    SAMPLE_OFFICIAL_COMMIT="a57b9ca07288e70be14cc57b488c824ba7a242b3"
+    SAMPLE_OFFICIAL_COMMIT="48cf038ef09db73c025da983c0a1f33e4fc1d818"
     SAMPLE_AUTHOR="ETrobocon"
 fi
 # mruby environment for UnityETroboSim
@@ -361,6 +361,7 @@ if [ -n "$1" ]; then
         git pull
         if [ "$1" = "official" ] || [ "$1" = "init" ]; then
             git checkout $SAMPLE_OFFICIAL_COMMIT
+            git submodule update --init --recursive
         fi
     fi
 fi

@@ -3,12 +3,12 @@
 # Preliminary Result Time calculator
 #   calc_result
 # Author: jtFuruhata
-# Copyright (c) 2021-2025 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2021-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 # Notice: Field names must not contain white spaces.
 #
-year="2025"
+year="2026"
 
 teamsCSV="$ETROBO_ROOT/dist/Teams.csv"
 divisionsCSV="$ETROBO_ROOT/dist/Divisions.csv"
@@ -17,7 +17,7 @@ start_time="`date "+%s"`"
 
 # show usage
 if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
-    echo "usage: calc_result [request <teamID>|serv|ranking </path/to/relayFolder>] [YEAR] [<CLASS>] /path/to/CSV"
+    echo "usage: calc_result [request <teamID>|serv|ranking </path/to/relayFolder>|dev] [YEAR] [<CLASS>] /path/to/CSV"
     echo
     echo "Calcuate preliminary Result Time from a CSV file."
     echo "  env ... set datum to ENVVAR"
@@ -25,8 +25,9 @@ if [ "$1" == "usage" ] || [ "$1" == "--help" ]; then
     echo "  request ... run on server which running at </path/to/relayFolder>, use <teamID> forcely"
     echo "  serv    ... run on server which running at </path/to/relayFolder>"
     echo "  ranking ... run on server with the ranking site at </path/to/relayFolder>"
+    echo "  dev     ... run in development mode, use ranking mode without relay folder"
     echo
-    echo "  YEAR(default:'2024'): specify the year of competition rules"
+    echo "  YEAR(default:'2026'): specify the year of competition rules"
     echo
     echo "  CLASS Options:  (default: 'auto')"
     echo "    auto   ... choose in depending on filename prefix(A|P|E)"
@@ -43,7 +44,7 @@ unset teamID
 unset relayFolder
 unset trigger
 unset lock
-if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ]; then
+if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ] || [ "$1" == "dev" ]; then
     serv="$1"
     shift
     if [ "$serv" == "request" ]; then
@@ -51,7 +52,11 @@ if [ "$1" == "serv" ] || [ "$1" == "ranking" ] || [ "$1" == "request" ]; then
         shift
     fi
     relayFolder="$1"
-    shift
+    if [ "$serv" == "dev" ]; then
+        relayFolder="$(dirname $relayFolder)"
+    else
+        shift
+    fi
 
     requests="$relayFolder/common/Requests.csv"
     destResult="$relayFolder/common/work/results.csv"
@@ -83,12 +88,91 @@ fi
 csv="$1"
 csv_filename="$(basename $csv)"
 
-unset ranking
+#
+# get/set value from/to JSON object
+#
+# json <envvar>.key.to.value [= <value>]
+json () {
+    argv="$1"
+    op="$2"
+    value="$3"
+    envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
+    key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
+    if [ -z "$op" ]; then
+        eval "echo \$$envvar | jq -r $key"
+    elif [ "$op" == "=" ]; then
+        eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
+    fi
+}
+
+# define result JSON object
+unset result
+if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
+   [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
+    result=$(sed 's/#.*//' << 'EOJ'
+    {
+        "No":               "", #  0, former Id
+        "BibId":            "", #  1, former TeamId
+        "CategoryCode":     "", #  2
+        "CourseKubun":      "", #  3
+        "RunTime":          "", #  4
+        "ResultTime":       "", #  5
+        "StatusCode":       "", #  6
+        "HalfwayGate1":     "", #  7
+        "HalfwayGate2":     "", #  8
+        "CarryBlocks":      "", #  9
+        "PassedSlalom":     "", # 10
+        "AvoidObstacles":   "", # 11
+        "GarageIn":         "", # 12
+        "BringInBlock":     "", # 13
+        "MovedBlocks":      "", # 14
+        "MovedPowerSpots":  "", # 15
+        "MovedCenter":      "", # 16
+        "MovedBingo":       "", # 17
+        "MovedPowerBingo":  "", # 18
+        "CarryBlockMove":   "", # 19
+        "SmartCarry":       "", # 20
+        "GoalAreaStop":     ""  # 21
+    }
+EOJ
+    )
+elif [ "$year" == "2026" ]; then
+    result=$(sed 's/#.*//' << 'EOJ'
+    {
+        "No":               "", #  0
+        "BibId":            "", #  1
+        "CategoryCode":     "",
+        "CourseKubun":      "",
+        "LapTime":          "", #  4, former RunTime
+        "ResultPoint":      "", #  5, former ResultTime
+        "StatusCode":       "", # 12
+        "HalfwayGate1":     "", #  7
+        "HalfwayGate2":     "", #  8
+        "CarryBlocks":      "", #  9
+        "PassedSlalom":     "", # 10
+        "AvoidObstacles":   "", # 11
+        "GarageIn":         "", # 12
+        "BringInBlock":     "", # 13
+        "MovedBlocks":      "", # 14
+        "MovedPowerSpots":  "", # 15
+        "MovedCenter":      "", # 16
+        "MovedBingo":       "", # 17
+        "MovedPowerBingo":  "", # 18
+        "CarryBlockMove":   "", # 19
+        "SmartCarry":       "", # 20
+        "GoalAreaStop":     ""  # 21
+    }
+EOJ
+    )
+else
+    echo "FATAL ERROR: no competion rules for $year."
+    exit 1
+fi
 
 # get requestID & lookup teamID
 unset requestID
 unset classPrefix
-if [ -n "$serv" ]; then
+if [ -n "$serv" ] && [ "$serv" != "dev" ]; then
     classPrefix=`echo $csv_filename | grep -E '^A_|^P_|^E_|^S_' | awk '{print substr($0,1,1)}'`
     case "$classPrefix" in
         "A" ) class="advanced" ;;
@@ -135,6 +219,10 @@ if [ "$class" == "auto" ]; then
         categoryCode="P"
     elif [[ "$csv_filename" =~ ^E ]];then
         categoryCode="E"
+    elif [[ "$csv_filename" =~ ^L ]];then
+        categoryCode="E"
+    elif [[ "$csv_filename" =~ ^R ]];then
+        categoryCode="E"
     elif [ -n "$teamID" ]; then
         # stringify 'Teams' lookup CSV file to JSON
         # fields=(`cat "$teamsCSV" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
@@ -176,23 +264,6 @@ fi
 ranking[2]="$categoryCode"
 #echo -n "start to calc $year result: $class class: now loading "
 
-#
-# get/set value from/to JSON object
-#
-# json <envvar>.key.to.value [= <value>]
-json () {
-    argv="$1"
-    op="$2"
-    value="$3"
-    envvar="`echo \"$argv\" | sed -E 's/^([^\.]*)\..*$/\1/'`"
-    key="`echo \"$argv\" | sed -E 's/^[^\.]*(\..*)$/\1/'`"
-    if [ -z "$op" ]; then
-        eval "echo \$$envvar | jq -r $key"
-    elif [ "$op" == "=" ]; then
-        eval "$envvar=\"\`echo \$$envvar | jq -c \"$key|=\\\"$value\\\"\"\`\""
-    fi
-}
-
 # stringify a CSV file to JSON
 fields=(`cat "$1" | head -n 1 | sed -E 's/[,\r\n]/\ /g'`)
 mapper=""
@@ -225,8 +296,8 @@ fi
 
 # define competition rules
 if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
-   [ "$year" == "2024" ] || [ "$year" == "2025" ]; then
-    # ETrobocon 2021 and 2022 and 2023 and 2024 and 2025
+   [ "$year" == "2024" ] || [ "$year" == "2025" ] || [ "$year" == "2026" ]; then
+    # ETrobocon 2021 and 2022 and 2023 and 2024 and 2025 and 2026
     #echo -n "and validating on $course course... "
 
     # CSV header for ranking site
@@ -288,73 +359,132 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     fi
 
     # time0; csv header for etrobosim
-    gate1="GATE1"
-    gate2="GATE2"
-    if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
-        gate1="GATE"
-        gate2="LAP"
-    fi
+    if [ "$year" == "2026" ]; then
+        time0='
+        { 
+            "Time": "0",
+            "Counter": "0",
+            "Filename": "",
+            "TIME": "0",
+            "MEASUREMENT_TIME": "0",
+            "RUN_TIME": "0",
+            "GATE1": "0",
+            "GATE2": "0",
+            "GATE3": "0",
+            "GATE4": "0",
+            "GATE5": "0",
+            "LAP": "0",
+            "GARAGE_STOP": "0",
+            "ENTRY_BONUS": "0",
+            "BLOCK_YUKOIDOP": "0",
+            "BLOCK_YUKOIDOC": "0",
+            "BLOCK_BINGOP": "0",
+            "LAP_POLE_TOUCHED": "0",
+            "CARRY_BLOCK_MOVE": "0",
+            "SMART_CARRY": "0",
+            "GOAL_AREA_STOP": "0",
+            "MeasurementMode": "READY",
+            "ShutdownByUdp": "0"
+        }'
+    else
+        gate1="GATE1"
+        gate2="GATE2"
+        if [ "$year" == "2023" ] || [ "$year" == "2024" ]; then
+            gate1="GATE"
+            gate2="LAP"
+        fi
 
-    time0='
-    { 
-        "Time": "0",
-        "Counter": "0",
-        "Filename": "",
-        "TIME": "0",
-        "MEASUREMENT_TIME": "0",
-        "RUN_TIME": "0",
-        "'$gate1'": "0",
-        "'$gate2'": "0",
-        "GOAL": "0",
-        "GARAGE_STOP": "0",
-        "GARAGE_TIME": "0",
-        "SLALOM": "0",
-        "BLOCK_IN_GARAGE": "0",
-        "BLOCK_YUKOIDO": "0",
-        "BLOCK_BINGO": "0",
-        "ENTRY_BONUS": "0",
-        "BLOCK_YUKOIDOP": "0",
-        "BLOCK_YUKOIDOC": "0",
-        "BLOCK_BINGOP": "0",
-        "LAP_POLE_TOUCHED": "0",
-        "CARRY_BLOCK_MOVE": "0",
-        "SMART_CARRY": "0",
-        "GOAL_AREA_STOP": "0",
-        "MeasurementMode": "READY"
-    }'
+        time0='
+        { 
+            "Time": "0",
+            "Counter": "0",
+            "Filename": "",
+            "TIME": "0",
+            "MEASUREMENT_TIME": "0",
+            "RUN_TIME": "0",
+            "'$gate1'": "0",
+            "'$gate2'": "0",
+            "GOAL": "0",
+            "GARAGE_STOP": "0",
+            "GARAGE_TIME": "0",
+            "SLALOM": "0",
+            "BLOCK_IN_GARAGE": "0",
+            "BLOCK_YUKOIDO": "0",
+            "BLOCK_BINGO": "0",
+            "ENTRY_BONUS": "0",
+            "BLOCK_YUKOIDOP": "0",
+            "BLOCK_YUKOIDOC": "0",
+            "BLOCK_BINGOP": "0",
+            "LAP_POLE_TOUCHED": "0",
+            "CARRY_BLOCK_MOVE": "0",
+            "SMART_CARRY": "0",
+            "GOAL_AREA_STOP": "0",
+            "MeasurementMode": "READY"
+        }'
+    fi
     time0="`echo "$time0" | jq -c .`"
 #    start=`echo "$result" | jq '.[]|select(.Counter=="0" and .MeasurementMode=="GO")'`
 #    end=`json result.[$lastIndex]`
 
     # start time validation
     unset status
-    if [ "`json time0.RUN_TIME`" == "`json start.RUN_TIME`" ] \
-    && [ "`json time0.$gate1`" == "`json start.$gate1`" ] \
-    && [ "`json time0.$gate2`" == "`json start.$gate2`" ] \
-    && [ "`json time0.GOAL`" == "`json start.GOAL`" ] \
-    && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
-    && [ "`json time0.GARAGE_TIME`" == "`json start.GARAGE_TIME`" ] \
-    && [ "`json time0.SLALOM`" == "`json start.SLALOM`" ] \
-    && [ "`json time0.BLOCK_IN_GARAGE`" == "`json start.BLOCK_IN_GARAGE`" ] \
-    && [ "`json time0.BLOCK_YUKOIDO`" == "`json start.BLOCK_YUKOIDO`" ] \
-    && [ "`json time0.BLOCK_BINGO`" == "`json start.BLOCK_BINGO`" ] \
-    && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
-    && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
-    && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
-    && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
-    && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ] \
-    && [ "`json time0.CARRY_BLOCK_MOVE`" == "`json start.CARRY_BLOCK_MOVE`" ] \
-    && [ "`json time0.SMART_CARRY`" == "`json start.SMART_CARRY`" ] \
-    && [ "`json time0.GOAL_AREA_STOP`" == "`json start.GOAL_AREA_STOP`" ]; then
-        if [ "`json end.MeasurementMode`" != "END" ]; then
-            status="judgemental retire"
+    if [ "$year" == "2026" ]; then
+        if [ "`json time0.RUN_TIME`" == "`json start.RUN_TIME`" ] \
+        && [ "`json time0.GATE1`" == "`json start.GATE1`" ] \
+        && [ "`json time0.GATE2`" == "`json start.GATE2`" ] \
+        && [ "`json time0.GATE3`" == "`json start.GATE3`" ] \
+        && [ "`json time0.GATE4`" == "`json start.GATE4`" ] \
+        && [ "`json time0.GATE5`" == "`json start.GATE5`" ] \
+        && [ "`json time0.LAP`" == "`json start.LAP`" ] \
+        && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
+        && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
+        && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
+        && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
+        && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
+        && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ] \
+        && [ "`json time0.CARRY_BLOCK_MOVE`" == "`json start.CARRY_BLOCK_MOVE`" ] \
+        && [ "`json time0.SMART_CARRY`" == "`json start.SMART_CARRY`" ] \
+        && [ "`json time0.ShutdownByUdp`" == "`json start.ShutdownByUdp`" ] \
+        && [ "`json time0.GOAL_AREA_STOP`" == "`json start.GOAL_AREA_STOP`" ]; then
+            if [ "`json end.MeasurementMode`" != "END" ]; then
+                status="judgemental retire"
+            else
+                #echo "validated."
+                unset status
+            fi
         else
-            #echo "validated."
-            unset status
+            #echo "validation failed. this race was eliminated."
+            status="eliminated"
         fi
     else
-        #echo "validation failed. this race was eliminated."
-        status="eliminated"
+        if [ "`json time0.RUN_TIME`" == "`json start.RUN_TIME`" ] \
+        && [ "`json time0.$gate1`" == "`json start.$gate1`" ] \
+        && [ "`json time0.$gate2`" == "`json start.$gate2`" ] \
+        && [ "`json time0.GOAL`" == "`json start.GOAL`" ] \
+        && [ "`json time0.GARAGE_STOP`" == "`json start.GARAGE_STOP`" ] \
+        && [ "`json time0.GARAGE_TIME`" == "`json start.GARAGE_TIME`" ] \
+        && [ "`json time0.SLALOM`" == "`json start.SLALOM`" ] \
+        && [ "`json time0.BLOCK_IN_GARAGE`" == "`json start.BLOCK_IN_GARAGE`" ] \
+        && [ "`json time0.BLOCK_YUKOIDO`" == "`json start.BLOCK_YUKOIDO`" ] \
+        && [ "`json time0.BLOCK_BINGO`" == "`json start.BLOCK_BINGO`" ] \
+        && [ "`json time0.ENTRY_BONUS`" == "`json start.ENTRY_BONUS`" ] \
+        && [ "`json time0.BLOCK_YUKOIDOP`" == "`json start.BLOCK_YUKOIDOP`" ] \
+        && [ "`json time0.BLOCK_YUKOIDOC`" == "`json start.BLOCK_YUKOIDOC`" ] \
+        && [ "`json time0.BLOCK_BINGOP`" == "`json start.BLOCK_BINGOP`" ] \
+        && [ "`json time0.LAP_POLE_TOUCHED`" == "`json start.LAP_POLE_TOUCHED`" ] \
+        && [ "`json time0.CARRY_BLOCK_MOVE`" == "`json start.CARRY_BLOCK_MOVE`" ] \
+        && [ "`json time0.SMART_CARRY`" == "`json start.SMART_CARRY`" ] \
+        && [ "`json time0.GOAL_AREA_STOP`" == "`json start.GOAL_AREA_STOP`" ]; then
+            if [ "`json end.MeasurementMode`" != "END" ]; then
+                status="judgemental retire"
+            else
+                #echo "validated."
+                unset status
+            fi
+        else
+            #echo "validation failed. this race was eliminated."
+            status="eliminated"
+        fi
     fi
 
     # calc result time/points
@@ -537,7 +667,7 @@ if [ "$year" == "2021" ] || [ "$year" == "2022" ] || [ "$year" == "2023" ] || \
     fi
 
     # write into CSVs
-    if [ -n "$serv" ]; then
+    if [ -n "$serv" ] && [ "$serv" != "dev" ]; then
         # make header line
         record="${ranking_header[0]}"
         for ((i=1; i<${#ranking_header[@]}; i++)); do

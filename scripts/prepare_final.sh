@@ -3,7 +3,7 @@
 # Postproduction utilities
 #   prepare_final.sh
 # Author: jtFuruhata
-# Copyright (c) 2020-2023 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -608,4 +608,22 @@ elif [ "$1" == "returnResults" ]; then
         fi
     done
     ETroboSimRunner.Relay.sh return "$relayFolder"
+
+#
+# cutReadyState [/path/to/commonFolder]
+#
+# Delete "COUNTDOWN" and "READY" state rows from CSV and remove corresponding video frames
+#
+elif [ "$1" == "cutReadyState" ]; then
+    shift
+    common="$commonFolder"
+    if [ -n "$1" ]; then
+        common="$1"
+    fi
+
+    raceservFolder="$common/raceserv"
+    tmpFolder="$common/tmp"
+    rm -rf "$tmpFolder"
+    mkdir -p "$tmpFolder"
+    
 fi

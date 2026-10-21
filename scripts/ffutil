@@ -3,7 +3,7 @@
 # Multi-platform movie utilities that run with ffmpeg and ImageMagick
 #   ffutil
 # Author: jtFuruhata, morita5840
-# Copyright (c) 2020-2025 ETロボコン実行委員会, Released under the MIT license
+# Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
 
@@ -22,15 +22,15 @@
 ffmpeg_win_root="$ETROBO_USERPROFILE/etrobosim"
 
 # newest version
-ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"  # 8.0.1
-ffmpeg_brew_formulae="ffmpeg"          # 8.0.1
-#im_debian_package="imagemagick"        # 7.1.1
-#im_brew_foumulae="imagemagick"         # 7.1.2
+ffmpeg_win_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"  # 9.0.2
+ffmpeg_brew_formulae="ffmpeg"          # 9.0.2
+im_debian_package="imagemagick"        # 7.1.2 with /usr/bin/convert
+#im_brew_foumulae="imagemagick"         # 7.1.1
 
 # version lock
 #ffmpeg_win_url="https://etrobocon.github.io/etroboEV3/ffmpeg-5.1.1-essentials_build.zip"
 #ffmpeg_brew_formulae="ffmpeg@5"         # 5.1.6
-im_debian_package="imagemagick-6.q16"   # 6.9.12
+#im_debian_package="imagemagick-6.q16"   # 6.9.12
 im_brew_foumulae="imagemagick@6"        # 6.9.13
 
 # show usage
@@ -49,7 +49,9 @@ if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
     echo "ffutil encode [multiplex|demultiplex] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
     echo "      encode a movie file or image files to a movie file"
     echo "ffutil stretch [bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]"
-    echo "      stretch <stretchFrames> frames by last frame"
+    echo "      append <stretchFrames> copies of last frame to the end of the movie"
+    echo "ffutil cut [bitrate <bitrate=2M>] <cutFrames> </path/to/source> </path/to/dest> [<loglevel>]"
+    echo "      cut the first <cutFrames> frames from the movie"
     echo "ffutil mmmux entry|primary|advanced left|right [getfilter] [bitrate <bitrate=2M>] <captureRate> </path/to/source> </path/to/dest> [<loglevel>]"
     echo "      multiplex with MatchMaker movie"
     exit 0
@@ -483,7 +485,7 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             fi
         fi
 
-        # stretch <stretchFrames> frames by last frame
+        # append <stretchFrames> copies of last frame to the end of the movie
         # ffutil stretch [bitrate <bitrate=2M>] <stretchFrames> </path/to/source> </path/to/dest> [<loglevel>]
         if [ "$command" == "stretch" ]; then
             bitrate="2M"
@@ -515,8 +517,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                 $loglevel_opt $loglevel \
                 -f nut - \
             | "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
                 -f nut -i - \
                 -vf tpad=stop=${stretchFrames}:stop_mode=clone \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
@@ -526,8 +526,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 
             # cut out "SHUTDOWN" animation
             "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
                 -ss 00:02:00.001 \
                 -i "$source" \
                 -c:v $ETROBO_ENC_CODEC -b:v 100M \
@@ -537,8 +535,6 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             
             # concat these files
             "$ETROBO_FFMPEG" -y \
-                $ETROBO_ENC_HW_OPT $ETROBO_ENC_HW \
-                $ETROBO_ENC_HWFORMAT_OPT $ETROBO_ENC_HWFORMAT \
                 -i "$file_main" \
                 -i "$file_shutdown" \
                 -filter_complex '[0:v][1:v]concat' \
@@ -549,6 +545,38 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
             
             rm "$filepath/${filebase}_main.$fileext"
             rm "$filepath/${filebase}_shutdown.$fileext"
+        fi
+
+        # cut the first <cutFrames> frames from the movie
+        # ffutil cut [bitrate <bitrate=2M>] <cutFrames> </path/to/source> </path/to/dest> [<loglevel>]
+        if [ "$command" == "cut" ]; then
+            bitrate="2M"
+            if [ "$1" == "bitrate" ]; then
+                bitrate="$2"
+                shift 2
+            fi
+            cutFrames=$1
+            source="`getWinPath "$2" $ETROBO_FFMPEG_OS`"
+            destination="`getWinPath "$3" $ETROBO_FFMPEG_OS`"
+            filepath=`dirname "$3"`
+            filename=`basename "$3"`
+            filebase=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\1/'`
+            fileext=`echo "$filename" | sed -E 's/^(.*)\.(.*)$/\2/'`
+
+            loglevel_opt="-loglevel"
+            loglevel="quiet"
+            if [ -n "$4" ]; then
+                loglevel="$4"
+            fi
+
+            # cut the first <cutFrames> frames from the movie
+            "$ETROBO_FFMPEG" -y \
+                -i "$source" \
+                -c:v $ETROBO_ENC_CODEC -b:v 100M \
+                $loglevel_opt $loglevel \
+                -pix_fmt nv12 \
+                -vf trim=start_frame=${cutFrames},setpts=PTS-STARTPTS,format=nv12 \
+                "$destination"
         fi
         
         # MatchMaker multiplexer

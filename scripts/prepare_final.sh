@@ -215,10 +215,10 @@ elif [ "$1" == "mmmux" ]; then
     combinedIDs=(`ls -1 "$srcDir" | grep '.mp4$' | sed -E 's/^(E[0-9]{3})_.*$/ \1/'`)
     for combinedID in ${combinedIDs[@]}; do
         echo "muxing... $combinedID"
-        ffutil mmmux 2 $destDir/${combinedID}_L.mp4 info
-        ffutil mmmux 2 $destDir/${combinedID}_R.mp4 info
-        ffutil encode multiplex 2 $destDir/${combinedID}_L.mp4 $destDir/results/${combinedID}_L.mp4 info
-        ffutil encode multiplex 2 $destDir/${combinedID}_R.mp4 $destDir/results/${combinedID}_R.mp4 info
+        ffutil mmmux bitrate 8M 2 $destDir/${combinedID}_L.mp4 info
+        ffutil mmmux bitrate 8M 2 $destDir/${combinedID}_R.mp4 info
+        ffutil encode multiplex bitrate 8M 2 $destDir/${combinedID}_L.mp4 $destDir/results/${combinedID}_L.mp4 info
+        ffutil encode multiplex bitrate 8M 2 $destDir/${combinedID}_R.mp4 $destDir/results/${combinedID}_R.mp4 info
     done
 
 #

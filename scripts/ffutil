@@ -419,10 +419,10 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
                     -c:v $ETROBO_ENC_CODEC -b:v $bitrate \
                     -filter_complex " \
                         color=s=1280x800:c=black:r=$frameRate [base]; \
-                        [0:v] scale=640x400 [upperleft]; \
-                        [1:v] scale=640x400 [upperright]; \
-                        [2:v] scale=640x400 [lowerleft]; \
-                        [3:v] scale=640x400 [lowerright]; \
+                        [0:v] scale=640x400:flags=lanczos,unsharp=5:5:0.3:3:3:0.0 [upperleft]; \
+                        [1:v] scale=640x400:flags=lanczos,unsharp=5:5:0.3:3:3:0.0 [upperright]; \
+                        [2:v] scale=640x400:flags=lanczos,unsharp=5:5:0.3:3:3:0.0 [lowerleft]; \
+                        [3:v] scale=640x400:flags=lanczos,unsharp=5:5:0.3:3:3:0.0 [lowerright]; \
                         [base][upperleft] overlay=shortest=1:x=0 [tmp1]; \
                         [tmp1][upperright] overlay=shortest=1:x=640 [tmp2]; \
                         [tmp2][lowerleft] overlay=shortest=1:y=400 [tmp3]; \

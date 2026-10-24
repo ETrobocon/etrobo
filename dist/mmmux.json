@@ -4,12 +4,12 @@
             "MatchMaker multiplexing settings using from ffutil",
             "  mmmux.json",
             "Author: jtFuruhata",
-            "Copyright (c) 2021-2025 ETロボコン実行委員会, Released under the MIT license",
+            "Copyright (c) 2021-2026 ETロボコン実行委員会, Released under the MIT license",
             "See LICENSE"
         ],
-        "version":                  "2025.entry.0",
+        "version":                  "2026.entry.0",
         "matchMakerScreenWidth":    "1024",
-        "matchMakerScreenHeight":   "768",
+        "matchMakerScreenHeight":   "770",
         "matchMakerFrameRate":      "30",
         "etrobosim": {
             "width":    "640",
@@ -52,7 +52,7 @@
             },
             "teamName": {
                 "width":    "433",
-                "height":   "48",
+                "height":   "59",
                 "x":        "14",
                 "y":        "118",
                 "toX":      "72",
@@ -61,7 +61,7 @@
             },
             "teamID": {
                 "width":    "40",
-                "height":   "14",
+                "height":   "16",
                 "x":        "22",
                 "y":        "88",
                 "toX":      "508",
@@ -106,68 +106,59 @@
             }
         },
         "entry": {
-            "midgate": {
-                "width":    "112",
-                "height":   "22",
+            "checkoint": {
+                "width":    "340",
+                "height":   "49",
                 "x":        "5",
-                "y":        "308",
+                "y":        "333",
                 "toX":      "70",
                 "toY":      "350",  
-                "scale":    "1.0"
+                "scale":    "0.5"
             },
             "lapgate": {
-                "width":    "107",
-                "height":   "22",
+                "width":    "190",
+                "height":   "49",
                 "x":        "5",
-                "y":        "330",
+                "y":        "383",
                 "toX":      "70",
                 "toY":      "325",  
-                "scale":    "1.0"
-            },
-            "goalgate": {
-                "width":    "41",
-                "height":   "22",
-                "x":        "5",
-                "y":        "353",
-                "toX":      "70",
-                "toY":      "60",  
-                "scale":    "1.0"
-            },
-            "stopAfterGoal": {
-                "width":    "135",
-                "height":   "22",
-                "x":        "5",
-                "y":        "376",
-                "toX":      "70",
-                "toY":      "85",  
-                "scale":    "1.0"
-            },
-            "smartcarry": {
-                "width":    "104",
-                "height":   "22",
-                "x":        "5",
-                "y":        "422",
-                "toX":      "30",
-                "toY":      "160",  
-                "scale":    "1.0"
-            },
-            "pointLandingSC": {
-                "width":    "223",
-                "height":   "22",
-                "x":        "60",
-                "y":        "469",
-                "toX":      "70",
-                "toY":      "185",  
-                "scale":    "1.0"
+                "scale":    "0.5"
             },
             "moveCarryBlock": {
-                "width":    "140",
-                "height":   "22",
-                "x":        "60",
-                "y":        "514",
+                "width":    "250",
+                "height":   "49",
+                "x":        "5",
+                "y":        "433",
                 "toX":      "70",
                 "toY":      "210",  
-                "scale":    "1.0"
+                "scale":    "0.5"
+            },
+            "smartcarry": {
+                "width":    "467",
+                "height":   "50",
+                "x":        "5",
+                "y":        "483",
+                "toX":      "30",
+                "toY":      "160",  
+                "scale":    "0.5"
+            },
+            "judgeLandingPoint": {
+                "width":    "210",
+                "height":   "49",
+                "x":        "50",
+                "y":        "533",
+                "toX":      "70",
+                "toY":      "185",  
+                "scale":    "0.5"
+            },
+            "garageStop": {
+                "width":    "160",
+                "height":   "50",
+                "x":        "5",
+                "y":        "583",
+                "toX":      "70",
+                "toY":      "85",  
+                "scale":    "0.5"
             }
         },
         "primary": {
@@ -287,7 +278,7 @@
             },
             "teamName": {
                 "width":    "433",
-                "height":   "48",
+                "height":   "59",
                 "x":        "14",
                 "y":        "118",
                 "toX":      "72",
@@ -296,7 +287,7 @@
             },
             "teamID": {
                 "width":    "40",
-                "height":   "14",
+                "height":   "16",
                 "x":        "22",
                 "y":        "88",
                 "toX":      "508",
@@ -341,68 +332,59 @@
             }
         },
         "entry": {
-            "midgate": {
-                "width":    "112",
-                "height":   "22",
+            "checkoint": {
+                "width":    "340",
+                "height":   "49",
                 "x":        "517",
-                "y":        "308",
-                "toX":      "458",
+                "y":        "333",
+                "toX":      "70",
                 "toY":      "350",  
-                "scale":    "1.0"
+                "scale":    "0.5"
             },
             "lapgate": {
-                "width":    "107",
-                "height":   "22",
+                "width":    "190",
+                "height":   "49",
                 "x":        "517",
-                "y":        "330",
-                "toX":      "463",
+                "y":        "383",
+                "toX":      "70",
                 "toY":      "325",  
-                "scale":    "1.0"
-            },
-            "goalgate": {
-                "width":    "41",
-                "height":   "22",
-                "x":        "517",
-                "y":        "353",
-                "toX":      "529",
-                "toY":      "60",  
-                "scale":    "1.0"
-            },
-            "stopAfterGoal": {
-                "width":    "135",
-                "height":   "22",
-                "x":        "517",
-                "y":        "376",
-                "toX":      "435",
-                "toY":      "85",  
-                "scale":    "1.0"
-            },
-            "smartcarry": {
-                "width":    "104",
-                "height":   "22",
-                "x":        "517",
-                "y":        "422",
-                "toX":      "506",
-                "toY":      "160",  
-                "scale":    "1.0"
-            },
-            "pointLandingSC": {
-                "width":    "223",
-                "height":   "22",
-                "x":        "572",
-                "y":        "469",
-                "toX":      "347",
-                "toY":      "185",  
-                "scale":    "1.0"
+                "scale":    "0.5"
             },
             "moveCarryBlock": {
-                "width":    "140",
-                "height":   "22",
-                "x":        "572",
-                "y":        "514",
-                "toX":      "430",
+                "width":    "250",
+                "height":   "49",
+                "x":        "517",
+                "y":        "433",
+                "toX":      "70",
                 "toY":      "210",  
-                "scale":    "1.0"
+                "scale":    "0.5"
+            },
+            "smartcarry": {
+                "width":    "467",
+                "height":   "50",
+                "x":        "517",
+                "y":        "483",
+                "toX":      "30",
+                "toY":      "160",  
+                "scale":    "0.5"
+            },
+            "judgeLandingPoint": {
+                "width":    "210",
+                "height":   "49",
+                "x":        "562",
+                "y":        "533",
+                "toX":      "70",
+                "toY":      "185",  
+                "scale":    "0.5"
+            },
+            "garageStop": {
+                "width":    "160",
+                "height":   "50",
+                "x":        "517",
+                "y":        "583",
+                "toX":      "70",
+                "toY":      "85",  
+                "scale":    "0.5"
             }
         },
         "primary": {

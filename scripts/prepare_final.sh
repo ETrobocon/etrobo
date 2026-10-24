@@ -622,8 +622,64 @@ elif [ "$1" == "cutReadyState" ]; then
     fi
 
     raceservFolder="$common/raceserv"
-    tmpFolder="$common/tmp"
-    rm -rf "$tmpFolder"
-    mkdir -p "$tmpFolder"
-    
+    raceserv_orgFolder="${raceservFolder}_org"
+    if [ ! -d "$raceserv_orgFolder" ]; then
+        echo "backup raceserv folder to ${raceserv_orgFolder}"
+        mv "$raceservFolder" "$raceserv_orgFolder"
+    fi
+
+    if [ -d "$raceservFolder" ]; then
+        echo "raceserv folder already exists, make sure you have backed up the original raceserv folder."
+        echo "delete it? (Y/n)"
+        read answer
+        if [ "$answer" != "n" ]; then
+            rm -rf "$raceservFolder"
+        else
+            echo "aborted."
+            exit 1
+        fi
+    fi
+    mkdir -p "$raceservFolder"
+
+    matchmaker_csvFolder="$common/matchmaker/csv"
+    ls -1 "$matchmaker_csvFolder" | grep -E '.*\.csv$' \
+    | while read csvFile; do
+        combinedID=`echo $csvFile | sed -E 's/^(.*)\.csv$/\1/'`
+        frames=$(awk -F, '
+            NR == 1 {
+                for (i = 1; i <= NF; i++) {
+                    gsub(/["\r]/, "", $i)
+                    gsub(/^[ \t]+|[ \t]+$/, "", $i)
+                    if ($i == "Counter") counterCol = i
+                    if ($i == "MeasurementMode") modeCol = i
+                }
+                next
+            }
+            counterCol && modeCol {
+                mode = $modeCol
+                counter = $counterCol
+                gsub(/["\r]/, "", mode)
+                gsub(/["\r]/, "", counter)
+                gsub(/^[ \t]+|[ \t]+$/, "", mode)
+                gsub(/^[ \t]+|[ \t]+$/, "", counter)
+                if (mode == "GO" && previousMode != "GO") {
+                    print counter
+                    exit
+                }
+                previousMode = mode
+            }
+        ' "$matchmaker_csvFolder/$csvFile")
+
+        if [ -z "$frames" ]; then
+            echo "*** [ no GO state found in $csvFile, skipping. ] ***"
+        else
+            echo "*** [ cutting $frames frames from $combinedID ] ***"
+            # cut the first $frames frames from the video files
+            ffutil cut $frames "$raceserv_orgFolder/${combinedID}.mp4" "$raceservFolder/${combinedID}.mp4" info </dev/null
+            ffutil cut $frames "$raceserv_orgFolder/${combinedID}_1.mp4" "$raceservFolder/${combinedID}_1.mp4" info </dev/null
+            ffutil cut $frames "$raceserv_orgFolder/${combinedID}_2.mp4" "$raceservFolder/${combinedID}_2.mp4" info </dev/null
+            ffutil cut $frames "$raceserv_orgFolder/${combinedID}_3.mp4" "$raceservFolder/${combinedID}_3.mp4" info </dev/null
+            ffutil cut $frames "$raceserv_orgFolder/${combinedID}_4.mp4" "$raceservFolder/${combinedID}_4.mp4" info </dev/null
+        fi
+    done
 fi

@@ -792,8 +792,8 @@ if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
 #                    fc="${fc}color=c=white:s=${width}x${height}:r=$frameRate[${mark}BG];"
 #                    fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.25:0.1[${mark}Key];"
 #                    fc="${fc}[${mark}BG][${mark}Key]overlay=shortest=1,colorkey=white:0.01:0[$mark];"
-                    fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.01:0.0[${mark}];"
-                    fc="${fc}[body][$mark]overlay=shortest=1:x=$toX:y=$toY$scale[body];"
+                    fc="${fc}[${mark}Diff]crop=$width:$height:$x:$y,colorkey=black:0.01:0.0$scale[${mark}];"
+                    fc="${fc}[body][$mark]overlay=shortest=1:x=$toX:y=$toY[body];"
                 done
                 width=$(json global.etrobosim.width)
                 height=$(json global.etrobosim.height)

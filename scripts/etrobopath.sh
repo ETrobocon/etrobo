@@ -24,11 +24,18 @@ else
     fi
 
     export ETROBO_PATH_ORG="$PATH"
+    unset scripts_path
+    if [ -d "$ETROBO_ADDON_SCRIPTS" ]; then
+        scripts_path=":$ETROBO_ADDON_SCRIPTS"
+    else
+        scripts_path=""
+    fi
+    scripts_path="$ETROBO_SCRIPTS${scripts_path}"
     unset gcc_path
     if [ "$ETROBO_ENV_TARGET" == "simulator" ]; then
-        gcc_path="$ETROBO_ATHRILL_GCC/bin:$ETROBO_TARGET_GCC/bin"
+        gcc_path="$ETROBO_ATHRILL_GCC/bin:$ETROBO_TARGET_GCC/bin:"
     else
-        gcc_path="$ETROBO_TARGET_GCC/bin:$ETROBO_ATHRILL_GCC/bin"
+        gcc_path="$ETROBO_TARGET_GCC/bin:$ETROBO_ATHRILL_GCC/bin:"
     fi
     unset spikert_path
     if [ "$ETROBO_ENV_MODE" == "SPIKE-RT" ]; then
@@ -36,9 +43,11 @@ else
         if [ "$ETROBO_OS" == "win" ]; then
             usbipd_path="$(wslpath "$(powershell.exe -Command '[System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")' | tr -d '\r' | tr ';' '\n' | grep -i "usbipd")" | sed 's/\/*$/:/' | sed 's/^.$//')"
         fi
-        spikert_path="${usbipd_path}$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin:~/.local/bin"
+        spikert_path="${usbipd_path}$ETROBO_SPIKE_RT_TOOLS/cmake/bin:$ETROBO_SPIKE_RT_TOOLS/qemu/bin:~/.local/bin:"
+    else
+        spikert_path=":"
     fi
-    export PATH=".:$ETROBO_SCRIPTS:$gcc_path:$spikert_path:$PATH"
+    export PATH=".:$scripts_path:{$gcc_path}${spikert_path}$PATH"
     if [ "$ETROBO_OS" == "win" ]; then
         if [ -n "$ETROBO_MODE_CUI" ]; then
             export PATH="$PATH:/mnt/c/Windows:/mnt/c/Windows/System32:/mnt/c/Windows/System32/wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH"

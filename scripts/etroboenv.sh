@@ -81,6 +81,8 @@ if [ "$1" = "unset" ]; then
     unset ETROBO_ENV_TARGET
     unset ETROBO_ENV_VER
     unset ETROBO_SCRIPTS
+    unset ETROBO_ADDON
+    unset ETROBO_ADDON_SCRIPTS
     unset ETROBO_TARGET_GCC
     unset ETROBO_TARGET_GCC_VER
     unset ETROBO_ATHRILL_GCC
@@ -113,6 +115,8 @@ else
         if [ ! -f "$ETROBO_ROOT/disable" ]; then
             export ETROBO_ENV="available"
             export ETROBO_SCRIPTS="$ETROBO_ROOT/scripts"
+            export ETROBO_ADDON="$ETROBO_ROOT/addon"
+            export ETROBO_ADDON_SCRIPTS="$ETROBO_ADDON/scripts"
             export ETROBO_ATHRILL_GCC="$ETROBO_ROOT/athrill-gcc-package/usr/local/athrill-gcc"
             export ETROBO_EV3RT_VER=$ver
             export ETROBO_EV3RT_KERNEL="$kernel"

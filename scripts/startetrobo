@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-echo '-----------------'
-echo ' startetrobo 4.1 - etrobo all-in-one package installer/invoker'
-echo '-----------------'
+echo '------------------'
+echo ' startetrobo 5.0 - etrobo all-in-one package installer/invoker'
+echo '------------------'
 # Author: jtFuruhata
 # Copyright (c) 2020-2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
@@ -571,6 +571,9 @@ if [ -z "$ETROBO_ENV" ]; then
     . "$ETROBO_ROOT/scripts/etroboenv.sh" silent
 fi
 if [ "$ETROBO_ENV" = "available" ]; then
+    if [ -d "$ETROBO_ADDON" ]; then
+        . addonman env
+    fi
     if [ -f ffutil_autoload ]; then
         . ffutil env
     fi

@@ -3,6 +3,11 @@
 !/LICENSE
 !/README.md
 !/proxy-whitelist-domains.txt
+!/addon/
+/addon/*
+!/addon/scripts/
+/addon/scripts/*
+!/addon/scripts/addonman
 !/scripts/
 /scripts/cygpath
 /scripts/wineconsole

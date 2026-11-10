@@ -47,7 +47,7 @@ else
     else
         spikert_path=":"
     fi
-    export PATH=".:$scripts_path:{$gcc_path}${spikert_path}$PATH"
+    export PATH=".:$scripts_path:${gcc_path}${spikert_path}$PATH"
     if [ "$ETROBO_OS" == "win" ]; then
         if [ -n "$ETROBO_MODE_CUI" ]; then
             export PATH="$PATH:/mnt/c/Windows:/mnt/c/Windows/System32:/mnt/c/Windows/System32/wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH"

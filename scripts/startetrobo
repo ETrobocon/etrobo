@@ -572,7 +572,7 @@ if [ -z "$ETROBO_ENV" ]; then
 fi
 if [ "$ETROBO_ENV" = "available" ]; then
     if [ -d "$ETROBO_ADDON" ]; then
-        . addonman env
+        addonman list
     fi
     if [ -f ffutil_autoload ]; then
         . ffutil env

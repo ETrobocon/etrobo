@@ -5,7 +5,93 @@
 # Copyright (c) 2026 ETロボコン実行委員会, Released under the MIT license
 # See LICENSE
 #
+ver="Ver.2026-11-10.a"
 
+# show usage
+if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
+    echo "usage: addonman <command> [<addon_name>|<addon_url>] [<params> ...]"
+    echo
+    echo "commands:"
+    echo "  [list]       (default) list installed addons"
+    echo "  open <addon_name>      open a new window of VSCode on <addon_name> addon directory"
+    echo "  install <addon_url>    install addon from <addon_url>"
+    echo "  uninstall <addon_name> uninstall <addon_name>"
+    echo "  update [<addon_name>]  update installed addon(s),"
+    echo "                         if <addon_name> is not specified, update all addons"
+    echo "  version                show version of addonman"
+    exit 0
+# show version
+elif [ "$1" == "--version" ] || [ "$1" == "version" ] || [ "$1" == "ver" ]; then
+    echo "$ver"
+    exit 0
+fi
+
+# command recognition and show splash
+unset env
+unset install
+unset list
+if [ "$1" != "env" ] && [ "$1" != "unset" ]; then
+    echo "----------"
+    echo " addonman - etrobo environment addon manager"
+    echo "----------    $ver"
+    if [ "$1" == "install" ] || [ "$1" == "uninstall" ] || [ "$1" == "update" ]; then
+        install="$1"
+    elif [ "$1" == "open" ]; then
+        list="open"
+    else
+        list="list"
+    fi
+else
+    env="$1"
+fi
+
+# install new addon
+if [ "$install" == "install" ]; then
+    if [ -z "$2" ]; then
+        echo "Error: addon URL is not specified."
+        exit 1
+    fi
+    addon_url="$2"
+    addon_name="$(basename "$addon_url" .git)"
+    if [ -d "$ETROBO_ADDON/$addon_name" ]; then
+        echo "Error: addon '$addon_name' is already installed."
+        exit 1
+    fi
+    echo "Installing addon '$addon_name' from $addon_url ..."
+    git clone "$addon_url" "$ETROBO_ADDON/$addon_name"
+    if [ $? -ne 0 ]; then
+        echo "Error: failed to clone addon from $addon_url"
+        exit 1
+    else
+        if [ ! -f "$ETROBO_ADDON/$addon_name/scripts/$addon_name" ]; then
+            echo "Error: addon '$addon_name' does not contain a valid script."
+            rm -rf "$ETROBO_ADDON/$addon_name"
+            exit 1
+        fi
+        chmod +x "$ETROBO_ADDON/$addon_name/scripts/$addon_name"
+        ln -s "$ETROBO_ADDON/$addon_name/scripts/$addon_name" "$ETROBO_ADDON_SCRIPTS/$addon_name"
+        echo "Addon installed successfully from $addon_url"
+    fi
+fi
+
+# uninstall addon
+if [ "$install" == "uninstall" ]; then
+    if [ -z "$2" ]; then
+        echo "Error: addon name is not specified."
+        exit 1
+    fi
+    addon_name="$2"
+    if [ ! -d "$ETROBO_ADDON/$addon_name" ]; then
+        echo "Error: addon '$addon_name' is not installed."
+        exit 1
+    fi
+    echo "Uninstalling addon '$addon_name' ..."
+    rm -rf "$ETROBO_ADDON/$addon_name"
+    rm -f "$ETROBO_ADDON_SCRIPTS/$addon_name"
+    echo "Addon '$addon_name' uninstalled successfully."
+fi
+
+# detect installed addons
 addons=()
 if [ -d "$ETROBO_ADDON" ]; then
     for addon_dir in "$ETROBO_ADDON"/*/; do
@@ -18,14 +104,91 @@ if [ -d "$ETROBO_ADDON" ]; then
     done
 fi
 
-echo "----------"
-echo " addonman - etrobo environment addon manager"
-echo "----------"
-if [ ${#addons[@]} -eq 0 ]; then
-    echo "  No addons found."
-else
-    echo "  Available addons:"
+# open addon directory in VSCode
+if [ "$list" == "open" ]; then
+    if [ -z "$2" ]; then
+        echo "Error: addon name is not specified."
+        exit 1
+    fi
+    addon_name="$2"
+    if [ ! -d "$ETROBO_ADDON/$addon_name" ]; then
+        echo "Error: addon '$addon_name' is not installed."
+        exit 1
+    fi
+    addon_path="$ETROBO_ADDON/$addon_name"
+    workspace_file="$addon_path/$addon_name.code-workspace"
+    if [ -f "$workspace_file" ]; then
+        addon_path="$workspace_file"
+    fi
+    PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" code "$addon_path"
+fi
+
+# update addon
+if [ "$install" == "update" ]; then
+    if [ -n "$2" ]; then
+        addon_name="$2"
+        if [ ! -d "$ETROBO_ADDON/$addon_name" ]; then
+            echo "Error: addon '$addon_name' is not installed."
+            exit 1
+        fi
+        echo "Updating addon '$addon_name' ..."
+        cd "$ETROBO_ADDON/$addon_name"
+        git pull --ff-only
+        if [ $? -ne 0 ]; then
+            echo "Error: failed to update addon '$addon_name'."
+            exit 1
+        else
+            chmod +x "$ETROBO_ADDON/$addon_name/scripts/$addon_name"
+            if [ ! -L "$ETROBO_ADDON_SCRIPTS/$addon_name" ]; then
+                ln -s "$ETROBO_ADDON/$addon_name/scripts/$addon_name" "$ETROBO_ADDON_SCRIPTS/$addon_name"
+            fi
+            echo "Addon '$addon_name' updated successfully."
+        fi
+    else
+        for addon_name in "${addons[@]}"; do
+            echo "Updating addon '$addon_name' ..."
+            cd "$ETROBO_ADDON/$addon_name"
+            git pull --ff-only
+            if [ $? -ne 0 ]; then
+                echo "Error: failed to update addon '$addon_name'."
+                exit 1
+            else
+                chmod +x "$ETROBO_ADDON/$addon_name/scripts/$addon_name"
+                if [ ! -L "$ETROBO_ADDON_SCRIPTS/$addon_name" ]; then
+                    ln -s "$ETROBO_ADDON/$addon_name/scripts/$addon_name" "$ETROBO_ADDON_SCRIPTS/$addon_name"
+                fi
+                echo "Addon '$addon_name' updated successfully."
+            fi
+        done
+    fi
+fi
+
+if [ "$env" == "unset" ] || [ "$install" == "uninstall" ]; then
+    # unset envvars
+    unset ETROBO_ADDONS
     for addon in "${addons[@]}"; do
-        echo "    - $addon"
+        . "$addon" unset
     done
+fi
+if [ "$env" != "unset" ]; then
+    # set envvars
+    export ETROBO_ADDONS="${addons[*]}"
+    for addon in "${addons[@]}"; do
+        . "$addon" env
+    done
+fi
+
+if [ "$list" == "list" ]; then
+    if [ ${#addons[@]} -eq 0 ]; then
+        echo "  No addons found."
+    else
+        echo "  Installed addons:"
+        for addon in "${addons[@]}"; do
+            if [ -L "$ETROBO_ADDON_SCRIPTS/$addon" ]; then
+                echo "    - $addon (available)"
+            else
+                echo "    - $addon (wrapper script not found)"
+            fi
+        done
+    fi
 fi

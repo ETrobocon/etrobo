@@ -72,6 +72,7 @@ if [ "$targetWorkspace" != "$currentWorkspace" ] && [ -d "$targetWorkspace" ]; t
 fi
 
 if [ "$1" = "unset" ]; then
+    . addonman unset
     . sim unset
     . etrobopkg unset
     . spike unset
@@ -197,6 +198,7 @@ else
             . "$ETROBO_SCRIPTS/etrobopkg" env
             . "$ETROBO_SCRIPTS/spike" env
             . "$ETROBO_SCRIPTS/etrobopath.sh"
+            . "$ETROBO_ADDON_SCRIPTS/addonman" env
 
             if [ "$BEERHALL_INVOKER" != "booting" ] && [ -z "$quit" ]; then
                 echo

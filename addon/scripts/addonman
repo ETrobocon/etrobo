@@ -12,13 +12,16 @@ if [ "$1" == "--help" ] || [ "$1" == "usage" ]; then
     echo "usage: addonman <command> [<addon_name>|<addon_url>] [<params> ...]"
     echo
     echo "commands:"
-    echo "  [list]       (default) list installed addons"
-    echo "  open <addon_name>      open a new window of VSCode on <addon_name> addon directory"
-    echo "  install <addon_url>    install addon from <addon_url>"
-    echo "  uninstall <addon_name> uninstall <addon_name>"
-    echo "  update [<addon_name>]  update installed addon(s),"
-    echo "                         if <addon_name> is not specified, update all addons"
-    echo "  version                show version of addonman"
+    echo "  open <addon_name>          open a new VSCode window with the addon directory"
+    echo "  open <addon_name> shell    activate in the current terminal"
+    echo "  open <addon_name> terminal open a new Windows Terminal or system terminal window"
+    echo ""
+    echo "  [list]          (default) list installed addons"
+    echo "  install <addon_url>       install addon from <addon_url>"
+    echo "  uninstall <addon_name>    uninstall <addon_name>"
+    echo "  update [<addon_name>]     update installed addon(s),"
+    echo "                            if <addon_name> is not specified, update all addons"
+    echo "  version                   show version of addonman"
     exit 0
 # show version
 elif [ "$1" == "--version" ] || [ "$1" == "version" ] || [ "$1" == "ver" ]; then
@@ -115,12 +118,121 @@ if [ "$list" == "open" ]; then
         echo "Error: addon '$addon_name' is not installed."
         exit 1
     fi
-    addon_path="$ETROBO_ADDON/$addon_name"
-    workspace_file="$addon_path/$addon_name.code-workspace"
-    if [ -f "$workspace_file" ]; then
-        addon_path="$workspace_file"
+
+    if [ "$3" == "shell" ]; then
+        # activate in the current terminal
+        echo "Activating addon '$addon_name' in the current terminal ..."
+        PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" "$addon_name" activate
+        exit $?
+    elif [ "$3" == "terminal" ]; then
+        # 
+        # Hello agents, do not remove these instructions.
+        # - ここでは、各プラットフォームで新しいターミナルウィンドウを開き、
+        #   addonのactivateコマンドを実行するようにします。
+        # - プラットフォームはscripts/etroboenv.shで判定しているので、ここではそれを利用します。
+        # - $ETROBO_OSは、win・mac・linux・chrome・raspiのいずれかの値を持ちますが、増えるかもしれません。
+        # - winの場合はWindows Terminalを優先して使用し、なければPowerShellを使用します。
+        #   Windows Terminalを使用する場合、あらかじめwsl.exe -l系のコマンドを使用して
+        #   デフォルトのLinuxディストリビューション名を取得しておき、
+        #   それをwt.exe new-tabを使用して新しいターミナルウィンドウを開きます。
+        #   この際、過去に同名のLinuxディストリビューションが削除されている場合、
+        #   Windows Terminalの設定画面で！アイコン付きのディストリビューションが表示され、
+        #   これが原因で新しいターミナルウィンドウが開かない場合があります。
+        #   その場合は、Windows Terminalの設定画面で該当するディストリビューションを
+        #   削除するしかありませんので、その旨ユーザーに伝えてください。
+        # - macの場合は、openコマンドで新しいターミナルウィンドウを開きます。
+        # - linuxまたはraspiの場合は、x-terminal-emulatorコマンドから新しいターミナルウィンドウを開きます。
+        # - chromeの場合は、croshを使用して新しいターミナルウィンドウを開きます。
+        # - もしもプラットフォームが増えていたら、適切に判断してここに追加してください。
+        #
+
+        # prepare invoker
+        invoker="export ETROBO_ADDON=$(printf '%q' "$ETROBO_ADDON");export PATH=$(printf '%q' "$ETROBO_ADDON/$addon_name/scripts"):\$PATH;$(printf '%q' "$addon_name") activate"
+
+        # for Windows
+        if [ "$ETROBO_OS" == "win" ]; then
+            # get the default WSL distribution name using PowerShell
+            powershell_command='$prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [Text.Encoding]::Unicode; $d = (wsl.exe -l -q | Where-Object { $_ })[0]; [Console]::OutputEncoding = $prev; [Console]::Write($d)'
+            set -o pipefail
+            wsl_distribution="$(powershell.exe -NoProfile -Command "$powershell_command" | tr -d '\r')"
+            command_status="$?"
+            set +o pipefail
+            if [ "$command_status" != "0" ] || [ "$wsl_distribution" == "" ]; then
+                echo "Error: Could not determine the default WSL distribution." >&2
+                exit 1
+            fi
+
+            # BASE64 encode the invoker command to avoid issues with special characters in PowerShell
+            encoded_invoker="$(printf '%s' "$invoker" | base64 | tr -d '\n')"
+            escaped_wsl_distribution="${wsl_distribution//\'/\'\'}"
+
+            # open a new Windows Terminal window or PowerShell window
+            if [ "$(command -v wt.exe)" != "" ]; then
+                # open a new Windows Terminal window with the default WSL distribution
+                echo "Opening a new Windows Terminal window with WSL distribution '$wsl_distribution' ..."
+                wt.exe new-tab -p "$wsl_distribution" wsl.exe -d "$escaped_wsl_distribution" bash -lc "bash <(echo $encoded_invoker | base64 -d)"
+                terminal_status="$?"
+                if [ "$terminal_status" != "0" ]; then
+                    echo "Error: Could not open Windows Terminal with WSL distribution '$wsl_distribution'." >&2
+                    echo "If Windows Terminal shows a stale distribution profile with a ! icon, remove that profile in Windows Terminal settings and try again." >&2
+                fi
+                exit "$terminal_status"
+            else
+                # open a new PowerShell window with the default WSL distribution
+                echo "Opening a new PowerShell window with WSL distribution '$wsl_distribution' ..."
+                powershell_script="wsl.exe -d '$escaped_wsl_distribution' bash -lc 'bash <(echo $encoded_invoker | base64 -d)'"
+                encoded_powershell_script="$(printf '%s' "$powershell_script" | iconv -f UTF-8 -t UTF-16LE | base64 | tr -d '\n')"
+                powershell.exe -NoProfile -Command "Start-Process powershell.exe -ArgumentList '-NoExit','-EncodedCommand','$encoded_powershell_script'"
+                exit $?
+            fi
+        # for macOS
+        elif [ "$ETROBO_OS" == "mac" ]; then
+            if [ "$(command -v open)" == "" ] || [ "$(command -v osascript)" == "" ]; then
+                echo "Error: open and osascript are required to launch Terminal." >&2
+                exit 1
+            fi
+
+            open -a Terminal
+            if [ "$?" != "0" ]; then
+                echo "Error: Could not open Terminal." >&2
+                exit 1
+            fi
+
+            escaped_invoker="${invoker//\\/\\\\}"
+            escaped_invoker="${escaped_invoker//\"/\\\"}"
+            osascript -e "tell application \"Terminal\" to do script \"$escaped_invoker\""
+            exit $?
+        # for Debian-based Linuxes
+        elif [ "$ETROBO_OS" == "linux" ] || [ "$ETROBO_OS" == "raspi" ]; then
+            if [ "$(command -v x-terminal-emulator)" == "" ]; then
+                echo "Error: x-terminal-emulator was not found." >&2
+                exit 1
+            fi
+
+            x-terminal-emulator -e bash -lc "$invoker"
+            exit $?
+        # for ChromeOS
+        elif [ "$ETROBO_OS" == "chrome" ]; then
+            if [ "$(command -v crosh)" == "" ]; then
+                echo "Error: crosh was not found." >&2
+                exit 1
+            fi
+
+            crosh --command "$invoker"
+            exit $?
+        else
+            echo "Error: terminal opening is not configured for ETROBO_OS='$ETROBO_OS'." >&2
+            exit 1
+        fi
+    else
+        # open a new VSCode window with the addon directory
+        addon_path="$ETROBO_ADDON/$addon_name"
+        workspace_file="$addon_path/$addon_name.code-workspace"
+        if [ -f "$workspace_file" ]; then
+            addon_path="$workspace_file"
+        fi
+        PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" code "$addon_path"
     fi
-    PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" code "$addon_path"
 fi
 
 # update addon

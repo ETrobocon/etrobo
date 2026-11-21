@@ -122,7 +122,7 @@ if [ "$list" == "open" ]; then
     if [ "$3" == "shell" ]; then
         # activate in the current terminal
         echo "Activating addon '$addon_name' in the current terminal ..."
-        PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" "$addon_name" activate
+        ETROBO_ADDON_ACTIVATION_SOURCE=addonman PATH="$ETROBO_ADDON/$addon_name/scripts:$PATH" "$addon_name" activate
         exit $?
     elif [ "$3" == "terminal" ]; then
         # 
@@ -147,7 +147,7 @@ if [ "$list" == "open" ]; then
         #
 
         # prepare invoker
-        invoker="export ETROBO_ADDON=$(printf '%q' "$ETROBO_ADDON");export PATH=$(printf '%q' "$ETROBO_ADDON/$addon_name/scripts"):\$PATH;$(printf '%q' "$addon_name") activate"
+        invoker="export ETROBO_ADDON=$(printf '%q' "$ETROBO_ADDON");export PATH=$(printf '%q' "$ETROBO_ADDON/$addon_name/scripts"):\$PATH;ETROBO_ADDON_ACTIVATION_SOURCE=addonman $(printf '%q' "$addon_name") activate"
 
         # for Windows
         if [ "$ETROBO_OS" == "win" ]; then

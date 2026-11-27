@@ -152,7 +152,7 @@ if [ "$list" == "open" ]; then
         # for Windows
         if [ "$ETROBO_OS" == "win" ]; then
             # get the default WSL distribution name using PowerShell
-            powershell_command='$prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [Text.Encoding]::Unicode; $d = (wsl.exe -l -q | Where-Object { $_ })[0]; [Console]::OutputEncoding = $prev; [Console]::Write($d)'
+            powershell_command='$prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [Text.Encoding]::Unicode; $d = @(wsl.exe -l -q | Where-Object { $_ })[0]; [Console]::OutputEncoding = $prev; [Console]::Write($d)'
             set -o pipefail
             wsl_distribution="$(powershell.exe -NoProfile -Command "$powershell_command" | tr -d '\r')"
             command_status="$?"
